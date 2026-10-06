@@ -18,6 +18,11 @@ installation sets the application's language to the selected installer
 language. Upgrades keep existing settings; uninstall also keeps settings in
 `%AppData%/MicDenoiser`.
 
+Preferences can optionally register the installed executable in the current user's
+Windows Run key, with `--startup`. This is disabled by default. Uninstall removes
+only the MicDenoiser Run value. Settings and recordings are separate: settings
+are saved in AppData, while mic-test recordings remain in memory only.
+
 The uninstaller deletes a generated list of published files and empty
 subdirectories. It never recursively deletes the installation folder or
 AppData. Close the application before installing or uninstalling.

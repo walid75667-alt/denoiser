@@ -15,6 +15,8 @@
     <Compile Include="../MicDenoiser/AudioPipeline.cs" Link="AudioPipeline.cs" />
     <Compile Include="../MicDenoiser/DenoiseEngines.cs" Link="DenoiseEngines.cs" />
     <Compile Include="../MicDenoiser/Dsp.cs" Link="Dsp.cs" />
+    <Compile Include="../MicDenoiser/ComparisonCapture.cs" Link="ComparisonCapture.cs" />
+    <Compile Include="../MicDenoiser/StabilityAdvisor.cs" Link="StabilityAdvisor.cs" />
     <Compile Include="../MicDenoiser/ProcessingSettings.cs" Link="ProcessingSettings.cs" />
     <Compile Include="../MicDenoiser/RNNoiseNative.cs" Link="RNNoiseNative.cs" />
     <None Include="../MicDenoiser/models/DeepFilterNet3_onnx.tar.gz" Link="models/DeepFilterNet3_onnx.tar.gz" CopyToOutputDirectory="PreserveNewest" />

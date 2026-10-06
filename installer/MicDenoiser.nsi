@@ -11,16 +11,16 @@ Unicode true
 !ifndef UNINSTALL_MANIFEST
   !define UNINSTALL_MANIFEST "..\artifacts\uninstall-files.nsh"
 !endif
-Name "MicDenoiser 2.0"
+Name "MicDenoiser 2.1"
 OutFile "${OUT_FILE}"
 InstallDir "$LOCALAPPDATA\Programs\MicDenoiser"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
 SetCompressorDictSize 32
-VIProductVersion "2.0.0.0"
+VIProductVersion "2.1.0.0"
 VIAddVersionKey /LANG=1033 "ProductName" "MicDenoiser"
 VIAddVersionKey /LANG=1033 "FileDescription" "MicDenoiser Windows x64 Setup"
-VIAddVersionKey /LANG=1033 "FileVersion" "2.0.0"
+VIAddVersionKey /LANG=1033 "FileVersion" "2.1.0"
 VIAddVersionKey /LANG=1033 "LegalCopyright" "MicDenoiser contributors; see bundled component licenses"
 !define MUI_ABORTWARNING
 !define MUI_ICON "..\MicDenoiser\Assets\MicDenoiser.ico"
@@ -64,6 +64,9 @@ Function .onInit
     Abort
   ${EndIf}
   FindWindow $0 "" "MicDenoiser 2.0"
+  ${If} $0 == 0
+    FindWindow $0 "" "MicDenoiser 2.1"
+  ${EndIf}
   ${If} $0 != 0
     MessageBox MB_OK|MB_ICONEXCLAMATION "$(CloseApp)"
     Abort
@@ -87,8 +90,8 @@ Section "$(AppSection)" SEC_APP
   CreateDirectory "$SMPROGRAMS\MicDenoiser"
   CreateShortcut "$SMPROGRAMS\MicDenoiser\MicDenoiser.lnk" "$INSTDIR\MicDenoiser.exe"
   CreateShortcut "$SMPROGRAMS\MicDenoiser\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "DisplayName" "MicDenoiser 2.0"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "DisplayVersion" "2.0.0"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "DisplayName" "MicDenoiser 2.1"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "DisplayVersion" "2.1.0"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "DisplayIcon" "$INSTDIR\MicDenoiser.exe"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "InstallLocation" "$INSTDIR"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "UninstallString" '"$INSTDIR\Uninstall.exe"'
@@ -104,6 +107,9 @@ Function un.onInit
   SetRegView 64
   !insertmacro MUI_UNGETLANGUAGE
   FindWindow $0 "" "MicDenoiser 2.0"
+  ${If} $0 == 0
+    FindWindow $0 "" "MicDenoiser 2.1"
+  ${EndIf}
   ${If} $0 != 0
     MessageBox MB_OK|MB_ICONEXCLAMATION "$(CloseApp)"
     Abort
@@ -117,6 +123,7 @@ Section "Uninstall"
   Delete "$SMPROGRAMS\MicDenoiser\Uninstall.lnk"
   RMDir "$SMPROGRAMS\MicDenoiser"
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "MicDenoiser"
   DeleteRegKey HKCU "Software\MicDenoiser"
   RMDir "$INSTDIR"
   ; User settings in AppData are deliberately preserved. No recursive user-folder deletion.

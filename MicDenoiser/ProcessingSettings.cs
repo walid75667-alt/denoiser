@@ -1,6 +1,6 @@
 namespace MicDenoiser;
 
-public enum AudioBufferMode { Balanced, Stable, LowLatency }
+public enum AudioBufferMode { Balanced, Stable, LowLatency, Automatic }
 
 /// <summary>All live-adjustable parameters of the processing chain.</summary>
 public sealed class ProcessingSettings
@@ -44,6 +44,24 @@ public sealed class ProcessingSettings
         var s = new ProcessingSettings { Engine = engine, GateEnabled = engine == DenoiserKind.RNNoise };
         switch (key)
         {
+            case "calls":
+                s.GateEnabled = false; s.NoiseReductionDb = 35;
+                s.CompressorOn = true; s.CompThresholdDb = -22; s.CompRatio = 2; s.PresenceDb = 1;
+                break;
+            case "streaming":
+                s.GateEnabled = false; s.NoiseReductionDb = 35;
+                s.CompressorOn = true; s.CompThresholdDb = -20; s.CompRatio = 3;
+                s.PresenceDb = 2; s.MudCutDb = 1; s.OutputGainDb = 2;
+                break;
+            case "weakmic":
+                s.GateEnabled = false; s.NoiseReductionDb = 30; s.InputGainDb = 6;
+                s.CompressorOn = true; s.CompThresholdDb = -24; s.CompRatio = 2;
+                break;
+            case "whisper":
+                s.GateEnabled = false; s.NoiseReductionDb = 25; s.InputGainDb = 3;
+                s.Strength = engine == DenoiserKind.RNNoise ? .85f : 1;
+                s.CompressorOn = false;
+                break;
             case "natural":
                 s.Strength = engine == DenoiserKind.DeepFilterNet3 ? 1f : 0.85f;
                 s.NoiseReductionDb = 25f; s.GateEnabled = false;

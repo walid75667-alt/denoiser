@@ -56,3 +56,25 @@ running while the window is hidden. Double-click the notification icon to
 restore; its localized menu can open the app, start/stop denoising or exit.
 Uncheck the tray option for normal taskbar minimization. The window close
 button exits the application. Icon and tray behavior need a Windows UI test.
+
+Version 2.1 adds a 10-second microphone comparison, automatic stability
+recommendations, calls/streaming/weak-microphone/quiet-speech presets, opt-in
+Windows startup, device-disconnection recovery and a saved dark theme.
+The mic test records original and processed audio from the same stream,
+aligns processing delay, and attenuates to matching integrated loudness.
+Recordings stay in memory and are discarded at exit. Use headphones; preview
+playback stops live denoising until you start it again.
+
+Automatic buffering begins with the balanced 60 ms target and evaluates
+five-second telemetry windows. It recommends Stable buffering or lighter
+RNNoise; clicking Apply explicitly restarts processing. Severe backlog stops
+processing rather than accumulating stale audio, and offers recovery advice.
+Device removal also stops processing; the app never silently switches to a
+replacement microphone. Reconnect or select devices and start again.
+
+Enable Start with Windows in Preferences to register the current executable
+in the current user's Run key. Startup minimizes to the tray and starts only
+if both saved device IDs are available. This option is off by default;
+uninstall removes the app's startup entry and preserves user settings.
+Actual Windows rendering, registration, notifications and microphone behavior
+still need Windows validation; see VALIDATION.md.

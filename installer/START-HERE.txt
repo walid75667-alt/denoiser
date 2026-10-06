@@ -1,4 +1,4 @@
-MicDenoiser 2.0 — Windows 10/11 x64
+MicDenoiser 2.1 — Windows 10/11 x64
 
 العربية
 - المثبّت يتضمن البرنامج و.NET وDeepFilterNet3 ومكتبات الصوت. لا يحتاج تنزيل النموذج.
@@ -10,9 +10,14 @@ MicDenoiser 2.0 — Windows 10/11 x64
 - ألغِ خيار «عند التصغير، انقل البرنامج بجوار الساعة» لو عاوز التصغير العادي لشريط المهام.
 - لو الصوت خشن أثناء الكلام: جرّب «صوت أنعم» (25dB) وخفّض تضخيم الدخل.
 - لو عداد نقص البيانات يزيد: أوقف العزل واختار «استقرار أعلى»، ثم ابدأ.
-- «صوت أنعم» يحفظ حالة بوابة الكلام أثناء التشغيل؛ أوقف العزل لإيقاف البوابة.
+- «صوت أنعم» ووضع الهمس يعطّلان بوابة الكلام لحماية الكلام الهادئ.
 - أغلق عزل الضوضاء الإضافي في برنامج المكالمات عند المقارنة، واستخدم سماعات.
 - النسخة المضغوطة: فك ضغط المجلد كاملًا في مكان جديد، ثم شغّل MicDenoiser.exe.
+
+- اختبار المايك: سجّل 10 ثوانٍ ثم اسمع الأصل والمعالَج بسماعات. الاستماع يوقف العزل المباشر؛ ابدأه من جديد بعد الانتهاء. التسجيل يبقى في الذاكرة فقط.
+- وضع التأخير التلقائي يعرض اقتراحات في تبويب الأداء. تطبيق الاقتراح يعيد تشغيل العزل.
+- التفضيلات: واجهة داكنة، وتشغيل اختياري مع ويندوز بالأجهزة المحفوظة، مصغّرًا بجوار الساعة.
+- عند فصل جهاز صوت، اختار جهازًا آخر ثم ابدأ العزل؛ لا يتم التبديل تلقائيًا.
 
 English
 - Setup includes the application, .NET runtime, DeepFilterNet3 model and audio libraries.
@@ -24,9 +29,14 @@ English
 - Uncheck Minimize to the notification tray to keep normal taskbar minimization.
 - For harsh speech, try Softer sound (25 dB) and reduce input gain.
 - If output dropouts increase, stop processing and choose More stable before restarting.
-- Softer sound preserves the live speech gate setting. Stop processing to disable the gate.
+- Softer sound and Quiet/whisper disable the speech gate to preserve quiet speech.
 - Disable extra denoising in your calling app for comparisons and use headphones.
 - For the ZIP, extract the entire folder into a new location and run MicDenoiser.exe.
+
+- Mic test: record 10 seconds and listen to matched original/processed audio through headphones. Listening stops live denoising; start it again afterward. Audio stays in memory only.
+- Automatic buffering displays recommendations in Health. Applying a recommendation restarts denoising.
+- Preferences: saved dark theme and optional Windows startup, minimized with saved devices.
+- Device removal stops audio. Choose another device and start again; no automatic device switch.
 
 This build was compiled and checked on Linux. Physical Windows microphone playback,
 installer execution/uninstallation and listening quality still need Windows validation.

@@ -47,6 +47,13 @@ internal sealed class NotificationTray : IDisposable
         _notification.Text = UiStrings.Get(starting ? "TrayPreparing" : running ? "TrayRunning" : "TrayReady");
     }
 
+    public void SetDarkTheme(bool dark)
+    {
+        _menu.RenderMode = Forms.ToolStripRenderMode.System;
+        _menu.BackColor = dark ? Drawing.Color.FromArgb(27, 41, 54) : Drawing.SystemColors.Control;
+        _menu.ForeColor = dark ? Drawing.Color.FromArgb(230, 238, 246) : Drawing.SystemColors.ControlText;
+    }
+
     public void ShowNotice(string title, string text, bool error = false) =>
         _notification.ShowBalloonTip(4000, title, text.Length > 240 ? text[..240] + "…" : text,
             error ? Forms.ToolTipIcon.Error : Forms.ToolTipIcon.Info);

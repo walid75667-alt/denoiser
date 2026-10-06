@@ -12,13 +12,19 @@ Verified:
   pinned upstream revision and locked dependencies. ABI version 2 and the
   live attenuation setter are exported by the Windows DLL. Its imports use
   only Windows system DLLs.
-- All 13 checks passed: Arabic/English catalog parity and XAML resource
+- All 20 checks passed: Arabic/English catalog parity and XAML resource
   references; output starvation/recovery fades; startup rebuffering and byte
   offsets; gain/compressor continuity; malformed persisted settings;
   fragmented live resampling at 16/44.1/96 kHz; sample delay; aligned wet/dry
   and bypass paths; native loading/metadata/silence; stationary noise; model
   integrity; and the attenuation control. The Windows RNNoise/optional VAD
   execution check was skipped on Linux.
+- The new comparison checks cover exactly 480,000 captured samples, delays of
+  0/517/1440/2400 samples, cancellation, a 1 kHz BS.1770 loudness reference,
+  matched attenuating playback, immutable source data, silence, buffer offsets
+  and clean playback completion. Stability checks distinguish isolated spikes,
+  sustained processing overload, fresh gap counts and unchanged advice. All
+  four use-case presets survive configuration serialization with gate disabled.
 - The starvation regression reproduces a 12,000 PCM-unit jump in the old
   zero-fill output. The guarded output fades the same transition over 5 ms,
   with adjacent sample changes at most 51 units, and counts a continuous
@@ -54,6 +60,14 @@ Still to validate on Windows:
 
 - WPF rendering, text fitting at different DPI settings, immediate language
   switching, and device refresh.
+- Ten-second recording/playback through physical devices, switching language
+  during capture, canceling, closing and USB removal during recording/listening.
+  Offline checks establish alignment and matching logic, not perceived matching
+  for every recording or the cause of the user's crackling.
+- Automatic advice under sustained real Windows load and applying/restarting.
+- Dark theme, combobox keyboard navigation, RTL/LTR layouts and saved preferences.
+- Optional current-user startup registration, startup with missing devices,
+  minimized launch, and startup entry removal on uninstall.
 - Notification icon rendering, tray menus, minimize/restore (normal and
   maximized), audio continuity while hidden, switching languages, exiting
   during model startup, Explorer restart and icon cleanup at shutdown.

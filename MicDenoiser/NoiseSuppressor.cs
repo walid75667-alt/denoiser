@@ -22,9 +22,14 @@ public sealed class NoiseSuppressor : IDisposable
     private readonly AutoResetEvent _available = new(false);
     private readonly Thread _worker;
     private ProcessingSettings _settings;
+    private ComparisonCapture? _comparison;
+    private readonly StabilityAdvisor _advisor;
+    private long _lastInputAt;
     private int _running, _faulted, _playbackStarted, _disposed;
     public event Action<MeterData>? Meters;
     public event Action<Exception>? Failed;
+    public event Action<ComparisonCapture>? ComparisonCompleted;
+    public event Action<StabilityAdvice>? AdviceChanged;
     public string EngineName => _pipeline.EngineName;
     public double AlgorithmicDelayMs => _pipeline.AlgorithmicDelayMs;
     public int PlaybackBufferTargetMs { get; }
@@ -33,6 +38,7 @@ public sealed class NoiseSuppressor : IDisposable
     public NoiseSuppressor(string inputId, string outputId, ProcessingSettings settings)
     {
         _settings = settings.SanitizedClone();
+        _advisor = new StabilityAdvisor(_settings.Engine, _settings.BufferMode);
         PlaybackBufferTargetMs = _settings.BufferMode switch { AudioBufferMode.Stable => 100, AudioBufferMode.LowLatency => 30, _ => 60 };
         IDenoiseEngine engine = _settings.Engine == DenoiserKind.DeepFilterNet3
             ? new DeepFilterNetEngine() : new RNNoiseEngine();
@@ -72,23 +78,32 @@ public sealed class NoiseSuppressor : IDisposable
         }
         catch
         {
-            _capture?.Dispose(); _playback?.Dispose();
-            _inputDevice?.Dispose(); _outputDevice?.Dispose();
-            _pipeline.Dispose(); _devices.Dispose(); _available.Dispose();
+            foreach (var resource in new IDisposable?[] { _capture, _playback, _inputDevice, _outputDevice, _pipeline, _devices, _available })
+                try { resource?.Dispose(); } catch { } // Preserve the constructor's original failure.
             throw;
         }
     }
 
     public void UpdateSettings(ProcessingSettings settings) => Volatile.Write(ref _settings, settings.SanitizedClone());
+    public ComparisonCapture BeginComparison()
+    {
+        if (Volatile.Read(ref _running) == 0) throw new InvalidOperationException("Audio processing is stopped.");
+        var capture = new ComparisonCapture(_pipeline.FrameSize, (int)Math.Round(AlgorithmicDelayMs * 48));
+        if (Interlocked.CompareExchange(ref _comparison, capture, null) != null) throw new InvalidOperationException("A comparison is already recording.");
+        return capture;
+    }
+    public void CancelComparison() => Interlocked.Exchange(ref _comparison, null)?.Cancel();
     public void Start()
     {
         if (Interlocked.CompareExchange(ref _running, 1, 0) != 0) return;
+        Interlocked.Exchange(ref _lastInputAt, Stopwatch.GetTimestamp());
         _worker.Start();
         try { _capture.StartRecording(); }
         catch { Stop(); throw; }
     }
     public void Stop()
     {
+        CancelComparison();
         Volatile.Write(ref _running, 0);
         _available.Set();
         try { _capture.StopRecording(); }
@@ -103,6 +118,7 @@ public sealed class NoiseSuppressor : IDisposable
         if (Volatile.Read(ref _running) == 0) return;
         try
         {
+            if (e.BytesRecorded > 0) Interlocked.Exchange(ref _lastInputAt, Stopwatch.GetTimestamp());
             _captureBuffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
             _available.Set();
         }
@@ -127,10 +143,12 @@ public sealed class NoiseSuppressor : IDisposable
             while (Volatile.Read(ref _running) != 0)
             {
                 _available.WaitOne(100);
+                if (Volatile.Read(ref _running) != 0 && Stopwatch.GetElapsedTime(Interlocked.Read(ref _lastInputAt)).TotalSeconds > 3)
+                    throw new IOException("The microphone stopped delivering audio. Reconnect it or choose another device.");
                 while (Volatile.Read(ref _running) != 0)
                 {
                     if (_captureBuffer.BufferedDuration.TotalMilliseconds > 150 || _outputBuffer.BufferedDuration.TotalMilliseconds > PlaybackBufferTargetMs + 150)
-                        throw new InvalidOperationException("المعالجة أو جهاز الصوت مش بيلحق الوقت الحقيقي. جرّب RNNoise أو اقفل البرامج الثقيلة.");
+                        throw new AudioProcessingOverloadException();
                     int read = _samples.Read(input, pending, size - pending);
                     if (read == 0) break;
                     pending += read;
@@ -141,6 +159,12 @@ public sealed class NoiseSuppressor : IDisposable
                     long started = Stopwatch.GetTimestamp();
                     FrameMeters meters = _pipeline.Process(input, output, settings);
                     maximumFrameMs = Math.Max(maximumFrameMs, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+                    var comparison = Volatile.Read(ref _comparison);
+                    if (comparison != null && comparison.Add(input, output))
+                    {
+                        Interlocked.CompareExchange(ref _comparison, null, comparison);
+                        ComparisonCompleted?.Invoke(comparison);
+                    }
                     inputPeak = Math.Max(inputPeak, meters.InPeak); outputPeak = Math.Max(outputPeak, meters.OutPeak);
                     for (int i = 0; i < size; i++)
                     {
@@ -152,6 +176,11 @@ public sealed class NoiseSuppressor : IDisposable
                         _playback.Play();
                     if (uiClock.ElapsedMilliseconds >= 100)
                     {
+                        if (settings.BufferMode == AudioBufferMode.Automatic)
+                        {
+                            var advice = _advisor.Observe(maximumFrameMs, _monitor.Underruns);
+                            if (advice != null) AdviceChanged?.Invoke(advice.Value);
+                        }
                         Meters?.Invoke(new MeterData(inputPeak, outputPeak, meters.Vad, meters.GateGain, settings.Bypass,
                             maximumFrameMs, _captureBuffer.BufferedDuration.TotalMilliseconds + _outputBuffer.BufferedDuration.TotalMilliseconds,
                             _monitor.Underruns));
@@ -168,8 +197,16 @@ public sealed class NoiseSuppressor : IDisposable
         try { Stop(); }
         finally
         {
-            _capture.Dispose(); _playback.Dispose(); _pipeline.Dispose();
-            _inputDevice.Dispose(); _outputDevice.Dispose(); _devices.Dispose(); _available.Dispose();
+            // Attempt every release even when a disconnected endpoint rejects cleanup.
+            List<Exception>? errors = null;
+            foreach (var resource in new IDisposable[] { _capture, _playback, _pipeline, _inputDevice, _outputDevice, _devices, _available })
+                try { resource.Dispose(); } catch (Exception ex) { (errors ??= new()).Add(ex); }
+            if (errors != null) throw new AggregateException(errors);
         }
     }
+}
+
+internal sealed class AudioProcessingOverloadException : InvalidOperationException
+{
+    public AudioProcessingOverloadException() : base("المعالجة أو جهاز الصوت مش بيلحق الوقت الحقيقي. جرّب RNNoise أو اقفل البرامج الثقيلة.") { }
 }

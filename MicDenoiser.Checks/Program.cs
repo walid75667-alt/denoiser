@@ -33,9 +33,110 @@ Check("interface catalogs and XAML resource references are complete", () =>
     {
         foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
                      File.ReadAllText(Path.Combine(assets, file)), @"\{(StaticResource|DynamicResource) ([^}]+)\}"))
-            Require(match.Groups[1].Value == "StaticResource" ? staticKeys.Contains(match.Groups[2].Value) : ar.ContainsKey(match.Groups[2].Value),
+            Require(match.Groups[1].Value == "StaticResource" ? staticKeys.Contains(match.Groups[2].Value) : (ar.ContainsKey(match.Groups[2].Value) || staticKeys.Contains(match.Groups[2].Value)),
                 "Unresolved XAML resource: " + match.Value);
     }
+});
+
+Check("comparison captures exactly ten seconds with aligned original audio", () =>
+{
+    foreach (int delay in new[] { 0, 517, 1440, 2400 })
+    {
+        var capture = new ComparisonCapture(480, delay);
+        var actualDelay = new SampleDelay(delay);
+        var raw = new float[480]; var wet = new float[480];
+        int position = 0, completions = 0;
+        while (!capture.IsComplete)
+        {
+            for (int i=0; i<480; i++) raw[i] = (position+i)%30000;
+            actualDelay.Process(raw, wet);
+            if (capture.Add(raw, wet)) completions++;
+            position += 480;
+        }
+        Require(capture.SampleCount == 480000 && completions == 1, "Wrong duration/completion count.");
+        Require(capture.Original.SequenceEqual(capture.Processed), "Comparison paths are misaligned.");
+        for (int i=0; i<480000; i++) Require(capture.Original[i] == i%30000, "Comparison includes pre-start samples or omits audio.");
+        Require(!capture.Add(raw, wet), "Completed capture accepted another frame.");
+    }
+});
+
+Check("comparison cancellation discards pending capture", () =>
+{
+    var capture = new ComparisonCapture(480, 2400);
+    capture.Cancel();
+    Require(capture.IsCanceled && !capture.IsComplete && !capture.Add(new float[480], new float[480]), "Canceled recording continued.");
+    bool refused = false;
+    try { ComparisonResult.Create(capture); } catch (InvalidOperationException) { refused = true; }
+    Require(refused, "Incomplete audio was playable.");
+});
+
+Check("BS.1770 loudness matching attenuates without changing the source", () =>
+{
+    var capture = new ComparisonCapture(480, 0, 48000);
+    var a = new float[480]; var b = new float[480];
+    for (int frame=0; frame<100; frame++)
+    {
+        for (int i=0; i<480; i++) { a[i]=(float)(30000*Math.Sin(2*Math.PI*1000*(frame*480+i)/48000)); b[i]=a[i]*.25f; }
+        capture.Add(a, b);
+    }
+    var rawCopy=(float[])capture.Original.Clone();
+    var result=ComparisonResult.Create(capture);
+    Require(Math.Abs(result.OriginalLufs - (-3.0+20*Math.Log10(30000/32768.0)))<.12, "1 kHz reference loudness is incorrect.");
+    Require(Math.Abs(result.OriginalLufs-result.ProcessedLufs-20*Math.Log10(4))<.001, "Relative loudness measurement is incorrect.");
+    Require(Math.Abs(result.OriginalLufs+20*Math.Log10(result.OriginalGain)-result.ProcessedLufs-20*Math.Log10(result.ProcessedGain))<.001, "Playback levels are unmatched.");
+    Require(result.OriginalGain<=1 && result.ProcessedGain<=1 && rawCopy.SequenceEqual(capture.Original), "Matching boosted or mutated source audio.");
+    var before=new float[48000]; var after=new float[48000];
+    Require(result.CreatePlayback(true).Read(before,0,before.Length)==48000, "Original playback is incomplete.");
+    result.CreatePlayback(false).Read(after,0,after.Length);
+    Require(before.Zip(after,(x,y)=>Math.Abs(x-y)).Max()<1e-6, "Proportional clips differ after matching.");
+    Require(before.Max(x=>Math.Abs(x))<=.89, "Playback clipped.");
+});
+
+Check("matched playback preserves offsets, ends cleanly, and handles silence", () =>
+{
+    var capture=new ComparisonCapture(480,0,480);
+    capture.Add(new float[480],new float[480]);
+    var result=ComparisonResult.Create(capture);
+    Require(double.IsNegativeInfinity(result.OriginalLufs) && double.IsFinite(result.OriginalGain), "Silent loudness produced an invalid gain.");
+    var provider=result.CreatePlayback(true); var buffer=Enumerable.Repeat(123f,500).ToArray();
+    Require(provider.Read(buffer,10,490)==480 && provider.Read(buffer,0,500)==0, "Provider duration/end is wrong.");
+    Require(buffer.Take(10).All(x=>x==123) && buffer.Skip(490).All(x=>x==123), "Read overwrote surrounding data.");
+    Require(buffer.Skip(10).Take(480).All(x=>x==0), "Silence became nonzero audio.");
+});
+
+Check("stability advisor distinguishes transient spikes from sustained overload", () =>
+{
+    var advisor=new StabilityAdvisor(DenoiserKind.DeepFilterNet3,AudioBufferMode.Automatic);
+    for (int i=0;i<49;i++) Require(advisor.Observe(i==0?15:2,0)==null, "Premature advice.");
+    Require(advisor.Observe(2,0)==StabilityAdvice.Healthy,"Transient spike was treated as overload.");
+    for (int i=0;i<49;i++) advisor.Observe(12,0);
+    Require(advisor.Observe(12,0)==StabilityAdvice.Lightweight,"Sustained overload did not suggest a lighter engine.");
+    for (int i=0;i<50;i++) Require(advisor.Observe(12,0)==null,"Unchanged advice was repeatedly emitted.");
+});
+
+Check("stability advisor accounts for new gaps and existing buffering", () =>
+{
+    foreach (var mode in new[]{AudioBufferMode.Automatic,AudioBufferMode.Stable})
+    {
+        var advisor=new StabilityAdvisor(DenoiserKind.RNNoise,mode);
+        for (int i=0;i<49;i++) advisor.Observe(2,2);
+        Require(advisor.Observe(2,2)==(mode==AudioBufferMode.Stable?StabilityAdvice.CheckDevice:StabilityAdvice.MoreBuffer),"Incorrect gap advice.");
+        for (int i=0;i<49;i++) advisor.Observe(2,2);
+        Require(advisor.Observe(2,2)==StabilityAdvice.Healthy,"Old gaps were counted again.");
+    }
+});
+
+Check("use-case presets preserve quiet speech and survive saved configuration", () =>
+{
+    foreach (var engine in Enum.GetValues<DenoiserKind>())
+        foreach (string key in new[]{"calls","streaming","weakmic","whisper"})
+        {
+            var settings=ProcessingSettings.FromPreset(key,engine);
+            settings.BufferMode=AudioBufferMode.Automatic;
+            var roundtrip=System.Text.Json.JsonSerializer.Deserialize<ProcessingSettings>(System.Text.Json.JsonSerializer.Serialize(settings))!.SanitizedClone();
+            Require(!roundtrip.GateEnabled && roundtrip.Engine==engine && roundtrip.BufferMode==AudioBufferMode.Automatic,"Preset/configuration lost engine or voice-gate choice.");
+            if(key=="whisper") Require(!roundtrip.CompressorOn && roundtrip.NoiseReductionDb<=25,"Whisper preset is excessively aggressive.");
+        }
 });
 
 Check("output starvation and recovery avoid abrupt zero-fill clicks", () =>
