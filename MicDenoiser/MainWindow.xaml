@@ -1,7 +1,7 @@
 <Window x:Class="MicDenoiser.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MicDenoiser 2.0" Width="1080" Height="820" MinWidth="900" MinHeight="680"
+        Title="MicDenoiser 2.0" Icon="/Assets/MicDenoiser.ico" Width="1080" Height="820" MinWidth="900" MinHeight="680"
         FlowDirection="RightToLeft" FontFamily="Segoe UI" FontSize="13"
         Background="{StaticResource Surface}" WindowStartupLocation="CenterScreen"
         UseLayoutRounding="True" SnapsToDevicePixels="True">
@@ -13,7 +13,10 @@
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock x:Name="BrandText" Text="MicDenoiser" Foreground="White" FontSize="26" FontWeight="SemiBold" FlowDirection="LeftToRight" HorizontalAlignment="Right"/>
+                    <StackPanel x:Name="BrandPanel" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Image Source="/Assets/MicDenoiser.png" Width="36" Height="36" Margin="0,0,10,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock x:Name="BrandText" Text="MicDenoiser" Foreground="White" FontSize="26" FontWeight="SemiBold" FlowDirection="LeftToRight" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </StackPanel>
                     <TextBlock Text="{DynamicResource Ui000}" Foreground="#B3C7D5" Margin="0,4,0,0"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -75,6 +78,10 @@
                 <StackPanel Grid.Row="1" Margin="0,10,0,0">
                     <ProgressBar x:Name="LoadingProgress" Height="3" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,9"/>
                     <Button x:Name="ToggleButton" Style="{StaticResource PrimaryButton}" Height="48" Content="{DynamicResource Ui019}" Click="ToggleButton_Click"/>
+                    <Button x:Name="TrayMinimizeButton" Style="{StaticResource SecondaryButton}" Content="{DynamicResource TrayMinimize}" Click="TrayMinimize_Click" Margin="0,9,0,0"/>
+                    <CheckBox x:Name="MinimizeToTrayCheck" Click="MinimizeToTray_Click" Margin="0,10,0,0" ToolTip="{DynamicResource TrayKeepsAudio}">
+                        <TextBlock Text="{DynamicResource TrayMinimizeOption}" TextWrapping="Wrap" FontSize="12" MaxWidth="244"/>
+                    </CheckBox>
                     <TextBlock Text="{DynamicResource Ui020}" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,9,0,0" FontSize="11"/>
                 </StackPanel>
             </Grid>

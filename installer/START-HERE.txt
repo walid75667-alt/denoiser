@@ -5,6 +5,9 @@ MicDenoiser 2.0 — Windows 10/11 x64
 - ثبّت VB-Cable بشكل منفصل: https://vb-audio.com/Cable/ ثم أعد تشغيل ويندوز.
 - اختار المايك الحقيقي، ومخرج CABLE Input. في برنامج المكالمات اختار CABLE Output.
 - اللغة: من القائمة أعلى الواجهة. الاختيار يُحفظ.
+- زر «تصغير بجوار الساعة» يخفي النافذة ويُبقي العزل شغّالًا. اضغط مرتين على الأيقونة لاستعادة البرنامج.
+- بالزر اليمين على الأيقونة: فتح، بدء/إيقاف العزل، خروج. زر X يغلق البرنامج ويوقف الصوت.
+- ألغِ خيار «عند التصغير، انقل البرنامج بجوار الساعة» لو عاوز التصغير العادي لشريط المهام.
 - لو الصوت خشن أثناء الكلام: جرّب «صوت أنعم» (25dB) وخفّض تضخيم الدخل.
 - لو عداد نقص البيانات يزيد: أوقف العزل واختار «استقرار أعلى»، ثم ابدأ.
 - «صوت أنعم» يحفظ حالة بوابة الكلام أثناء التشغيل؛ أوقف العزل لإيقاف البوابة.
@@ -16,6 +19,9 @@ English
 - Install VB-Cable separately: https://vb-audio.com/Cable/ and restart Windows.
 - Select your microphone and CABLE Input. Select CABLE Output in the calling app.
 - Change language in the header; the choice is saved.
+- Minimize to tray hides the window while denoising continues. Double-click the tray icon to restore.
+- Right-click the icon to open, start/stop denoising, or exit. The window X closes the app and stops audio.
+- Uncheck Minimize to the notification tray to keep normal taskbar minimization.
 - For harsh speech, try Softer sound (25 dB) and reduce input gain.
 - If output dropouts increase, stop processing and choose More stable before restarting.
 - Softer sound preserves the live speech gate setting. Stop processing to disable the gate.

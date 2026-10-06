@@ -23,6 +23,8 @@ VIAddVersionKey /LANG=1033 "FileDescription" "MicDenoiser Windows x64 Setup"
 VIAddVersionKey /LANG=1033 "FileVersion" "2.0.0"
 VIAddVersionKey /LANG=1033 "LegalCopyright" "MicDenoiser contributors; see bundled component licenses"
 !define MUI_ABORTWARNING
+!define MUI_ICON "..\MicDenoiser\Assets\MicDenoiser.ico"
+!define MUI_UNICON "..\MicDenoiser\Assets\MicDenoiser.ico"
 !define MUI_FINISHPAGE_RUN "$INSTDIR\MicDenoiser.exe"
 !define MUI_LANGDLL_REGISTRY_ROOT "HKCU"
 !define MUI_LANGDLL_REGISTRY_KEY "Software\MicDenoiser"

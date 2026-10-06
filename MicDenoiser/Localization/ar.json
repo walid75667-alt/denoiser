@@ -107,5 +107,18 @@
   "ErrorMissingNative": "مكتبة DeepFilterNet غير موجودة. شغّل scripts/build-native.ps1 وأعد بناء التطبيق، أو اختر RNNoise.",
   "ErrorNativeArch": "مكتبة DeepFilterNet لازم تكون مبنية لويندوز x64.",
   "ErrorModelMetadata": "النموذج لا يطابق إعدادات 48kHz وإطارات 10ms المطلوبة.",
-  "ErrorOverload": "المعالجة أو جهاز الصوت مش بيلحق الوقت الحقيقي. جرّب RNNoise أو اقفل البرامج الثقيلة."
+  "ErrorOverload": "المعالجة أو جهاز الصوت مش بيلحق الوقت الحقيقي. جرّب RNNoise أو اقفل البرامج الثقيلة.",
+  "TrayOpen": "فتح البرنامج",
+  "TrayStop": "إيقاف العزل",
+  "TrayExit": "خروج من البرنامج",
+  "TrayMinimize": "تصغير بجوار الساعة",
+  "TrayMinimizeOption": "عند التصغير، انقل البرنامج بجوار الساعة",
+  "TrayKeepsAudio": "العزل يفضل شغّال في الخلفية. اضغط مرتين على الأيقونة لاستعادة النافذة.",
+  "TrayRunning": "MicDenoiser · العزل يعمل",
+  "TrayReady": "MicDenoiser · العزل متوقف",
+  "TrayPreparing": "MicDenoiser · جاري تجهيز المحرّك",
+  "TrayHiddenTitle": "MicDenoiser يعمل في الخلفية",
+  "TrayHiddenInfo": "اضغط مرتين على الأيقونة لفتح البرنامج، أو اضغط بالزر اليمين لإيقاف العزل أو الخروج.",
+  "TrayUnavailable": "تعذر تفعيل الأيقونة بجوار الساعة؛ التصغير العادي متاح.",
+  "TrayAudioStopped": "توقفت معالجة الصوت"
 }

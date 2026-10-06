@@ -16,6 +16,9 @@ public partial class MainWindow : Window
     private readonly object _meterLock = new();
     private readonly DispatcherTimer _meterTimer;
     private NoiseSuppressor? _suppressor, _meterSource;
+    private NotificationTray? _tray;
+    private bool _minimizeToTray = true, _trayNoticeShown;
+    private WindowState _restoreWindowState = WindowState.Normal;
     private MeterData _latestMeters;
     private bool _hasMeters, _ready, _loading, _starting, _closed;
     private string _preset = "studio", _language = "ar";
@@ -55,8 +58,70 @@ public partial class MainWindow : Window
             if (_suppressor == source && source != null) RenderMeters(m);
         };
         _meterTimer.Start();
+        InitializeTray();
+        StateChanged += (_, _) =>
+        {
+            if (WindowState != WindowState.Minimized && IsVisible) _restoreWindowState = WindowState;
+            else if (_minimizeToTray) HideToTray();
+        };
         SizeChanged += (_, _) => { SetMask(InMask, InTrack, _inDisp); SetMask(OutMask, OutTrack, _outDisp); };
-        Closing += (_, _) => { _closed = true; _meterTimer.Stop(); StopProcessing(); SaveConfig(); };
+        Closing += (_, _) =>
+        {
+            _closed = true; _meterTimer.Stop();
+            try { StopProcessing(); }
+            finally { _tray?.Dispose(); _tray = null; SaveConfig(); }
+        };
+    }
+
+    private void InitializeTray()
+    {
+        void Post(Action action)
+        {
+            if (Dispatcher.HasShutdownStarted) return;
+            Dispatcher.BeginInvoke(() => { if (!_closed) action(); });
+        }
+        try
+        {
+            _tray = new NotificationTray(() => Post(RestoreFromTray),
+                () => Post(() => ToggleButton_Click(this, new RoutedEventArgs())), () => Post(Close));
+        }
+        catch (Exception) { StatusText.Text = T("TrayUnavailable"); }
+        TrayMinimizeButton.IsEnabled = MinimizeToTrayCheck.IsEnabled = _tray != null;
+        MinimizeToTrayCheck.IsChecked = _tray != null && _minimizeToTray;
+    }
+
+    private void TrayMinimize_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+        HideToTray(); // The explicit command works regardless of the title-bar minimize preference.
+    }
+    private void MinimizeToTray_Click(object sender, RoutedEventArgs e)
+    {
+        _minimizeToTray = MinimizeToTrayCheck.IsChecked == true;
+        SaveConfig();
+    }
+    private void HideToTray()
+    {
+        if (_tray == null || _closed || !IsVisible) return;
+        _tray.Refresh(_suppressor != null, _starting);
+        ShowInTaskbar = false;
+        Hide();
+        _meterTimer.Stop(); // Meter events coalesce; the dedicated audio worker keeps running.
+        SaveConfig();
+        if (!_trayNoticeShown)
+        {
+            _trayNoticeShown = true;
+            _tray.ShowNotice(T("TrayHiddenTitle"), T("TrayHiddenInfo"));
+        }
+    }
+    private void RestoreFromTray()
+    {
+        if (_closed) return;
+        ShowInTaskbar = true;
+        WindowState = _restoreWindowState;
+        Show();
+        _meterTimer.Start();
+        Activate();
     }
 
     private void LoadDevices()
@@ -132,6 +197,8 @@ public partial class MainWindow : Window
         {
             var s = _settings;
             BrandText.HorizontalAlignment = _language == "ar" ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+            BrandPanel.HorizontalAlignment = BrandText.HorizontalAlignment;
+            MinimizeToTrayCheck.IsChecked = _tray != null && _minimizeToTray;
             LanguageCombo.SelectedIndex = _language == "en" ? 1 : 0;
             BufferModeCombo.SelectedIndex = (int)s.BufferMode;
             StrengthSlider.Value = s.Strength * 100; NoiseLimitSlider.Value = s.NoiseReductionDb;
@@ -189,6 +256,7 @@ public partial class MainWindow : Window
         InputCombo.IsEnabled = OutputCombo.IsEnabled = EngineCombo.IsEnabled = BufferModeCombo.IsEnabled = RefreshDevicesButton.IsEnabled = GateEnabledCheck.IsEnabled = idle;
         ToggleButton.IsEnabled = !_starting;
         LoadingProgress.Visibility = _starting ? Visibility.Visible : Visibility.Collapsed;
+        _tray?.Refresh(_suppressor != null, _starting);
     }
     private async void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
@@ -213,6 +281,7 @@ public partial class MainWindow : Window
             {
                 if (_suppressor != suppressor) return;
                 StopProcessing(); StatusText.Text = T("Failed", UiStrings.ErrorDetail(error.Message));
+                if (!IsVisible) _tray?.ShowNotice(T("TrayAudioStopped"), UiStrings.ErrorDetail(error.Message), error: true);
             });
             _lastUnderruns = 0; _gapUntil = _clippingUntil = DateTime.MinValue;
             suppressor.Start(); ToggleButton.Content = T("Stop"); ToggleButton.Background = (Brush)FindResource("Danger");
@@ -223,6 +292,7 @@ public partial class MainWindow : Window
         {
             _suppressor?.Dispose(); _suppressor = null; ResetMeters(); SetStatus(false);
             StatusText.Text = T("Error", UiStrings.ErrorDetail(ex.Message));
+            if (!IsVisible) _tray?.ShowNotice(T("TrayAudioStopped"), UiStrings.ErrorDetail(ex.Message), error: true);
         }
         finally { _starting = false; SetDeviceControls(); }
     }
@@ -239,6 +309,7 @@ public partial class MainWindow : Window
         StatusPill.Text = T(running ? "Running" : "Ui001");
         StatusDot.Fill = (Brush)FindResource(running ? "Accent" : "Muted");
         ToggleButton.Content = T(running ? "Stop" : "Ui019");
+        _tray?.Refresh(running, _starting);
     }
     private void ResetMeters()
     {
@@ -289,6 +360,7 @@ public partial class MainWindow : Window
         public string? OutputDeviceId { get; set; }
         public string Preset { get; set; } = "studio";
         public string Language { get; set; } = "ar";
+        public bool MinimizeToTray { get; set; } = true;
         public ProcessingSettings? Settings { get; set; }
     }
     private void LoadConfig()
@@ -299,6 +371,7 @@ public partial class MainWindow : Window
             var cfg = JsonSerializer.Deserialize<AppConfig>(File.ReadAllText(ConfigPath)); if (cfg == null) return;
             _preset = cfg.Preset is "natural" or "studio" or "podcast" or "max" or "custom" ? cfg.Preset : "studio";
             _language = cfg.Language == "en" ? "en" : "ar";
+            _minimizeToTray = cfg.MinimizeToTray;
             if (cfg.Settings != null) _settings.CopyFrom(cfg.Settings.SanitizedClone());
             InputCombo.SelectedItem = InputCombo.Items.Cast<DeviceItem>().FirstOrDefault(d => d.Id == cfg.InputDeviceId)
                 ?? InputCombo.Items.Cast<DeviceItem>().FirstOrDefault(d => d.Name == cfg.InputDevice) ?? InputCombo.SelectedItem;
@@ -314,7 +387,7 @@ public partial class MainWindow : Window
             var cfg = new AppConfig { InputDevice = (InputCombo.SelectedItem as DeviceItem)?.Name,
                 OutputDevice = (OutputCombo.SelectedItem as DeviceItem)?.Name,
                 InputDeviceId = (InputCombo.SelectedItem as DeviceItem)?.Id, OutputDeviceId = (OutputCombo.SelectedItem as DeviceItem)?.Id,
-                Preset = _preset, Language = _language, Settings = _settings.SanitizedClone() };
+                Preset = _preset, Language = _language, MinimizeToTray = _minimizeToTray, Settings = _settings.SanitizedClone() };
             Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath)!);
             File.WriteAllText(ConfigPath, JsonSerializer.Serialize(cfg, new JsonSerializerOptions { WriteIndented = true }));
         }

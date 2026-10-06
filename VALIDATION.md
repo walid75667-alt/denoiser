@@ -38,6 +38,9 @@ Verified:
 - Processing that 10.60-second clip took 1.84 seconds on this Linux host,
   excluding model construction. This is an offline observation, not a
   guarantee of real-time operation on another machine.
+- The generated application icon has 10 decoded ICO sizes from 16 to 256
+  pixels. Its executable/installer resource groups were inspected after
+  compilation. The PNG source and ICO are bundled as WPF resources.
 - Native/model hashes in `native-checksums.json` match both the source and
   self-contained publish copies. The app-local runtime copy used by the
   uploaded RNNoise DLL exports all five of its required VCRUNTIME140 symbols.
@@ -51,6 +54,9 @@ Still to validate on Windows:
 
 - WPF rendering, text fitting at different DPI settings, immediate language
   switching, and device refresh.
+- Notification icon rendering, tray menus, minimize/restore (normal and
+  maximized), audio continuity while hidden, switching languages, exiting
+  during model startup, Explorer restart and icon cleanup at shutdown.
 - Installation, installer language selection, shortcuts, upgrade and
   uninstall. Settings are preserved; uninstall deletes only listed payload
   files and empty subdirectories.

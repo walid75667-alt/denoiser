@@ -107,5 +107,18 @@
   "ErrorMissingNative": "The DeepFilterNet library is missing. Reinstall the complete application, or select RNNoise.",
   "ErrorNativeArch": "The DeepFilterNet library must be built for Windows x64.",
   "ErrorModelMetadata": "The model does not match the required 48 kHz sample rate and 10 ms frames.",
-  "ErrorOverload": "Processing or the audio device cannot keep up in real time. Try RNNoise or close CPU-heavy applications."
+  "ErrorOverload": "Processing or the audio device cannot keep up in real time. Try RNNoise or close CPU-heavy applications.",
+  "TrayOpen": "Open MicDenoiser",
+  "TrayStop": "Stop denoising",
+  "TrayExit": "Exit MicDenoiser",
+  "TrayMinimize": "Minimize to tray",
+  "TrayMinimizeOption": "Minimize to the notification tray",
+  "TrayKeepsAudio": "Denoising continues in the background. Double-click the icon to restore the window.",
+  "TrayRunning": "MicDenoiser · Denoising active",
+  "TrayReady": "MicDenoiser · Denoising stopped",
+  "TrayPreparing": "MicDenoiser · Preparing engine",
+  "TrayHiddenTitle": "MicDenoiser is in the background",
+  "TrayHiddenInfo": "Double-click the icon to open the app. Right-click to start or stop denoising, or exit.",
+  "TrayUnavailable": "The notification tray icon is unavailable; normal taskbar minimization is available.",
+  "TrayAudioStopped": "Audio processing stopped"
 }

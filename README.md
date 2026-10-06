@@ -49,3 +49,10 @@ Setup installs for the current user under `%LocalAppData%/Programs/MicDenoiser`,
 adds Start menu shortcuts and an optional desktop shortcut, and registers an
 uninstaller. Existing settings are preserved. Installer and application can
 both use Arabic or English. See [installer details](installer/README.md).
+
+The application now includes a custom microphone icon in the executable,
+window header, taskbar and installer. Minimize to tray keeps audio processing
+running while the window is hidden. Double-click the notification icon to
+restore; its localized menu can open the app, start/stop denoising or exit.
+Uncheck the tray option for normal taskbar minimization. The window close
+button exits the application. Icon and tray behavior need a Windows UI test.
