@@ -18,7 +18,7 @@ public sealed class NoiseSuppressor : IDisposable
     private readonly BufferedWaveProvider _captureBuffer, _outputBuffer;
     private readonly ISampleProvider _samples;
     private readonly AudioPipeline _pipeline;
-    private readonly OutputMonitor _monitor;
+    private readonly StablePlaybackProvider _monitor;
     private readonly AutoResetEvent _available = new(false);
     private readonly Thread _worker;
     private ProcessingSettings _settings;
@@ -27,15 +27,21 @@ public sealed class NoiseSuppressor : IDisposable
     public event Action<Exception>? Failed;
     public string EngineName => _pipeline.EngineName;
     public double AlgorithmicDelayMs => _pipeline.AlgorithmicDelayMs;
+    public int PlaybackBufferTargetMs { get; }
+    public string InputFormatDescription => $"{_capture.WaveFormat.SampleRate / 1000.0:0.#} kHz / {_capture.WaveFormat.Channels} channels";
 
     public NoiseSuppressor(string inputId, string outputId, ProcessingSettings settings)
     {
-        _settings = settings.Clone();
-        IDenoiseEngine engine = settings.Engine == DenoiserKind.DeepFilterNet3
+        _settings = settings.SanitizedClone();
+        PlaybackBufferTargetMs = _settings.BufferMode switch { AudioBufferMode.Stable => 100, AudioBufferMode.LowLatency => 30, _ => 60 };
+        IDenoiseEngine engine = _settings.Engine == DenoiserKind.DeepFilterNet3
             ? new DeepFilterNetEngine() : new RNNoiseEngine();
         _pipeline = new AudioPipeline(engine);
         try
         {
+            // Initialize model/DSP buffers and optional VAD before starting capture.
+            var silent = new float[_pipeline.FrameSize]; var discard = new float[_pipeline.FrameSize];
+            for (int i = 0; i < 10; i++) _pipeline.Process(silent, discard, _settings);
             _inputDevice = _devices.GetDevice(inputId);
             _outputDevice = _devices.GetDevice(outputId);
             _capture = new WasapiCapture(_inputDevice, true, 10);
@@ -51,11 +57,13 @@ public sealed class NoiseSuppressor : IDisposable
                     () => _captureBuffer.BufferedBytes / _captureBuffer.WaveFormat.BlockAlign, AudioPipeline.SampleRate);
             _outputBuffer = new BufferedWaveProvider(new WaveFormat(AudioPipeline.SampleRate, 16, 1))
             {
-                BufferDuration = TimeSpan.FromMilliseconds(150),
+                BufferDuration = TimeSpan.FromMilliseconds(400),
+                ReadFully = false,
                 DiscardOnBufferOverflow = false
             };
-            _monitor = new OutputMonitor(_outputBuffer);
-            _playback = new WasapiOut(_outputDevice, AudioClientShareMode.Shared, true, 30);
+            _monitor = new StablePlaybackProvider(_outputBuffer, PlaybackBufferTargetMs);
+            _playback = new WasapiOut(_outputDevice, AudioClientShareMode.Shared, true,
+                _settings.BufferMode switch { AudioBufferMode.Stable => 60, AudioBufferMode.LowLatency => 20, _ => 40 });
             _playback.Init(_monitor);
             _capture.DataAvailable += OnData;
             _capture.RecordingStopped += (_, e) => { if (e.Exception != null) ReportFailure(e.Exception); };
@@ -71,7 +79,7 @@ public sealed class NoiseSuppressor : IDisposable
         }
     }
 
-    public void UpdateSettings(ProcessingSettings settings) => Volatile.Write(ref _settings, settings.Clone());
+    public void UpdateSettings(ProcessingSettings settings) => Volatile.Write(ref _settings, settings.SanitizedClone());
     public void Start()
     {
         if (Interlocked.CompareExchange(ref _running, 1, 0) != 0) return;
@@ -115,12 +123,13 @@ public sealed class NoiseSuppressor : IDisposable
         double maximumFrameMs = 0;
         try
         {
+            using var priority = new AudioThreadPriority();
             while (Volatile.Read(ref _running) != 0)
             {
                 _available.WaitOne(100);
                 while (Volatile.Read(ref _running) != 0)
                 {
-                    if (_captureBuffer.BufferedDuration.TotalMilliseconds > 100 || _outputBuffer.BufferedDuration.TotalMilliseconds > 100)
+                    if (_captureBuffer.BufferedDuration.TotalMilliseconds > 150 || _outputBuffer.BufferedDuration.TotalMilliseconds > PlaybackBufferTargetMs + 150)
                         throw new InvalidOperationException("المعالجة أو جهاز الصوت مش بيلحق الوقت الحقيقي. جرّب RNNoise أو اقفل البرامج الثقيلة.");
                     int read = _samples.Read(input, pending, size - pending);
                     if (read == 0) break;
@@ -139,7 +148,7 @@ public sealed class NoiseSuppressor : IDisposable
                         bytes[i * 2] = (byte)value; bytes[i * 2 + 1] = (byte)(value >> 8);
                     }
                     _outputBuffer.AddSamples(bytes, 0, bytes.Length);
-                    if (_outputBuffer.BufferedDuration.TotalMilliseconds >= 40 && Interlocked.CompareExchange(ref _playbackStarted, 1, 0) == 0)
+                    if (_outputBuffer.BufferedDuration.TotalMilliseconds >= PlaybackBufferTargetMs && Interlocked.CompareExchange(ref _playbackStarted, 1, 0) == 0)
                         _playback.Play();
                     if (uiClock.ElapsedMilliseconds >= 100)
                     {
@@ -161,17 +170,6 @@ public sealed class NoiseSuppressor : IDisposable
         {
             _capture.Dispose(); _playback.Dispose(); _pipeline.Dispose();
             _inputDevice.Dispose(); _outputDevice.Dispose(); _devices.Dispose(); _available.Dispose();
-        }
-    }
-    private sealed class OutputMonitor(BufferedWaveProvider source) : IWaveProvider
-    {
-        private int _underruns;
-        public int Underruns => Volatile.Read(ref _underruns);
-        public WaveFormat WaveFormat => source.WaveFormat;
-        public int Read(byte[] buffer, int offset, int count)
-        {
-            if (source.BufferedBytes < count) Interlocked.Increment(ref _underruns);
-            return source.Read(buffer, offset, count);
         }
     }
 }

@@ -1,5 +1,6 @@
 {
-  "native/micdenoiser_df.dll": "6bac1a827b06ff8c47f2fc51343176c385d239555fd7f3be4a81d5e8565515b3",
+  "native/micdenoiser_df.dll": "021f7f02f766730ef2b653ed439b74fdf58a0d51c9b6cf9387e639206f349b51",
   "native/rnnoise.dll": "06770aeb8855ef942b5dcdb436f84dfdd5867b716ba4b4c8a2c66ade03197f31",
-  "models/DeepFilterNet3_onnx.tar.gz": "c94d91f70911001c946e0fabb4aa9adc37045f45a03b56008cb0c8244cb63616"
+  "models/DeepFilterNet3_onnx.tar.gz": "c94d91f70911001c946e0fabb4aa9adc37045f45a03b56008cb0c8244cb63616",
+  "native/vcruntime140.dll": "d5e4d9a3e835fa679450145d6a7d94e36573a509317111904d9b3712c30d9066"
 }

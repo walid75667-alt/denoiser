@@ -6,6 +6,9 @@ use ndarray::{ArrayView2, ArrayViewMut2};
 
 thread_local! { static LAST_ERROR: RefCell<String> = const { RefCell::new(String::new()) }; }
 
+#[no_mangle]
+pub extern "C" fn md_df_abi_version() -> u32 { 2 }
+
 fn guarded<T>(fallback: T, f: impl FnOnce() -> Result<T, String>) -> T {
     match catch_unwind(AssertUnwindSafe(f)) {
         Ok(Ok(value)) => value,
@@ -26,9 +29,22 @@ pub unsafe extern "C" fn md_df_create(path: *const c_char, attenuation: f32) -> 
         if path.is_null() { return Err("Missing model path".into()); }
         let path = CStr::from_ptr(path).to_str().map_err(|e| e.to_string())?;
         let params = DfParams::new(PathBuf::from(path)).map_err(|e| format!("{e:#}"))?;
-        let runtime = RuntimeParams::default_with_ch(1).with_atten_lim(attenuation);
+        let runtime = RuntimeParams::default_with_ch(1)
+            .with_thresholds(-15.0, 35.0, 35.0)
+            .with_atten_lim(attenuation);
         let state = DfTract::new(params, &runtime).map_err(|e| format!("{e:#}"))?;
         Ok(Box::into_raw(Box::new(state)))
+    })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn md_df_set_attenuation(state: *mut DfTract, limit: f32) -> i32 {
+    guarded(-1, || {
+        if state.is_null() || !limit.is_finite() || !(0.0..=60.0).contains(&limit) {
+            return Err("Invalid attenuation limit (expected 0..60 dB)".into());
+        }
+        (*state).set_atten_lim(limit);
+        Ok(0)
     })
 }
 

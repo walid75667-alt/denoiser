@@ -1,5 +1,20 @@
 namespace MicDenoiser;
 
+public sealed class SmoothedValue
+{
+    private readonly double _decay;
+    private float _value, _target;
+    private bool _initialized;
+    public SmoothedValue(double milliseconds = 20) => _decay = Math.Exp(-1.0 / (milliseconds * 48));
+    public void SetTarget(float value)
+    {
+        _target = value;
+        if (!_initialized) { _value = value; _initialized = true; }
+    }
+    public float Next(int samples = 1) => _value = _target + (_value - _target) *
+        (samples == 1 ? (float)_decay : (float)Math.Pow(_decay, samples));
+}
+
 /// <summary>RBJ-cookbook biquad filter (samples are floats in 16-bit range).</summary>
 public sealed class Biquad
 {

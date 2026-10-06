@@ -1,9 +1,13 @@
 namespace MicDenoiser;
 
+public enum AudioBufferMode { Balanced, Stable, LowLatency }
+
 /// <summary>All live-adjustable parameters of the processing chain.</summary>
 public sealed class ProcessingSettings
 {
     public DenoiserKind Engine { get; set; } = DenoiserKind.DeepFilterNet3;
+    public AudioBufferMode BufferMode { get; set; } = AudioBufferMode.Balanced;
+    public float NoiseReductionDb { get; set; } = 35f;
     public bool GateEnabled { get; set; }
     public bool HighPassEnabled { get; set; }
     public bool Bypass { get; set; }
@@ -41,12 +45,15 @@ public sealed class ProcessingSettings
         switch (key)
         {
             case "natural":
-                s.Strength = 0.85f; s.GateThreshold = 0.35f; s.GateDepthDb = 12f;
+                s.Strength = engine == DenoiserKind.DeepFilterNet3 ? 1f : 0.85f;
+                s.NoiseReductionDb = 25f; s.GateEnabled = false;
+                s.GateThreshold = 0.35f; s.GateDepthDb = 12f;
                 s.PresenceDb = 0f; s.MudCutDb = 0f;
                 s.CompressorOn = false; s.OutputGainDb = 0f;
                 break;
 
             case "max":
+                s.NoiseReductionDb = 50f;
                 s.Strength = 1f; s.GateDepthDb = 24f;
                 break;
 
@@ -66,6 +73,8 @@ public sealed class ProcessingSettings
     public void CopyFrom(ProcessingSettings o)
     {
         Engine = o.Engine;
+        BufferMode = o.BufferMode;
+        NoiseReductionDb = o.NoiseReductionDb;
         GateEnabled = o.GateEnabled;
         HighPassEnabled = o.HighPassEnabled;
         Bypass = o.Bypass;
@@ -84,4 +93,25 @@ public sealed class ProcessingSettings
     }
 
     public ProcessingSettings Clone() => (ProcessingSettings)MemberwiseClone();
+
+    public ProcessingSettings SanitizedClone()
+    {
+        var s = Clone();
+        static float Bound(float v, float lo, float hi, float fallback) => float.IsFinite(v) ? Math.Clamp(v, lo, hi) : fallback;
+        if (!Enum.IsDefined(s.Engine)) s.Engine = DenoiserKind.DeepFilterNet3;
+        if (!Enum.IsDefined(s.BufferMode)) s.BufferMode = AudioBufferMode.Balanced;
+        s.NoiseReductionDb = Bound(s.NoiseReductionDb, 10, 60, 35);
+        s.Strength = Bound(s.Strength, 0, 1, 1);
+        s.InputGainDb = Bound(s.InputGainDb, -12, 18, 0);
+        s.OutputGainDb = Bound(s.OutputGainDb, -12, 12, 0);
+        s.GateThreshold = Bound(s.GateThreshold, .15f, .85f, .5f);
+        s.GateDepthDb = Bound(s.GateDepthDb, 0, 60, 30);
+        s.GateHoldMs = Bound(s.GateHoldMs, 0, 1000, 180);
+        s.GateReleaseMs = Bound(s.GateReleaseMs, 10, 1000, 150);
+        s.PresenceDb = Bound(s.PresenceDb, 0, 6, 0);
+        s.MudCutDb = Bound(s.MudCutDb, 0, 6, 0);
+        s.CompThresholdDb = Bound(s.CompThresholdDb, -40, -6, -18);
+        s.CompRatio = Bound(s.CompRatio, 1, 8, 3);
+        return s;
+    }
 }

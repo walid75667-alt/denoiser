@@ -17,5 +17,6 @@ if ($LASTEXITCODE -ne 0) { throw 'Processing checks failed.' }
 if ($Publish) {
     & dotnet publish $project -c Release -r win-x64 --self-contained true -o (Join-Path $root 'artifacts/windows') -p:PublishSingleFile=false
     if ($LASTEXITCODE -ne 0) { throw 'Publishing failed.' }
+    Copy-Item (Join-Path $root 'installer/START-HERE.txt') (Join-Path $root 'artifacts/windows/START-HERE.txt')
     Write-Host 'Windows application: artifacts/windows/MicDenoiser.exe'
 }

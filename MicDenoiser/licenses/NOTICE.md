@@ -11,6 +11,14 @@
   or a binary build recipe. The applicable license texts are included here;
   this statement does not independently establish its build provenance.
 - NAudio 2.2.1 is distributed under the MIT license. See NAudio-MIT.txt.
+- The self-contained distribution includes .NET 8.0.31. The app-local
+  `native/vcruntime140.dll` is a byte-for-byte copy of `vcruntime140_cor3.dll`
+  from Microsoft's `Microsoft.WindowsDesktop.App.Runtime.win-x64` 8.0.31
+  NuGet package, provided under the filename required by the uploaded RNNoise
+  DLL. Its five imported symbols were checked against this runtime's exports.
+  This compatibility copy still needs the Windows RNNoise execution check;
+  it does not install or replace a system C++ runtime. See
+  DotNET-WindowsDesktop-MIT.txt and DotNET-THIRD-PARTY-NOTICES.txt.
 - The DeepFilterNet native dependency graph is locked in native-src/Cargo.lock.
   See the corresponding crates for their individual copyright and license notices.
 

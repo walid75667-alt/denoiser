@@ -13,6 +13,7 @@ public interface IDenoiseEngine : IDisposable
     string Name { get; }
     int FrameSize { get; }
     int DelaySamples { get; }
+    void Configure(ProcessingSettings settings) { }
     // Samples use the existing pipeline's PCM16 float range. Null means no VAD.
     float? Process(float[] input, float[] output);
 }
@@ -37,6 +38,7 @@ public sealed class DeepFilterNetEngine : IDenoiseEngine
     private readonly DfHandle _state;
     private readonly float[] _input;
     private readonly float[] _output;
+    private float _attenuation = 35f;
     public string Name => "DeepFilterNet3";
     public int FrameSize { get; }
     public int DelaySamples { get; }
@@ -51,7 +53,15 @@ public sealed class DeepFilterNetEngine : IDenoiseEngine
             if (!Convert.ToHexString(SHA256.HashData(stream)).Equals(ModelSha256, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidDataException("ملف نموذج DeepFilterNet3 تالف أو مختلف عن النسخة المعتمدة.");
         }
-        try { _state = Native.Create(modelPath, 100f); }
+        try
+        {
+            if (Native.AbiVersion() != 2) throw new InvalidOperationException("حدّث مجلد البرنامج كاملًا؛ إصدار مكتبة DeepFilterNet لا يطابق التطبيق.");
+            _state = Native.Create(modelPath, _attenuation);
+        }
+        catch (EntryPointNotFoundException ex)
+        {
+            throw new InvalidOperationException("مكتبة DeepFilterNet قديمة. فك ضغط النسخة الجديدة في مجلد جديد وشغّل البرنامج منه.", ex);
+        }
         catch (DllNotFoundException ex)
         {
             throw new InvalidOperationException("مكتبة DeepFilterNet غير موجودة. شغّل scripts/build-native.ps1 وأعد بناء التطبيق، أو اختر RNNoise.", ex);
@@ -70,6 +80,16 @@ public sealed class DeepFilterNetEngine : IDenoiseEngine
         }
         _input = new float[FrameSize];
         _output = new float[FrameSize];
+    }
+
+    public void Configure(ProcessingSettings settings)
+    {
+        float limit = Math.Clamp(settings.NoiseReductionDb, 10f, 60f);
+        if (limit == _attenuation) return;
+        // Move by <= 1 dB per 10 ms frame rather than changing the spectral floor abruptly.
+        float next = _attenuation + Math.Clamp(limit - _attenuation, -1f, 1f);
+        if (Native.SetAttenuation(_state, next) != 0) throw Error();
+        _attenuation = next;
     }
 
     public float? Process(float[] input, float[] output)
@@ -103,6 +123,10 @@ public sealed class DeepFilterNetEngine : IDenoiseEngine
     private static class Native
     {
         private const string Dll = "micdenoiser_df";
+        [DllImport(Dll, EntryPoint = "md_df_abi_version", CallingConvention = CallingConvention.Cdecl)]
+        public static extern uint AbiVersion();
+        [DllImport(Dll, EntryPoint = "md_df_set_attenuation", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int SetAttenuation(DfHandle state, float attenuation);
         [DllImport(Dll, EntryPoint = "md_df_create", CallingConvention = CallingConvention.Cdecl)]
         public static extern DfHandle Create([MarshalAs(UnmanagedType.LPUTF8Str)] string path, float attenuation);
         [DllImport(Dll, EntryPoint = "md_df_destroy", CallingConvention = CallingConvention.Cdecl)]

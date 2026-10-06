@@ -14,6 +14,115 @@ int passed = 0;
 void Check(string name, Action test) { test(); Console.WriteLine("PASS " + name); passed++; }
 void Require(bool value, string message) { if (!value) throw new Exception(message); }
 
+Check("interface catalogs and XAML resource references are complete", () =>
+{
+    string assets = Path.Combine(AppContext.BaseDirectory, "UiValidation");
+    var ar = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(Path.Combine(assets, "ar.json")))!;
+    var en = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(Path.Combine(assets, "en.json")))!;
+    Require(ar.Keys.Order().SequenceEqual(en.Keys.Order()), "A language catalog is missing keys.");
+    foreach (string key in ar.Keys)
+    {
+        Require(!string.IsNullOrWhiteSpace(ar[key]) && !string.IsNullOrWhiteSpace(en[key]), "Empty translation: " + key);
+        Require(System.Text.CompositeFormat.Parse(ar[key]).MinimumArgumentCount == System.Text.CompositeFormat.Parse(en[key]).MinimumArgumentCount,
+            "Translation format arguments differ: " + key);
+    }
+    var xkey = System.Xml.Linq.XName.Get("Key", "http://schemas.microsoft.com/winfx/2006/xaml");
+    var application = System.Xml.Linq.XDocument.Load(Path.Combine(assets, "App.xaml"));
+    var staticKeys = application.Descendants().SelectMany(e => e.Attributes(xkey)).Select(a => a.Value).ToHashSet();
+    foreach (string file in new[] { "MainWindow.xaml", "App.xaml" })
+    {
+        foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
+                     File.ReadAllText(Path.Combine(assets, file)), @"\{(StaticResource|DynamicResource) ([^}]+)\}"))
+            Require(match.Groups[1].Value == "StaticResource" ? staticKeys.Contains(match.Groups[2].Value) : ar.ContainsKey(match.Groups[2].Value),
+                "Unresolved XAML resource: " + match.Value);
+    }
+});
+
+Check("output starvation and recovery avoid abrupt zero-fill clicks", () =>
+{
+    byte[] Tone(short value, int samples)
+    {
+        var bytes = new byte[samples * 2];
+        for (int i = 0; i < samples; i++) System.Buffers.Binary.BinaryPrimitives.WriteInt16LittleEndian(bytes.AsSpan(i * 2, 2), value);
+        return bytes;
+    }
+    var old = new BufferedWaveProvider(new WaveFormat(48000, 16, 1));
+    var block = Tone(12000, 480); old.AddSamples(block, 0, block.Length);
+    var buffer = new byte[960]; old.Read(buffer, 0, buffer.Length); short before = BitConverter.ToInt16(buffer, 958);
+    old.Read(buffer, 0, buffer.Length);
+    Require(Math.Abs(before - BitConverter.ToInt16(buffer, 0)) == 12000, "Original discontinuity was not reproduced.");
+
+    var source = new BufferedWaveProvider(new WaveFormat(48000, 16, 1));
+    var output = new StablePlaybackProvider(source, 10);
+    source.AddSamples(block, 0, block.Length); output.Read(buffer, 0, buffer.Length);
+    before = BitConverter.ToInt16(buffer, 958);
+    output.Read(buffer, 0, buffer.Length);
+    for (int i = 0; i < buffer.Length; i += 2)
+    {
+        short sample = BitConverter.ToInt16(buffer, i);
+        Require(Math.Abs(sample - before) <= 51, "Starvation caused a click-sized sample jump."); before = sample;
+    }
+    Require(before == 0 && output.Underruns == 1, "Gap did not decay to silence/count once.");
+    output.Read(buffer, 0, buffer.Length);
+    Require(output.Underruns == 1, "A single gap was counted repeatedly.");
+    block = Tone(-12000, 480); source.AddSamples(block, 0, block.Length);
+    output.Read(buffer, 0, buffer.Length);
+    for (int i = 0; i < buffer.Length; i += 2)
+    {
+        short sample = BitConverter.ToInt16(buffer, i);
+        Require(Math.Abs(sample - before) <= 51, "Recovery caused an abrupt sample jump."); before = sample;
+    }
+    Require(before == -12000, "Recovery did not return to full level.");
+});
+
+Check("playback rebuffering preserves queued input and respects offsets", () =>
+{
+    var source = new BufferedWaveProvider(new WaveFormat(48000, 16, 1));
+    var output = new StablePlaybackProvider(source, 60);
+    var data = new byte[480 * 2]; source.AddSamples(data, 0, data.Length);
+    var destination = Enumerable.Repeat((byte)0xa5, 1000).ToArray();
+    output.Read(destination, 7, 960);
+    Require(source.BufferedBytes == 960 && output.Underruns == 0, "Startup consumed undersized queued input or counted an underrun.");
+    Require(destination.Take(7).All(v => v == 0xa5) && destination.Skip(967).All(v => v == 0xa5), "Playback overwrote bytes outside requested range.");
+    for (int i = 0; i < 5; i++) source.AddSamples(data, 0, data.Length);
+    output.Read(destination, 7, 960);
+    Require(source.BufferedBytes == 4800, "Buffered input did not resume at target occupancy.");
+});
+
+Check("gain and compressor changes are continuous across frames", () =>
+{
+    using var pipeline = new AudioPipeline(new DelayedIdentityEngine(0));
+    var input = Enumerable.Repeat(1000f, 480).ToArray(); var output = new float[480];
+    var settings = new ProcessingSettings();
+    for (int frame = 0; frame < 20; frame++) pipeline.Process(input, output, settings);
+    float previous = output[^1], largestJump = 0;
+    settings.InputGainDb = settings.OutputGainDb = 12;
+    for (int frame = 0; frame < 20; frame++)
+    {
+        pipeline.Process(input, output, settings);
+        foreach (float sample in output) { largestJump = Math.Max(largestJump, Math.Abs(sample - previous)); previous = sample; }
+    }
+    Require(largestJump < 100 && output[^1] > 14000, $"Gain transition jumped {largestJump:0.0} samples or did not reach target.");
+    settings.CompressorOn = true; settings.CompThresholdDb = -40;
+    for (int frame = 0; frame < 30; frame++) pipeline.Process(input, output, settings);
+    previous = output[^1]; settings.CompressorOn = false;
+    largestJump = 0;
+    for (int frame = 0; frame < 20; frame++)
+    {
+        pipeline.Process(input, output, settings);
+        foreach (float sample in output) { largestJump = Math.Max(largestJump, Math.Abs(sample - previous)); previous = sample; }
+    }
+    Require(largestJump < 100, "Disabling the compressor jumped the output level.");
+});
+
+Check("persisted settings cannot inject nonfinite/extreme audio parameters", () =>
+{
+    var s = new ProcessingSettings { Engine = (DenoiserKind)99, BufferMode = (AudioBufferMode)99,
+        Strength = float.NaN, NoiseReductionDb = float.PositiveInfinity, InputGainDb = 1000, OutputGainDb = float.NaN }.SanitizedClone();
+    Require(s.Engine == DenoiserKind.DeepFilterNet3 && s.BufferMode == AudioBufferMode.Balanced &&
+        s.Strength == 1 && s.NoiseReductionDb == 35 && s.InputGainDb == 18 && s.OutputGainDb == 0, "Invalid settings were not bounded.");
+});
+
 Check("live resampling survives fragmented capture and empty gaps", () =>
 {
     foreach (int rate in new[] { 16000, 44100, 96000 })
@@ -151,6 +260,22 @@ Check("model integrity errors are actionable", () =>
         catch (InvalidDataException) { }
     }
     finally { File.Delete(path); }
+});
+
+Check("DeepFilterNet attenuation control retains more detail at lower limits", () =>
+{
+    using var mild = new DeepFilterNetEngine(); using var strong = new DeepFilterNetEngine();
+    var a = new ProcessingSettings { NoiseReductionDb = 10 }; var b = new ProcessingSettings { NoiseReductionDb = 60 };
+    var input = new float[480]; var x = new float[480]; var y = new float[480]; var random = new Random(75667);
+    double mildEnergy = 0, strongEnergy = 0;
+    for (int frame = 0; frame < 200; frame++)
+    {
+        for (int i = 0; i < input.Length; i++) input[i] = (float)(random.NextDouble() * 2 - 1) * 2000;
+        mild.Configure(a); strong.Configure(b); mild.Process(input, x); strong.Process(input, y);
+        if (frame < 100) continue;
+        for (int i = 0; i < x.Length; i++) { mildEnergy += x[i] * x[i]; strongEnergy += y[i] * y[i]; }
+    }
+    Require(mildEnergy > strongEnergy * 20 && mildEnergy > 0, "Native attenuation control did not change suppression strength.");
 });
 if (OperatingSystem.IsWindows())
 {

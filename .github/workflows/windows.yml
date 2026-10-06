@@ -20,3 +20,12 @@ jobs:
         with:
           name: MicDenoiser-Windows-x64
           path: artifacts/windows
+      - name: Install NSIS and package Windows setup
+        shell: pwsh
+        run: |
+          choco install nsis --no-progress -y
+          ./scripts/build-installer.ps1 -Makensis "${env:ProgramFiles(x86)}/NSIS/makensis.exe"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MicDenoiser-Setup-x64
+          path: artifacts/MicDenoiser-Setup-x64.exe

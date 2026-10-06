@@ -1,250 +1,256 @@
 <Window x:Class="MicDenoiser.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Mic Denoiser" Width="540" Height="840" MinHeight="620" MinWidth="460"
-        FlowDirection="RightToLeft" FontFamily="Segoe UI"
-        Background="{StaticResource Surface}"
-        WindowStartupLocation="CenterScreen">
-
+        Title="MicDenoiser 2.0" Width="1080" Height="820" MinWidth="900" MinHeight="680"
+        FlowDirection="RightToLeft" FontFamily="Segoe UI" FontSize="13"
+        Background="{StaticResource Surface}" WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True" SnapsToDevicePixels="True">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <!-- ═════════ Header ═════════ -->
-        <Border Grid.Row="0" Background="{StaticResource Ink}" Padding="20,16">
+        <Border Background="{StaticResource Ink}" Padding="26,20">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock Text="Mic Denoiser" Foreground="White" FontSize="22" FontWeight="Bold"
-                               FlowDirection="LeftToRight" HorizontalAlignment="Right"/>
-                    <TextBlock Text="عزل ضوضاء مع الحفاظ على طبيعية الكلام" Foreground="#9AA3B2" FontSize="12" Margin="0,2,0,0"/>
+                    <TextBlock x:Name="BrandText" Text="MicDenoiser" Foreground="White" FontSize="26" FontWeight="SemiBold" FlowDirection="LeftToRight" HorizontalAlignment="Right"/>
+                    <TextBlock Text="{DynamicResource Ui000}" Foreground="#B3C7D5" Margin="0,4,0,0"/>
                 </StackPanel>
-                <Border Grid.Column="1" Background="#232733" CornerRadius="14" Padding="12,6"
-                        VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ComboBox x:Name="LanguageCombo" Width="125" Margin="0,0,12,0" FlowDirection="LeftToRight" SelectionChanged="Language_Changed" ToolTip="Language / اللغة">
+                        <ComboBoxItem Content="العربية" Tag="ar"/>
+                        <ComboBoxItem Content="English" Tag="en"/>
+                    </ComboBox>
+                <Border Background="#263D4D" CornerRadius="18" Padding="16,9" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
-                        <Ellipse x:Name="StatusDot" Width="9" Height="9" Fill="#6B7280"
-                                 VerticalAlignment="Center" Margin="0,0,0,0"/>
-                        <TextBlock x:Name="StatusPill" Text="متوقف" Foreground="White" FontSize="12"
-                                   Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#94A3B8" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="StatusPill" Text="{DynamicResource Ui001}" Foreground="White" Margin="9,0,0,0"/>
                     </StackPanel>
                 </Border>
+                </StackPanel>
             </Grid>
         </Border>
-
-        <!-- ═════════ Body ═════════ -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="20,18,20,8">
-
-                <!-- Devices -->
-                <Border Style="{StaticResource Card}">
+        <Grid Grid.Row="1" Margin="22,20,22,8">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="292"/><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource CardTitle}" Text="الأجهزة"/>
-                        <TextBlock Style="{StaticResource Label}" Text="المايك الحقيقي"/>
-                        <ComboBox x:Name="InputCombo" Margin="0,0,0,12" Padding="6"/>
-                        <TextBlock Style="{StaticResource Label}" Text="المخرج (اختر CABLE Input)"/>
-                        <ComboBox x:Name="OutputCombo" Padding="6"/>
-                        <TextBlock Style="{StaticResource Label}" Text="محرّك العزل" Margin="0,12,0,4"/>
-                        <ComboBox x:Name="EngineCombo" SelectionChanged="Engine_Changed" Padding="6">
-                            <ComboBoxItem Content="DeepFilterNet3 — جودة عالية" Tag="DeepFilterNet3"/>
-                            <ComboBoxItem Content="RNNoise — خفيف" Tag="RNNoise"/>
-                        </ComboBox>
-                    </StackPanel>
-                </Border>
-
-                <!-- Meters -->
-                <Border Style="{StaticResource Card}">
-                    <StackPanel>
-                        <TextBlock Style="{StaticResource CardTitle}" Text="المستويات"/>
-
-                        <TextBlock Style="{StaticResource Label}" Text="الدخل (المايك)"/>
-                        <Border x:Name="InTrack" Height="12" CornerRadius="6" ClipToBounds="True"
-                                Background="{StaticResource Track}" Margin="0,0,0,12" FlowDirection="LeftToRight">
-                            <Grid>
-                                <Border>
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                            <GradientStop Color="#12B5A0" Offset="0"/>
-                                            <GradientStop Color="#12B5A0" Offset="0.65"/>
-                                            <GradientStop Color="#F5A524" Offset="0.85"/>
-                                            <GradientStop Color="#E5484D" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Border.Background>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{DynamicResource Ui002}" Style="{StaticResource CardTitle}" Margin="0" VerticalAlignment="Center"/>
+                                    <Button x:Name="RefreshDevicesButton" Grid.Column="1" Content="{DynamicResource Ui003}" Style="{StaticResource SecondaryButton}" Click="RefreshDevices_Click" ToolTip="{DynamicResource Ui004}"/>
+                                </Grid>
+                                <TextBlock Text="{DynamicResource Ui005}" Style="{StaticResource Label}"/>
+                                <ComboBox x:Name="InputCombo" Margin="0,0,0,16" ToolTip="{DynamicResource Ui006}"/>
+                                <TextBlock Text="{DynamicResource Ui007}" Style="{StaticResource Label}"/>
+                                <ComboBox x:Name="OutputCombo" Margin="0,0,0,10" ToolTip="{DynamicResource Ui008}" SelectionChanged="OutputDevice_Changed"/>
+                                <Border Background="{StaticResource AccentSoft}" CornerRadius="8" Padding="10">
+                                    <TextBlock x:Name="RoutingText" Text="{DynamicResource Ui009}" Foreground="{StaticResource Accent}" TextWrapping="Wrap" FontSize="12"/>
                                 </Border>
-                                <Border x:Name="InMask" Background="{StaticResource Track}"
-                                        HorizontalAlignment="Right" Width="9999"/>
-                            </Grid>
-                        </Border>
-
-                        <TextBlock Style="{StaticResource Label}" Text="الخرج (بعد العزل)"/>
-                        <Border x:Name="OutTrack" Height="12" CornerRadius="6" ClipToBounds="True"
-                                Background="{StaticResource Track}" Margin="0,0,0,12" FlowDirection="LeftToRight">
-                            <Grid>
-                                <Border>
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                            <GradientStop Color="#12B5A0" Offset="0"/>
-                                            <GradientStop Color="#12B5A0" Offset="0.65"/>
-                                            <GradientStop Color="#F5A524" Offset="0.85"/>
-                                            <GradientStop Color="#E5484D" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Border.Background>
-                                </Border>
-                                <Border x:Name="OutMask" Background="{StaticResource Track}"
-                                        HorizontalAlignment="Right" Width="9999"/>
-                            </Grid>
-                        </Border>
-
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal">
-                                <Ellipse x:Name="VoiceDot" Width="9" Height="9" Fill="#C5CBD6" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="VoiceText" Text="في الانتظار" Style="{StaticResource Label}"
-                                           Margin="8,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
-                            <TextBlock x:Name="GateText" Grid.Column="1" Style="{StaticResource Value}" Text=""/>
-                        </Grid>
-                        <TextBlock x:Name="PerformanceText" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource Ui010}" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Text="{DynamicResource Ui011}" Style="{StaticResource Label}"/>
+                                <ComboBox x:Name="EngineCombo" SelectionChanged="Engine_Changed" Margin="0,0,0,16">
+                                    <ComboBoxItem Content="{DynamicResource Ui012}" Tag="DeepFilterNet3"/>
+                                    <ComboBoxItem Content="{DynamicResource Ui013}" Tag="RNNoise"/>
+                                </ComboBox>
+                                <TextBlock Text="{DynamicResource Ui014}" Style="{StaticResource Label}"/>
+                                <ComboBox x:Name="BufferModeCombo" SelectionChanged="BufferMode_Changed">
+                                    <ComboBoxItem Content="{DynamicResource Ui015}"/>
+                                    <ComboBoxItem Content="{DynamicResource Ui016}"/>
+                                    <ComboBoxItem Content="{DynamicResource Ui017}"/>
+                                </ComboBox>
+                                <TextBlock x:Name="BufferHint" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,9,0,0"/>
+                                <TextBlock Text="{DynamicResource Ui018}" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,8,0,0" FontSize="11"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
-                </Border>
-
-                <!-- Presets -->
-                <Border Style="{StaticResource Card}">
+                </ScrollViewer>
+                <StackPanel Grid.Row="1" Margin="0,10,0,0">
+                    <ProgressBar x:Name="LoadingProgress" Height="3" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,9"/>
+                    <Button x:Name="ToggleButton" Style="{StaticResource PrimaryButton}" Height="48" Content="{DynamicResource Ui019}" Click="ToggleButton_Click"/>
+                    <TextBlock Text="{DynamicResource Ui020}" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,9,0,0" FontSize="11"/>
+                </StackPanel>
+            </Grid>
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <Border x:Name="HealthBanner" Background="{StaticResource AccentSoft}" CornerRadius="10" Padding="14,11" Margin="0,0,0,14">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource CardTitle}" Text="الإعداد المسبق"/>
-                        <WrapPanel x:Name="PresetPanel">
-                            <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="natural"
-                                         Content="طبيعي" Checked="Preset_Checked"/>
-                            <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="studio"
-                                         Content="استوديو" IsChecked="True" Checked="Preset_Checked"/>
-                            <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="podcast"
-                                         Content="بودكاست" Checked="Preset_Checked"/>
-                            <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="max"
-                                         Content="أقصى عزل" Checked="Preset_Checked"/>
-                        </WrapPanel>
-                        <TextBlock x:Name="PresetHint" Style="{StaticResource Label}" TextWrapping="Wrap"
-                                   Text="عزل من غير مؤثرات إضافية؛ نقطة البداية للمقارنة."/>
-                        <CheckBox x:Name="BypassCheck" Margin="0,10,0,0" Click="Param_Clicked"
-                                  Content="تجاوز المعالجة (للمقارنة بين الأصلي والمعالَج)"/>
+                        <TextBlock x:Name="HealthText" Text="{DynamicResource Ui021}" Foreground="{StaticResource Accent}" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="HealthDetail" Text="{DynamicResource Ui022}" TextWrapping="Wrap" Foreground="{StaticResource Muted}" Margin="0,4,0,0" FontSize="12"/>
                     </StackPanel>
                 </Border>
-
-                <!-- Main controls -->
-                <Border Style="{StaticResource Card}">
+                <Border Grid.Row="1" Style="{StaticResource Card}">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource CardTitle}" Text="التحكم"/>
-
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,0,12">
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{DynamicResource Ui023}" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="InDbText" Grid.Column="1" Text="— dBFS" Style="{StaticResource Value}"/>
+                                </Grid>
+                                <Border x:Name="InTrack" Height="12" CornerRadius="6" ClipToBounds="True" Background="{StaticResource Track}" FlowDirection="LeftToRight">
+                                    <Grid><Border Background="{StaticResource MeterGradient}"/><Border x:Name="InMask" Background="{StaticResource Track}" HorizontalAlignment="Right" Width="9999"/></Grid>
+                                </Border>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="12,0,0,12">
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{DynamicResource Ui024}" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="OutDbText" Grid.Column="1" Text="— dBFS" Style="{StaticResource Value}"/>
+                                </Grid>
+                                <Border x:Name="OutTrack" Height="12" CornerRadius="6" ClipToBounds="True" Background="{StaticResource Track}" FlowDirection="LeftToRight">
+                                    <Grid><Border Background="{StaticResource MeterGradient}"/><Border x:Name="OutMask" Background="{StaticResource Track}" HorizontalAlignment="Right" Width="9999"/></Grid>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource Label}" Text="قوة عزل الضوضاء"/>
-                            <TextBlock Grid.Column="1" Style="{StaticResource Value}"
-                                       Text="{Binding Value, ElementName=StrengthSlider, StringFormat={}{0:0}%}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse x:Name="VoiceDot" Width="8" Height="8" Fill="#94A3B8" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="VoiceText" Text="{DynamicResource Ui025}" Style="{StaticResource Label}" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock x:Name="GateText" Grid.Column="1" Style="{StaticResource Value}"/>
                         </Grid>
-                        <Slider x:Name="StrengthSlider" Minimum="0" Maximum="100" ValueChanged="Param_Changed"/>
-
-                        <CheckBox x:Name="GateEnabledCheck" Click="Param_Clicked" Margin="0,0,0,8"
-                                  Content="تفعيل بوابة الكلام (اختيارية؛ قد تؤثر على الهمس)"/>
-
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource Label}" Text="صرامة بوابة الصوت (أعلى = يقطع الهمس والضوضاء أكثر)"/>
-                            <TextBlock Grid.Column="1" Style="{StaticResource Value}"
-                                       Text="{Binding Value, ElementName=GateSlider, StringFormat={}{0:0}%}"/>
-                        </Grid>
-                        <Slider x:Name="GateSlider" Minimum="0" Maximum="100" ValueChanged="Param_Changed"/>
-
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource Label}" Text="عمق البوابة (كتم الضوضاء بين الكلمات)"/>
-                            <TextBlock Grid.Column="1" Style="{StaticResource Value}"
-                                       Text="{Binding Value, ElementName=GateDepthSlider, StringFormat={}{0:0} dB}"/>
-                        </Grid>
-                        <Slider x:Name="GateDepthSlider" Minimum="0" Maximum="60" ValueChanged="Param_Changed"/>
-
                     </StackPanel>
                 </Border>
-
-                <!-- Advanced -->
-                <Border Style="{StaticResource Card}">
-                    <Expander Header="إعدادات متقدمة" FontWeight="SemiBold">
-                        <StackPanel Margin="0,12,0,0" TextElement.FontWeight="Normal">
-
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource Label}" Text="تضخيم الدخل"/>
-                                <TextBlock Grid.Column="1" Style="{StaticResource Value}"
-                                           Text="{Binding Value, ElementName=InputGainSlider, StringFormat={}{0:+0;-0;0} dB}"/>
-                            </Grid>
-                            <Slider x:Name="InputGainSlider" Minimum="-12" Maximum="18" ValueChanged="Param_Changed"/>
-                            <CheckBox x:Name="HighPassCheck" Click="Param_Clicked" Margin="0,0,0,10"
-                                      Content="فلتر اهتزازات وترددات منخفضة (70Hz)"/>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource Label}" Text="وضوح الصوت (Presence 3.5 kHz)"/>
-                                <TextBlock Grid.Column="1" Style="{StaticResource Value}"
-                                           Text="{Binding Value, ElementName=PresenceSlider, StringFormat={}{0:0.0} dB}"/>
-                            </Grid>
-                            <Slider x:Name="PresenceSlider" Minimum="0" Maximum="6" ValueChanged="Param_Changed"/>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource Label}" Text="تقليل الطنين (Mud 280 Hz)"/>
-                                <TextBlock Grid.Column="1" Style="{StaticResource Value}"
-                                           Text="{Binding Value, ElementName=MudSlider, StringFormat={}{0:0.0} dB}"/>
-                            </Grid>
-                            <Slider x:Name="MudSlider" Minimum="0" Maximum="6" ValueChanged="Param_Changed"/>
-
-                            <CheckBox x:Name="CompCheck" Margin="0,0,0,10" Click="Param_Clicked"
-                                      Content="ضاغط ديناميكي (يوازن بين الهمس والصراخ)"/>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource Label}" Text="عتبة الضاغط"/>
-                                <TextBlock Grid.Column="1" Style="{StaticResource Value}"
-                                           Text="{Binding Value, ElementName=CompThresholdSlider, StringFormat={}{0:0} dB}"/>
-                            </Grid>
-                            <Slider x:Name="CompThresholdSlider" Minimum="-40" Maximum="-6" ValueChanged="Param_Changed"/>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource Label}" Text="نسبة الضغط"/>
-                                <TextBlock Grid.Column="1" Style="{StaticResource Value}"
-                                           Text="{Binding Value, ElementName=CompRatioSlider, StringFormat={}{0:0.0}:1}"/>
-                            </Grid>
-                            <Slider x:Name="CompRatioSlider" Minimum="1.5" Maximum="8" ValueChanged="Param_Changed"/>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource Label}" Text="مستوى الخرج"/>
-                                <TextBlock Grid.Column="1" Style="{StaticResource Value}"
-                                           Text="{Binding Value, ElementName=OutputGainSlider, StringFormat={}{0:+0;-0;0} dB}"/>
-                            </Grid>
-                            <Slider x:Name="OutputGainSlider" Minimum="-12" Maximum="12" ValueChanged="Param_Changed"/>
-                        </StackPanel>
-                    </Expander>
-                </Border>
-
-            </StackPanel>
-        </ScrollViewer>
-
-        <!-- ═════════ Footer ═════════ -->
-        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0"
-                Padding="20,14">
-            <StackPanel>
-                <Button x:Name="ToggleButton" Style="{StaticResource PrimaryButton}" Height="46"
-                        Content="ابدأ العزل" Click="ToggleButton_Click"/>
-                <TextBlock x:Name="StatusText" Style="{StaticResource Label}" Margin="0,10,0,0"
-                           TextWrapping="Wrap" Text="جاهز."/>
-            </StackPanel>
+                <TabControl Grid.Row="2">
+                    <TabItem Header="{DynamicResource Ui026}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="0,14,0,0">
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource Ui027}" Style="{StaticResource CardTitle}"/>
+                                        <WrapPanel x:Name="PresetPanel">
+                                            <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="natural" Content="{DynamicResource Ui028}" Checked="Preset_Checked"/>
+                                            <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="studio" Content="{DynamicResource Ui029}" IsChecked="True" Checked="Preset_Checked"/>
+                                            <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="podcast" Content="{DynamicResource Ui030}" Checked="Preset_Checked"/>
+                                            <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="max" Content="{DynamicResource Ui031}" Checked="Preset_Checked"/>
+                                        </WrapPanel>
+                                        <TextBlock x:Name="PresetHint" Style="{StaticResource Label}" TextWrapping="Wrap"/>
+                                        <WrapPanel Margin="0,12,0,0">
+                                            <Button Content="{DynamicResource Ui032}" Style="{StaticResource SecondaryButton}" Click="SofterSound_Click" Margin="0,0,8,8" ToolTip="{DynamicResource Ui033}"/>
+                                            <Button Content="{DynamicResource Ui034}" Style="{StaticResource SecondaryButton}" Click="ResetAudio_Click" Margin="0,0,0,8"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{DynamicResource Ui035}" Style="{StaticResource CardTitle}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=NoiseLimitSlider, StringFormat={}{0:0} dB}"/>
+                                        </Grid>
+                                        <Slider x:Name="NoiseLimitSlider" Minimum="10" Maximum="60" ValueChanged="Param_Changed"/>
+                                        <TextBlock Text="{DynamicResource Ui036}" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,0,0,16"/>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{DynamicResource Ui037}" Style="{StaticResource Label}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=StrengthSlider, StringFormat={}{0:0}%}"/>
+                                        </Grid>
+                                        <Slider x:Name="StrengthSlider" Minimum="0" Maximum="100" ValueChanged="Param_Changed"/>
+                                        <CheckBox x:Name="BypassCheck" Click="Param_Clicked" Content="{DynamicResource Ui038}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="{DynamicResource Ui039}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="0,14,0,0">
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource Ui040}" Style="{StaticResource CardTitle}"/>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{DynamicResource Ui041}" Style="{StaticResource Label}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=InputGainSlider, StringFormat={}{0:+0;-0;0} dB}"/>
+                                        </Grid>
+                                        <Slider x:Name="InputGainSlider" Minimum="-12" Maximum="18" ValueChanged="Param_Changed"/>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{DynamicResource Ui042}" Style="{StaticResource Label}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=OutputGainSlider, StringFormat={}{0:+0;-0;0} dB}"/>
+                                        </Grid>
+                                        <Slider x:Name="OutputGainSlider" Minimum="-12" Maximum="12" ValueChanged="Param_Changed"/>
+                                        <CheckBox x:Name="HighPassCheck" Click="Param_Clicked" Content="{DynamicResource Ui043}"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource Ui044}" Style="{StaticResource CardTitle}"/>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{DynamicResource Ui045}" Style="{StaticResource Label}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=PresenceSlider, StringFormat={}{0:0.0} dB}"/>
+                                        </Grid>
+                                        <Slider x:Name="PresenceSlider" Minimum="0" Maximum="6" ValueChanged="Param_Changed"/>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{DynamicResource Ui046}" Style="{StaticResource Label}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=MudSlider, StringFormat={}{0:0.0} dB}"/>
+                                        </Grid>
+                                        <Slider x:Name="MudSlider" Minimum="0" Maximum="6" ValueChanged="Param_Changed"/>
+                                        <CheckBox x:Name="CompCheck" Click="Param_Clicked" Content="{DynamicResource Ui047}" Margin="0,0,0,12"/>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{DynamicResource Ui048}" Style="{StaticResource Label}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=CompThresholdSlider, StringFormat={}{0:0} dB}"/>
+                                        </Grid>
+                                        <Slider x:Name="CompThresholdSlider" Minimum="-40" Maximum="-6" ValueChanged="Param_Changed"/>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{DynamicResource Ui049}" Style="{StaticResource Label}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=CompRatioSlider, StringFormat={}{0:0.0}:1}"/>
+                                        </Grid>
+                                        <Slider x:Name="CompRatioSlider" Minimum="1.5" Maximum="8" ValueChanged="Param_Changed"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource Ui050}" Style="{StaticResource CardTitle}"/>
+                                        <CheckBox x:Name="GateEnabledCheck" Click="Param_Clicked" Content="{DynamicResource Ui051}" Margin="0,0,0,9"/>
+                                        <TextBlock Text="{DynamicResource Ui052}" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{DynamicResource Ui053}" Style="{StaticResource Label}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=GateSlider, StringFormat={}{0:0}%}"/>
+                                        </Grid>
+                                        <Slider x:Name="GateSlider" Minimum="0" Maximum="100" ValueChanged="Param_Changed"/>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{DynamicResource Ui054}" Style="{StaticResource Label}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=GateDepthSlider, StringFormat={}{0:0} dB}"/>
+                                        </Grid>
+                                        <Slider x:Name="GateDepthSlider" Minimum="0" Maximum="60" ValueChanged="Param_Changed"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="{DynamicResource Ui055}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="0,14,0,0">
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource Ui056}" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock x:Name="PerformanceText" Text="{DynamicResource Ui057}" TextWrapping="Wrap" Foreground="{StaticResource Ink}" LineHeight="24"/>
+                                        <TextBlock x:Name="FormatText" TextWrapping="Wrap" Style="{StaticResource Label}" Margin="0,14,0,0"/>
+                                        <Button Content="{DynamicResource Ui058}" Style="{StaticResource SecondaryButton}" Click="CopyDiagnostics_Click" HorizontalAlignment="Right" Margin="0,16,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource Ui059}" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock Text="{DynamicResource Ui060}" TextWrapping="Wrap" Foreground="{StaticResource Muted}" LineHeight="23"/>
+                                        <TextBlock Text="{DynamicResource Ui061}" TextWrapping="Wrap" Style="{StaticResource Label}" Margin="0,12,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </Grid>
+        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="24,12">
+            <TextBlock x:Name="StatusText" Text="{DynamicResource Ui062}" TextWrapping="Wrap" Style="{StaticResource Label}" Margin="0"/>
         </Border>
     </Grid>
 </Window>

@@ -1,0 +1,26 @@
+MicDenoiser 2.0 — Windows 10/11 x64
+
+العربية
+- المثبّت يتضمن البرنامج و.NET وDeepFilterNet3 ومكتبات الصوت. لا يحتاج تنزيل النموذج.
+- ثبّت VB-Cable بشكل منفصل: https://vb-audio.com/Cable/ ثم أعد تشغيل ويندوز.
+- اختار المايك الحقيقي، ومخرج CABLE Input. في برنامج المكالمات اختار CABLE Output.
+- اللغة: من القائمة أعلى الواجهة. الاختيار يُحفظ.
+- لو الصوت خشن أثناء الكلام: جرّب «صوت أنعم» (25dB) وخفّض تضخيم الدخل.
+- لو عداد نقص البيانات يزيد: أوقف العزل واختار «استقرار أعلى»، ثم ابدأ.
+- «صوت أنعم» يحفظ حالة بوابة الكلام أثناء التشغيل؛ أوقف العزل لإيقاف البوابة.
+- أغلق عزل الضوضاء الإضافي في برنامج المكالمات عند المقارنة، واستخدم سماعات.
+- النسخة المضغوطة: فك ضغط المجلد كاملًا في مكان جديد، ثم شغّل MicDenoiser.exe.
+
+English
+- Setup includes the application, .NET runtime, DeepFilterNet3 model and audio libraries.
+- Install VB-Cable separately: https://vb-audio.com/Cable/ and restart Windows.
+- Select your microphone and CABLE Input. Select CABLE Output in the calling app.
+- Change language in the header; the choice is saved.
+- For harsh speech, try Softer sound (25 dB) and reduce input gain.
+- If output dropouts increase, stop processing and choose More stable before restarting.
+- Softer sound preserves the live speech gate setting. Stop processing to disable the gate.
+- Disable extra denoising in your calling app for comparisons and use headphones.
+- For the ZIP, extract the entire folder into a new location and run MicDenoiser.exe.
+
+This build was compiled and checked on Linux. Physical Windows microphone playback,
+installer execution/uninstallation and listening quality still need Windows validation.

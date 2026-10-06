@@ -36,7 +36,9 @@ public sealed class AudioPipeline : IDisposable
     private readonly VadGate _gate = new();
     private readonly Compressor _comp = new();
     private RNNoise? _vadDetector;
-    private readonly float[] _input, _dry, _wet, _mixed, _bypass, _vadInput;
+    private readonly float[] _input, _dry, _wet, _mixed, _bypass, _vadInput, _compressed;
+    private readonly SmoothedValue _inputGain = new(), _outputGain = new(), _strength = new();
+    private readonly SmoothedValue _mudDb = new(30), _presenceDb = new(30), _compBlend = new();
     private readonly float[] _vadNow = new float[1], _vadAligned = new float[1];
     private float _lastMud = float.NaN, _lastPresence = float.NaN, _bypassMix, _highPassMix;
     public int FrameSize => _engine.FrameSize;
@@ -48,6 +50,7 @@ public sealed class AudioPipeline : IDisposable
         _engine = engine;
         _input = new float[FrameSize]; _dry = new float[FrameSize]; _wet = new float[FrameSize];
         _mixed = new float[FrameSize]; _bypass = new float[FrameSize]; _vadInput = new float[FrameSize];
+        _compressed = new float[FrameSize];
         _dryDelay = new SampleDelay(engine.DelaySamples);
         _bypassDelay = new SampleDelay(engine.DelaySamples + GateLookAheadSamples);
         _lookAhead = new SampleDelay(GateLookAheadSamples);
@@ -60,10 +63,16 @@ public sealed class AudioPipeline : IDisposable
     {
         if (source.Length != FrameSize || destination.Length != FrameSize)
             throw new ArgumentException("Invalid audio frame size.");
-        float inGain = MathF.Pow(10f, s.InputGainDb / 20f), inPeak = 0, outPeak = 0;
+        _inputGain.SetTarget(MathF.Pow(10f, s.InputGainDb / 20f));
+        _outputGain.SetTarget(MathF.Pow(10f, s.OutputGainDb / 20f));
+        _strength.SetTarget(Math.Clamp(s.Strength, 0f, 1f));
+        _compBlend.SetTarget(s.CompressorOn ? 1f : 0f);
+        _mudDb.SetTarget(s.MudCutDb); _presenceDb.SetTarget(s.PresenceDb);
+        float inPeak = 0, outPeak = 0;
         for (int i = 0; i < FrameSize; i++)
         {
-            _input[i] = source[i] * inGain;
+            if (!float.IsFinite(source[i])) throw new ArgumentException("Invalid microphone sample.");
+            _input[i] = source[i] * _inputGain.Next();
             inPeak = Math.Max(inPeak, Math.Abs(_input[i]) / 32768f);
         }
         _bypassDelay.Process(_input, _bypass);
@@ -76,6 +85,7 @@ public sealed class AudioPipeline : IDisposable
         }
         _highPassMix = highPassTarget;
         _dryDelay.Process(_input, _dry);
+        _engine.Configure(s);
         float? vad = _engine.Process(_input, _wet);
         if (vad is null && s.GateEnabled)
         {
@@ -85,24 +95,30 @@ public sealed class AudioPipeline : IDisposable
             _vadDelay.Process(_vadNow, _vadAligned);
             vad = _vadAligned[0];
         }
-        float wet = Math.Clamp(s.Strength, 0f, 1f);
-        for (int i = 0; i < FrameSize; i++) _mixed[i] = wet * _wet[i] + (1f - wet) * _dry[i];
+        for (int i = 0; i < FrameSize; i++)
+        {
+            float wet = _strength.Next();
+            _mixed[i] = wet * _wet[i] + (1f - wet) * _dry[i];
+        }
         _lookAhead.Process(_mixed, destination);
         // The newest aligned VAD opens the gate ahead of delayed audio onset.
         _gate.Process(destination, FrameSize, s.GateEnabled ? vad ?? 1f : 1f, s);
-        if (s.MudCutDb != _lastMud) { _mud.SetPeaking(SampleRate, 280, 1, -s.MudCutDb); _lastMud = s.MudCutDb; }
-        if (s.PresenceDb != _lastPresence) { _presence.SetPeaking(SampleRate, 3500, 0.9, s.PresenceDb); _lastPresence = s.PresenceDb; }
+        float mud = _mudDb.Next(FrameSize), presence = _presenceDb.Next(FrameSize);
+        if (mud != _lastMud) { _mud.SetPeaking(SampleRate, 280, 1, -mud); _lastMud = mud; }
+        if (presence != _lastPresence) { _presence.SetPeaking(SampleRate, 3500, 0.9, presence); _lastPresence = presence; }
         for (int i = 0; i < FrameSize; i++)
         {
-            if (s.MudCutDb > 0.05f) destination[i] = _mud.Process(destination[i]);
-            if (s.PresenceDb > 0.05f) destination[i] = _presence.Process(destination[i]);
+            destination[i] = _presence.Process(_mud.Process(destination[i]));
         }
-        if (s.CompressorOn) _comp.Process(destination, FrameSize, s.CompThresholdDb, s.CompRatio, SampleRate);
-        float outGain = MathF.Pow(10f, s.OutputGainDb / 20f), target = s.Bypass ? 1f : 0f;
+        Array.Copy(destination, _compressed, FrameSize);
+        _comp.Process(_compressed, FrameSize, s.CompThresholdDb, s.CompRatio, SampleRate);
+        float target = s.Bypass ? 1f : 0f;
         for (int i = 0; i < FrameSize; i++)
         {
+            float comp = _compBlend.Next();
+            destination[i] = destination[i] * (1f - comp) + _compressed[i] * comp;
             float blend = _bypassMix + (target - _bypassMix) * (i + 1) / FrameSize;
-            destination[i] = Limiter.Process(destination[i] * outGain * (1f - blend) + _bypass[i] * blend);
+            destination[i] = Limiter.Process(destination[i] * _outputGain.Next() * (1f - blend) + _bypass[i] * blend);
             outPeak = Math.Max(outPeak, Math.Abs(destination[i]) / 32768f);
         }
         _bypassMix = target;

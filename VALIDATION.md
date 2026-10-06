@@ -1,49 +1,71 @@
-# Validation of this implementation
+# Validation of MicDenoiser 2.0
 
-The uploaded Windows project was imported into `MicDenoiser/`; the initial
-repository contained only a README. No application is claimed to have run on
-Windows in this Linux development environment.
+The Windows application was imported from the user's uploaded project. The
+repository initially contained only a README. This development environment is
+Linux; no live Windows microphone session or installer execution is claimed.
 
 Verified:
 
-- WPF/.NET 8 Release build and self-contained `win-x64` publish: passed with
+- WPF/.NET 8 Release build and self-contained `win-x64` publish completed with
   zero warnings and errors.
-- Linux DeepFilterNet native library: built from the pinned source and locked
-  dependencies. The Windows GNU x64 DLL was also cross-compiled. Its exports
-  and imports were inspected; it needs only Windows system DLLs.
-- Seven processing checks: passed. These exercise fragmented live resampling
-  at 16/44.1/96 kHz, sample delay across frames, dry/wet and bypass alignment,
-  native loading and model metadata, silence, stationary noise, and model
-  integrity errors. The Windows-only RNNoise/sidechain check was skipped.
-- Corrupt model passed directly to the native C ABI: returned an error without
-  aborting the process.
-- The paired `assets/noisy_snr0.wav` / `assets/clean_freesound_33711.wav`
-  example from the pinned upstream DeepFilterNet repository was processed
-  through the final C# pipeline. All 508,591 samples were retained, the 50 ms
-  algorithmic delay was compensated, and the speech output was nonzero and
-  unclipped. SI-SDR improved from 6.05 to 6.91 dB on this one example.
-- The 10.60-second speech clip was processed in 1.10 seconds on this Linux
-  host, excluding model construction. This is an offline observation, not a
-  guarantee about a Windows microphone session or another CPU.
-- Windows publish contains the executable, runtime, model, both native DLLs,
-  and license files. Published DLL hashes match their source-package copies.
-
-The initial pipeline's fixed high-pass filter reduced the paired speech
-example's SI-SDR. High-pass is now optional and disabled in the default preset.
-Both the live application and the file-processing tool use the same final
-pipeline.
+- Linux and Windows GNU x64 DeepFilterNet libraries were rebuilt from the
+  pinned upstream revision and locked dependencies. ABI version 2 and the
+  live attenuation setter are exported by the Windows DLL. Its imports use
+  only Windows system DLLs.
+- All 13 checks passed: Arabic/English catalog parity and XAML resource
+  references; output starvation/recovery fades; startup rebuffering and byte
+  offsets; gain/compressor continuity; malformed persisted settings;
+  fragmented live resampling at 16/44.1/96 kHz; sample delay; aligned wet/dry
+  and bypass paths; native loading/metadata/silence; stationary noise; model
+  integrity; and the attenuation control. The Windows RNNoise/optional VAD
+  execution check was skipped on Linux.
+- The starvation regression reproduces a 12,000 PCM-unit jump in the old
+  zero-fill output. The guarded output fades the same transition over 5 ms,
+  with adjacent sample changes at most 51 units, and counts a continuous
+  outage once. Recovery also fades in. This softens discontinuities; it
+  cannot recover speech lost while capture or processing is stalled.
+- DeepFilterNet now uses the upstream C API inference thresholds
+  `(-15, 35, 35)` and a default 35 dB attenuation limit. The interface's
+  Softer sound profile uses 25 dB. The live limit changes at most 1 dB per
+  10 ms frame. Gain/mix/compressor controls also transition gradually.
+- The paired upstream `assets/noisy_snr0.wav` and
+  `assets/clean_freesound_33711.wav` example was processed through the final
+  default pipeline. All 508,591 samples were retained, 50 ms algorithmic
+  delay was compensated, output was finite and nonzero, and the peak was
+  0.641 full scale. SI-SDR improved from 6.05 to 19.97 dB on this single
+  example. The prior implementation achieved 6.91 dB; these figures do not
+  measure the user's microphone or establish a Krisp comparison.
+- Processing that 10.60-second clip took 1.84 seconds on this Linux host,
+  excluding model construction. This is an offline observation, not a
+  guarantee of real-time operation on another machine.
+- Native/model hashes in `native-checksums.json` match both the source and
+  self-contained publish copies. The app-local runtime copy used by the
+  uploaded RNNoise DLL exports all five of its required VCRUNTIME140 symbols.
+  This export check is not a Windows RNNoise execution test.
+- The Arabic/English NSIS 3.11 installer compiled without warnings. Its
+  extracted payload and the portable ZIP were checked against the publish
+  directory. Setup includes the application runtime, model, instructions
+  and libraries; VB-Cable is installed separately.
 
 Still to validate on Windows:
 
-- Opening the WPF UI and loading the Windows DLLs.
+- WPF rendering, text fitting at different DPI settings, immediate language
+  switching, and device refresh.
+- Installation, installer language selection, shortcuts, upgrade and
+  uninstall. Settings are preserved; uninstall deletes only listed payload
+  files and empty subdirectories.
+- Windows native binding, RNNoise and optional sidechain VAD execution.
+  GitHub Actions is configured to rebuild/check/package them; no CI result
+  is claimed here.
 - Physical microphone capture, format negotiation, VB-Cable routing,
-  stopping/restarting, device removal, and sustained real-time operation.
-- The optional RNNoise voice detector and lightweight engine using the
-  uploaded Windows binary. A Windows CI job is included to rebuild the native
-  library and run those processing checks, but it has not run here.
-- Total audio latency, quality on Egyptian Arabic/whispers/background
-  speakers, and a matched-input listening comparison against Krisp.
+  stopping/restarting, device removal, CPU load and prolonged real-time use.
+- The user's intermittent DeepFilterNet3 crackling during speech. Buffer
+  gaps and model artifacts have separate possible causes; diagnostics and
+  the softer profile help distinguish them. No recording of that symptom
+  was supplied.
+- Total audio latency, Egyptian Arabic, whispers, background speakers, and
+  a matched-input listening comparison with Krisp.
 
-These results establish functioning file-based DeepFilterNet processing and
-buildable Windows code. They do not establish equivalence to Krisp, target
-speaker isolation, echo cancellation, or production readiness.
+These checks establish functioning file processing and buildable Windows
+artifacts. They do not establish Krisp equivalence, target speaker isolation,
+echo cancellation or production readiness.
