@@ -5,6 +5,11 @@ lightweight RNNoise option. The WPF/.NET 8 application was imported from the
 attached MicDenoiser project and upgraded with a streaming native engine,
 WASAPI audio, a dedicated processing worker, and aligned dry/bypass paths.
 
+The [Windows x64 trial ZIP](downloads/MicDenoiser-Windows-x64.zip) includes
+the .NET runtime, model, and native DLLs. On GitHub, open the file and select
+Download raw file. Extract the entire folder and run `MicDenoiser.exe` after
+installing VB-Cable. See [validation and remaining Windows checks](VALIDATION.md).
+
 On Windows, install VB-Cable and the .NET 8 SDK, then run:
 
 ```powershell
