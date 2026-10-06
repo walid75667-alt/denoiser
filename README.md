@@ -78,3 +78,24 @@ if both saved device IDs are available. This option is off by default;
 uninstall removes the app's startup entry and preserves user settings.
 Actual Windows rendering, registration, notifications and microphone behavior
 still need Windows validation; see VALIDATION.md.
+
+Version 2.2 adds a voice-studio mixer aimed at singing and voice-over:
+four parametric EQ bands with frequency/gain/Q, a logarithmic target-response
+curve, variable high-pass cutoff, compressor attack/release/soft knee/make-up,
+a split-band de-esser, output ceiling and RMS/gain-reduction meters. Each
+module has live controls with smoothed transitions. Effects settings can be
+saved/loaded as versioned JSON without changing devices, engine or buffering.
+
+Natural singing starts with wet mix at 0% and the speech gate off, plus gentle
+1.5:1 compression. DeepFilterNet is trained for speech and may alter sustained
+notes; add wet mix only after comparing. Voice-over and Broadcast voice offer
+subtle starting points, not calibrated mastering presets. Output protection
+limits sample peaks with a soft curve; it is not a true-peak limiter.
+
+The ten-second mic test can export original/processed 48 kHz mono Float32 WAV
+at captured levels, separately from matched preview playback. Float export
+preserves captured samples; it does not increase microphone resolution. Live
+WASAPI output remains 48 kHz mono PCM16. Use the app's output in your recording
+software via your configured audio routing. Full-session/multitrack recording
+is outside the current mic-test workflow. Windows UI, device latency and
+listening with actual singing/voice-over still require a Windows check.

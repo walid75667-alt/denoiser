@@ -14,6 +14,8 @@
     <Compile Include="../MicDenoiser/StablePlaybackProvider.cs" Link="StablePlaybackProvider.cs" />
     <Compile Include="../MicDenoiser/AudioPipeline.cs" Link="AudioPipeline.cs" />
     <Compile Include="../MicDenoiser/DenoiseEngines.cs" Link="DenoiseEngines.cs" />
+    <Compile Include="../MicDenoiser/EffectsProfile.cs" Link="EffectsProfile.cs" />
+    <Compile Include="../MicDenoiser/VoiceEffects.cs" Link="VoiceEffects.cs" />
     <Compile Include="../MicDenoiser/Dsp.cs" Link="Dsp.cs" />
     <Compile Include="../MicDenoiser/ComparisonCapture.cs" Link="ComparisonCapture.cs" />
     <Compile Include="../MicDenoiser/StabilityAdvisor.cs" Link="StabilityAdvisor.cs" />

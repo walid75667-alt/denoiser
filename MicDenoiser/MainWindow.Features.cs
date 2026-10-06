@@ -42,7 +42,7 @@ public partial class MainWindow
             if (_savedDevicesAvailable) await StartProcessing();
             else ShowDeviceRecovery("StartupMissingDevices");
         };
-        RefreshAdvice(); RefreshComparison();
+        ResetStudioMeters(); RefreshAdvice(); RefreshComparison();
     }
 
     private void ShowDeviceRecovery(string key)
@@ -74,7 +74,7 @@ public partial class MainWindow
     private void Theme_Click(object sender, RoutedEventArgs e)
     {
         _darkTheme = DarkThemeCheck.IsChecked == true;
-        AppTheme.Apply(this, _darkTheme);
+        AppTheme.Apply(this, _darkTheme); EqPlot.InvalidateVisual();
         _tray?.SetDarkTheme(_darkTheme);
         ToggleButton.Background = (System.Windows.Media.Brush)FindResource(_suppressor == null ? "PrimaryAccent" : "Danger");
         if (_suppressor == null) ResetMeters(); else { lock (_meterLock) _hasMeters = true; }
@@ -154,6 +154,7 @@ public partial class MainWindow
         CancelRecordButton.IsEnabled = _comparison != null;
         PlayOriginalButton.IsEnabled = PlayProcessedButton.IsEnabled = _comparisonResult != null && !busy;
         StopPreviewButton.IsEnabled = _preview != null;
+        ExportOriginalButton.IsEnabled=ExportProcessedButton.IsEnabled=_comparisonResult!=null && !busy && !_exporting;
         PreviewOutputCombo.IsEnabled = !busy;
         SoundOptions.IsEnabled = CustomOptions.IsEnabled = _comparison == null;
         RefreshAdvice();

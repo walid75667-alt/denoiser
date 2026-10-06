@@ -30,6 +30,9 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        var workArea=SystemParameters.WorkArea;
+        Width=Math.Min(Width,Math.Max(MinWidth,workArea.Width-32));
+        Height=Math.Min(Height,Math.Max(MinHeight,workArea.Height-32));
         UiStrings.Apply(this, _language);
         try { LoadDevices(); } catch (Exception ex) { StatusText.Text = T("Error", UiStrings.ErrorDetail(ex.Message)); }
         LoadConfig();
@@ -217,6 +220,29 @@ public partial class MainWindow : Window
             InputGainSlider.Value = s.InputGainDb; PresenceSlider.Value = s.PresenceDb; MudSlider.Value = s.MudCutDb;
             CompCheck.IsChecked = s.CompressorOn; CompThresholdSlider.Value = s.CompThresholdDb;
             CompRatioSlider.Value = s.CompRatio; OutputGainSlider.Value = s.OutputGainDb; BypassCheck.IsChecked = s.Bypass;
+            EqEnabledCheck.IsChecked=s.EqEnabled; DeEsserCheck.IsChecked=s.DeEsserEnabled;
+            HighPassHzSlider.Value=s.HighPassHz;
+            CompAttackSlider.Value=s.CompAttackMs;
+            CompReleaseSlider.Value=s.CompReleaseMs;
+            CompKneeSlider.Value=s.CompKneeDb;
+            CompMakeupSlider.Value=s.CompMakeupDb;
+            OutputCeilingSlider.Value=s.OutputCeilingDb;
+            DeEsserHzSlider.Value=s.DeEsserHz;
+            DeEsserThresholdSlider.Value=s.DeEsserThresholdDb;
+            DeEsserReductionSlider.Value=s.DeEsserMaxReductionDb;
+            EqLowHzSlider.Value=s.EqLowHz;
+            EqLowGainSlider.Value=s.EqLowGainDb;
+            EqLowQSlider.Value=s.EqLowQ;
+            EqBodyHzSlider.Value=s.EqBodyHz;
+            EqBodyGainSlider.Value=s.EqBodyGainDb;
+            EqBodyQSlider.Value=s.EqBodyQ;
+            EqPresenceHzSlider.Value=s.EqPresenceHz;
+            EqPresenceGainSlider.Value=s.EqPresenceGainDb;
+            EqPresenceQSlider.Value=s.EqPresenceQ;
+            EqAirHzSlider.Value=s.EqAirHz;
+            EqAirGainSlider.Value=s.EqAirGainDb;
+            EqAirQSlider.Value=s.EqAirQ;
+            EqPlot.SetSettings(s);
             foreach (var rb in PresetRadios()) rb.IsChecked = (string?)rb.Tag == _preset;
             RefreshPresetHint(); RefreshBufferHint(); RefreshRouting(); RefreshAdvice(); RefreshComparison();
         }
@@ -239,6 +265,29 @@ public partial class MainWindow : Window
         s.MudCutDb = (float)MudSlider.Value; s.CompressorOn = CompCheck.IsChecked == true;
         s.CompThresholdDb = (float)CompThresholdSlider.Value; s.CompRatio = (float)CompRatioSlider.Value;
         s.OutputGainDb = (float)OutputGainSlider.Value; s.Bypass = BypassCheck.IsChecked == true;
+        s.EqEnabled=EqEnabledCheck.IsChecked==true; s.DeEsserEnabled=DeEsserCheck.IsChecked==true;
+        s.HighPassHz=(float)HighPassHzSlider.Value;
+        s.CompAttackMs=(float)CompAttackSlider.Value;
+        s.CompReleaseMs=(float)CompReleaseSlider.Value;
+        s.CompKneeDb=(float)CompKneeSlider.Value;
+        s.CompMakeupDb=(float)CompMakeupSlider.Value;
+        s.OutputCeilingDb=(float)OutputCeilingSlider.Value;
+        s.DeEsserHz=(float)DeEsserHzSlider.Value;
+        s.DeEsserThresholdDb=(float)DeEsserThresholdSlider.Value;
+        s.DeEsserMaxReductionDb=(float)DeEsserReductionSlider.Value;
+        s.EqLowHz=(float)EqLowHzSlider.Value;
+        s.EqLowGainDb=(float)EqLowGainSlider.Value;
+        s.EqLowQ=(float)EqLowQSlider.Value;
+        s.EqBodyHz=(float)EqBodyHzSlider.Value;
+        s.EqBodyGainDb=(float)EqBodyGainSlider.Value;
+        s.EqBodyQ=(float)EqBodyQSlider.Value;
+        s.EqPresenceHz=(float)EqPresenceHzSlider.Value;
+        s.EqPresenceGainDb=(float)EqPresenceGainSlider.Value;
+        s.EqPresenceQ=(float)EqPresenceQSlider.Value;
+        s.EqAirHz=(float)EqAirHzSlider.Value;
+        s.EqAirGainDb=(float)EqAirGainSlider.Value;
+        s.EqAirQ=(float)EqAirQSlider.Value;
+        EqPlot.SetSettings(s);
         if (IsCustomSound())
         {
             _preset = "custom"; _loading = true;
@@ -335,6 +384,7 @@ public partial class MainWindow : Window
     }
     private void ResetMeters()
     {
+        ResetStudioMeters();
         _inDisp = _outDisp = 0; SetMask(InMask, InTrack, 0); SetMask(OutMask, OutTrack, 0);
         InDbText.Text = OutDbText.Text = "— dBFS";
         VoiceDot.Fill = (Brush)FindResource("Muted"); VoiceText.Text = T("Ui025"); GateText.Text = "";
@@ -344,6 +394,7 @@ public partial class MainWindow : Window
     }
     private void RenderMeters(MeterData m)
     {
+        RenderStudioMeters(m);
         _inDisp = Math.Max(ToMeter(m.InPeak), _inDisp * .88); _outDisp = Math.Max(ToMeter(m.OutPeak), _outDisp * .88);
         SetMask(InMask, InTrack, _inDisp); SetMask(OutMask, OutTrack, _outDisp);
         InDbText.Text = PeakText(m.InPeak); OutDbText.Text = PeakText(m.OutPeak);
@@ -365,7 +416,7 @@ public partial class MainWindow : Window
         try
         {
             // No device identifiers or microphone recordings are included.
-            Clipboard.SetText($"MicDenoiser 2.1\n{FormatText.Text}\n{PerformanceText.Text}\n{HealthText.Text}\nEngine: {_settings.Engine}\nBuffer: {_settings.BufferMode}\nNoise limit: {_settings.NoiseReductionDb:0} dB\nInput gain: {_settings.InputGainDb:0} dB\nGate: {_settings.GateEnabled}\nBypass: {_settings.Bypass}");
+            Clipboard.SetText($"MicDenoiser 2.2\n{FormatText.Text}\n{PerformanceText.Text}\n{HealthText.Text}\nEngine: {_settings.Engine}\nBuffer: {_settings.BufferMode}\nNoise limit: {_settings.NoiseReductionDb:0} dB\nInput gain: {_settings.InputGainDb:0} dB\nGate: {_settings.GateEnabled}\nBypass: {_settings.Bypass}");
             StatusText.Text = T("Copied");
         }
         catch (Exception ex) { StatusText.Text = T("Error", UiStrings.ErrorDetail(ex.Message)); }
@@ -392,7 +443,7 @@ public partial class MainWindow : Window
         {
             if (!File.Exists(ConfigPath)) return;
             var cfg = JsonSerializer.Deserialize<AppConfig>(File.ReadAllText(ConfigPath)); if (cfg == null) return;
-            _preset = cfg.Preset is "natural" or "studio" or "podcast" or "max" or "custom" or "calls" or "streaming" or "weakmic" or "whisper" ? cfg.Preset : "studio";
+            _preset = cfg.Preset is "natural" or "studio" or "podcast" or "max" or "custom" or "calls" or "streaming" or "weakmic" or "whisper" or "singing" or "voiceover" or "broadcast" ? cfg.Preset : "studio";
             _language = cfg.Language == "en" ? "en" : "ar";
             _minimizeToTray = cfg.MinimizeToTray; _darkTheme = cfg.DarkTheme;
             if (cfg.Settings != null) _settings.CopyFrom(cfg.Settings.SanitizedClone());

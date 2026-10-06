@@ -12,7 +12,7 @@ Verified:
   pinned upstream revision and locked dependencies. ABI version 2 and the
   live attenuation setter are exported by the Windows DLL. Its imports use
   only Windows system DLLs.
-- All 20 checks passed: Arabic/English catalog parity and XAML resource
+- All 31 checks passed: Arabic/English catalog parity and XAML resource
   references; output starvation/recovery fades; startup rebuffering and byte
   offsets; gain/compressor continuity; malformed persisted settings;
   fragmented live resampling at 16/44.1/96 kHz; sample delay; aligned wet/dry
@@ -25,6 +25,17 @@ Verified:
   and clean playback completion. Stability checks distinguish isolated spikes,
   sustained processing overload, fresh gap counts and unchanged advice. All
   four use-case presets survive configuration serialization with gate disabled.
+- Version 2.2 checks measured a 6 dB parametric band against its target,
+  neutral EQ transparency, coefficient/bypass transitions, graph response,
+  selective high-band de-essing with low fundamentals retained, soft-knee
+  continuity and attack control, output sample ceilings and metering,
+  bounded/versioned profile exchange, sustained dry singing, WAV read-back
+  at captured levels and zero allocations on a warmed effects worker.
+  A completed float-feedback fade was reproduced retaining a subnormal tail;
+  double state with an inaudible settling threshold now reaches exact zero.
+  Filter/envelope states also clear only below negligible levels. This is not
+  a diagnosis of the user's microphone crackling.
+  These are DSP/regression checks, not a listening-quality score.
 - The starvation regression reproduces a 12,000 PCM-unit jump in the old
   zero-fill output. The guarded output fades the same transition over 5 ms,
   with adjacent sample changes at most 51 units, and counts a continuous
@@ -58,6 +69,13 @@ Verified:
 
 Still to validate on Windows:
 
+- Mixer layout/faders at different DPI/window sizes, EQ curve, numeric field
+  entry/validation with Arabic and English, per-module switches, profile
+  dialogs, Float32 WAV export and recording-software import.
+- Actual singing/voice-over listening, sibilant consonants, extreme live EQ
+  moves, compressor timing, gain staging and gain-reduction/RMS meters.
+  Live routing remains mono PCM16. Singing defaults to a dry denoiser mix;
+  no vocal/music quality benchmark or low-latency audio-interface claim.
 - WPF rendering, text fitting at different DPI settings, immediate language
   switching, and device refresh.
 - Ten-second recording/playback through physical devices, switching language

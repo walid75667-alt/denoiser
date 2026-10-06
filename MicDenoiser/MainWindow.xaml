@@ -1,17 +1,16 @@
-<Window x:Class="MicDenoiser.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MicDenoiser 2.1" Icon="/Assets/MicDenoiser.ico" Width="1080" Height="820" MinWidth="900" MinHeight="680"
-        FlowDirection="RightToLeft" FontFamily="Segoe UI" FontSize="13"
-        Background="{DynamicResource Surface}" WindowStartupLocation="CenterScreen"
-        UseLayoutRounding="True" SnapsToDevicePixels="True">
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:MicDenoiser" x:Class="MicDenoiser.MainWindow" Title="MicDenoiser 2.2" Icon="/Assets/MicDenoiser.ico" Width="1220" Height="860" MinWidth="900" MinHeight="680" FlowDirection="RightToLeft" FontFamily="Segoe UI" FontSize="13" Background="{DynamicResource Surface}" WindowStartupLocation="CenterScreen" UseLayoutRounding="True" SnapsToDevicePixels="True">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Border Background="{DynamicResource HeaderBg}" Padding="26,20">
             <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
                 <StackPanel>
                     <StackPanel x:Name="BrandPanel" Orientation="Horizontal" HorizontalAlignment="Right">
                         <Image Source="/Assets/MicDenoiser.png" Width="36" Height="36" Margin="0,0,10,0" RenderOptions.BitmapScalingMode="HighQuality"/>
@@ -24,25 +23,35 @@
                         <ComboBoxItem Content="العربية" Tag="ar"/>
                         <ComboBoxItem Content="English" Tag="en"/>
                     </ComboBox>
-                <Border Background="#263D4D" CornerRadius="18" Padding="16,9" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#94A3B8" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="StatusPill" Text="{DynamicResource Ui001}" Foreground="White" Margin="9,0,0,0"/>
-                    </StackPanel>
-                </Border>
+                    <Border Background="#263D4D" CornerRadius="18" Padding="16,9" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#94A3B8" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="StatusPill" Text="{DynamicResource Ui001}" Foreground="White" Margin="9,0,0,0"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Grid>
         </Border>
         <Grid Grid.Row="1" Margin="22,20,22,8">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="292"/><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="292"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
             <Grid>
-                <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
                                     <TextBlock Text="{DynamicResource Ui002}" Style="{StaticResource CardTitle}" Margin="0" VerticalAlignment="Center"/>
                                     <Button x:Name="RefreshDevicesButton" Grid.Column="1" Content="{DynamicResource Ui003}" Style="{StaticResource SecondaryButton}" Click="RefreshDevices_Click" ToolTip="{DynamicResource Ui004}"/>
                                 </Grid>
@@ -87,49 +96,71 @@
                 </StackPanel>
             </Grid>
             <Grid Grid.Column="2">
-                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
                 <StackPanel>
-                <Border x:Name="DeviceRecoveryPanel" Visibility="Collapsed" Background="{DynamicResource WarningSoft}" CornerRadius="10" Padding="14" Margin="0,0,0,12">
-                    <StackPanel>
-                        <TextBlock Text="{DynamicResource DeviceRecoveryTitle}" Style="{StaticResource CardTitle}"/>
-                        <TextBlock x:Name="DeviceRecoveryText" TextWrapping="Wrap" Style="{StaticResource Label}"/>
-                        <Button Content="{DynamicResource DeviceRecover}" Click="RecoverDevices_Click" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left"/>
-                    </StackPanel>
-                </Border>
-                <Border x:Name="HealthBanner" Background="{DynamicResource AccentSoft}" CornerRadius="10" Padding="14,11" Margin="0,0,0,14">
-                    <StackPanel>
-                        <TextBlock x:Name="HealthText" Text="{DynamicResource Ui021}" Foreground="{DynamicResource Accent}" FontWeight="SemiBold"/>
-                        <TextBlock x:Name="HealthDetail" Text="{DynamicResource Ui022}" TextWrapping="Wrap" Foreground="{DynamicResource Muted}" Margin="0,4,0,0" FontSize="12"/>
-                    </StackPanel>
-                </Border>
+                    <Border x:Name="DeviceRecoveryPanel" Visibility="Collapsed" Background="{DynamicResource WarningSoft}" CornerRadius="10" Padding="14" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource DeviceRecoveryTitle}" Style="{StaticResource CardTitle}"/>
+                            <TextBlock x:Name="DeviceRecoveryText" TextWrapping="Wrap" Style="{StaticResource Label}"/>
+                            <Button Content="{DynamicResource DeviceRecover}" Click="RecoverDevices_Click" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="HealthBanner" Background="{DynamicResource AccentSoft}" CornerRadius="10" Padding="14,11" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock x:Name="HealthText" Text="{DynamicResource Ui021}" Foreground="{DynamicResource Accent}" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="HealthDetail" Text="{DynamicResource Ui022}" TextWrapping="Wrap" Foreground="{DynamicResource Muted}" Margin="0,4,0,0" FontSize="12"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
                 <Border Grid.Row="1" Style="{StaticResource Card}">
                     <StackPanel>
                         <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
                             <StackPanel Margin="0,0,0,12">
                                 <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
                                     <TextBlock Text="{DynamicResource Ui023}" Style="{StaticResource Label}"/>
                                     <TextBlock x:Name="InDbText" Grid.Column="1" Text="— dBFS" Style="{StaticResource Value}"/>
                                 </Grid>
                                 <Border x:Name="InTrack" Height="12" CornerRadius="6" ClipToBounds="True" Background="{DynamicResource Track}" FlowDirection="LeftToRight">
-                                    <Grid><Border Background="{StaticResource MeterGradient}"/><Border x:Name="InMask" Background="{DynamicResource Track}" HorizontalAlignment="Right" Width="9999"/></Grid>
+                                    <Grid>
+                                        <Border Background="{StaticResource MeterGradient}"/>
+                                        <Border x:Name="InMask" Background="{DynamicResource Track}" HorizontalAlignment="Right" Width="9999"/>
+                                    </Grid>
                                 </Border>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Margin="12,0,0,12">
                                 <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
                                     <TextBlock Text="{DynamicResource Ui024}" Style="{StaticResource Label}"/>
                                     <TextBlock x:Name="OutDbText" Grid.Column="1" Text="— dBFS" Style="{StaticResource Value}"/>
                                 </Grid>
                                 <Border x:Name="OutTrack" Height="12" CornerRadius="6" ClipToBounds="True" Background="{DynamicResource Track}" FlowDirection="LeftToRight">
-                                    <Grid><Border Background="{StaticResource MeterGradient}"/><Border x:Name="OutMask" Background="{DynamicResource Track}" HorizontalAlignment="Right" Width="9999"/></Grid>
+                                    <Grid>
+                                        <Border Background="{StaticResource MeterGradient}"/>
+                                        <Border x:Name="OutMask" Background="{DynamicResource Track}" HorizontalAlignment="Right" Width="9999"/>
+                                    </Grid>
                                 </Border>
                             </StackPanel>
                         </Grid>
                         <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal">
                                 <Ellipse x:Name="VoiceDot" Width="8" Height="8" Fill="#94A3B8" VerticalAlignment="Center"/>
                                 <TextBlock x:Name="VoiceText" Text="{DynamicResource Ui025}" Style="{StaticResource Label}" Margin="8,0,0,0"/>
@@ -154,6 +185,9 @@
                                             <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="streaming" Content="{DynamicResource StreamingPreset}" Checked="Preset_Checked"/>
                                             <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="weakmic" Content="{DynamicResource WeakMicPreset}" Checked="Preset_Checked"/>
                                             <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="whisper" Content="{DynamicResource WhisperPreset}" Checked="Preset_Checked"/>
+                                            <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="singing" Content="{DynamicResource SingingPreset}" Checked="Preset_Checked"/>
+                                            <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="voiceover" Content="{DynamicResource VoiceOverPreset}" Checked="Preset_Checked"/>
+                                            <RadioButton Style="{StaticResource PresetButton}" GroupName="preset" Tag="broadcast" Content="{DynamicResource BroadcastPreset}" Checked="Preset_Checked"/>
                                         </WrapPanel>
                                         <TextBlock x:Name="PresetHint" Style="{StaticResource Label}" TextWrapping="Wrap"/>
                                         <WrapPanel Margin="0,12,0,0">
@@ -164,13 +198,21 @@
                                 </Border>
                                 <Border Style="{StaticResource Card}">
                                     <StackPanel>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
                                             <TextBlock Text="{DynamicResource Ui035}" Style="{StaticResource CardTitle}"/>
                                             <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=NoiseLimitSlider, StringFormat={}{0:0} dB}"/>
                                         </Grid>
                                         <Slider x:Name="NoiseLimitSlider" Minimum="10" Maximum="60" ValueChanged="Param_Changed"/>
                                         <TextBlock Text="{DynamicResource Ui036}" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,0,0,16"/>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
                                             <TextBlock Text="{DynamicResource Ui037}" Style="{StaticResource Label}"/>
                                             <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=StrengthSlider, StringFormat={}{0:0}%}"/>
                                         </Grid>
@@ -186,74 +228,432 @@
                             <StackPanel x:Name="CustomOptions" Margin="0,14,0,0">
                                 <Border Style="{StaticResource Card}">
                                     <StackPanel>
-                                        <TextBlock Text="{DynamicResource Ui040}" Style="{StaticResource CardTitle}"/>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <TextBlock Text="{DynamicResource Ui041}" Style="{StaticResource Label}"/>
-                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=InputGainSlider, StringFormat={}{0:+0;-0;0} dB}"/>
-                                        </Grid>
-                                        <Slider x:Name="InputGainSlider" Minimum="-12" Maximum="18" ValueChanged="Param_Changed"/>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <TextBlock Text="{DynamicResource Ui042}" Style="{StaticResource Label}"/>
-                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=OutputGainSlider, StringFormat={}{0:+0;-0;0} dB}"/>
-                                        </Grid>
-                                        <Slider x:Name="OutputGainSlider" Minimum="-12" Maximum="12" ValueChanged="Param_Changed"/>
-                                        <CheckBox x:Name="HighPassCheck" Click="Param_Clicked" Content="{DynamicResource Ui043}"/>
+                                        <TextBlock Text="{DynamicResource MixerTitle}" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock Text="{DynamicResource MixerHint}" Style="{StaticResource Label}"/>
+                                        <Border Background="{DynamicResource AccentSoft}" Padding="12" CornerRadius="8" Margin="0,8,0,14">
+                                            <TextBlock Text="{DynamicResource SignalChain}" TextWrapping="Wrap" Foreground="{DynamicResource Accent}"/>
+                                        </Border>
+                                        <WrapPanel>
+                                            <Button Content="{DynamicResource SaveEffects}" Click="SaveEffects_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/>
+                                            <Button Content="{DynamicResource LoadEffects}" Click="LoadEffects_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/>
+                                        </WrapPanel>
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource Card}">
                                     <StackPanel>
-                                        <TextBlock Text="{DynamicResource Ui044}" Style="{StaticResource CardTitle}"/>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <TextBlock Text="{DynamicResource Ui045}" Style="{StaticResource Label}"/>
-                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=PresenceSlider, StringFormat={}{0:0.0} dB}"/>
-                                        </Grid>
-                                        <Slider x:Name="PresenceSlider" Minimum="0" Maximum="6" ValueChanged="Param_Changed"/>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <TextBlock Text="{DynamicResource Ui046}" Style="{StaticResource Label}"/>
-                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=MudSlider, StringFormat={}{0:0.0} dB}"/>
-                                        </Grid>
-                                        <Slider x:Name="MudSlider" Minimum="0" Maximum="6" ValueChanged="Param_Changed"/>
-                                        <CheckBox x:Name="CompCheck" Click="Param_Clicked" Content="{DynamicResource Ui047}" Margin="0,0,0,12"/>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <TextBlock Text="{DynamicResource Ui048}" Style="{StaticResource Label}"/>
-                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=CompThresholdSlider, StringFormat={}{0:0} dB}"/>
-                                        </Grid>
-                                        <Slider x:Name="CompThresholdSlider" Minimum="-40" Maximum="-6" ValueChanged="Param_Changed"/>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <TextBlock Text="{DynamicResource Ui049}" Style="{StaticResource Label}"/>
-                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=CompRatioSlider, StringFormat={}{0:0.0}:1}"/>
-                                        </Grid>
-                                        <Slider x:Name="CompRatioSlider" Minimum="1.5" Maximum="8" ValueChanged="Param_Changed"/>
+                                        <TextBlock Text="{DynamicResource EqTitle}" Style="{StaticResource CardTitle}"/>
+                                        <CheckBox x:Name="EqEnabledCheck" Content="{DynamicResource EqEnable}" Click="Param_Clicked" Margin="0,0,0,10"/>
+                                        <local:EqCurve x:Name="EqPlot" Height="160" FlowDirection="LeftToRight"/>
+                                        <TextBlock Text="{DynamicResource EqCurveHint}" Style="{StaticResource Label}"/>
+                                        <UniformGrid x:Name="EqBandGrid" Columns="4" Margin="0,12,0,0" SizeChanged="EqBandGrid_SizeChanged">
+                                            <Border BorderBrush="{DynamicResource Line}" BorderThickness="1" Padding="8" CornerRadius="8" Margin="3">
+                                                <StackPanel>
+                                                    <TextBlock Text="{DynamicResource EqLow}" Style="{StaticResource CardTitle}"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource GainDb}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqLowGainSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0.0}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqLowGainSlider" Minimum="-9" Maximum="9" ValueChanged="Param_Changed" Orientation="Vertical" Height="100" HorizontalAlignment="Center" Width="36"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource Frequency}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqLowHzSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqLowHzSlider" Minimum="40" Maximum="400" ValueChanged="Param_Changed"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource EqQ}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqLowQSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0.00}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqLowQSlider" Minimum="0.35" Maximum="3" ValueChanged="Param_Changed"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <Border BorderBrush="{DynamicResource Line}" BorderThickness="1" Padding="8" CornerRadius="8" Margin="3">
+                                                <StackPanel>
+                                                    <TextBlock Text="{DynamicResource EqBody}" Style="{StaticResource CardTitle}"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource GainDb}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqBodyGainSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0.0}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqBodyGainSlider" Minimum="-9" Maximum="9" ValueChanged="Param_Changed" Orientation="Vertical" Height="100" HorizontalAlignment="Center" Width="36"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource Frequency}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqBodyHzSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqBodyHzSlider" Minimum="200" Maximum="1800" ValueChanged="Param_Changed"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource EqQ}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqBodyQSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0.00}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqBodyQSlider" Minimum="0.35" Maximum="3" ValueChanged="Param_Changed"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <Border BorderBrush="{DynamicResource Line}" BorderThickness="1" Padding="8" CornerRadius="8" Margin="3">
+                                                <StackPanel>
+                                                    <TextBlock Text="{DynamicResource EqPresence}" Style="{StaticResource CardTitle}"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource GainDb}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqPresenceGainSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0.0}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqPresenceGainSlider" Minimum="-9" Maximum="9" ValueChanged="Param_Changed" Orientation="Vertical" Height="100" HorizontalAlignment="Center" Width="36"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource Frequency}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqPresenceHzSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqPresenceHzSlider" Minimum="1000" Maximum="6000" ValueChanged="Param_Changed"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource EqQ}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqPresenceQSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0.00}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqPresenceQSlider" Minimum="0.35" Maximum="3" ValueChanged="Param_Changed"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <Border BorderBrush="{DynamicResource Line}" BorderThickness="1" Padding="8" CornerRadius="8" Margin="3">
+                                                <StackPanel>
+                                                    <TextBlock Text="{DynamicResource EqAir}" Style="{StaticResource CardTitle}"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource GainDb}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqAirGainSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0.0}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqAirGainSlider" Minimum="-9" Maximum="9" ValueChanged="Param_Changed" Orientation="Vertical" Height="100" HorizontalAlignment="Center" Width="36"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource Frequency}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqAirHzSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqAirHzSlider" Minimum="4000" Maximum="14000" ValueChanged="Param_Changed"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{DynamicResource EqQ}" Style="{StaticResource Label}"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBox FlowDirection="LeftToRight" Width="54" Padding="4,2" Background="{DynamicResource Surface}" Foreground="{DynamicResource Ink}" BorderBrush="{DynamicResource Line}" KeyDown="MixerNumber_KeyDown" Text="{Binding Value, ElementName=EqAirQSlider, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, StringFormat={}{0:0.00}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <Slider x:Name="EqAirQSlider" Minimum="0.35" Maximum="3" ValueChanged="Param_Changed"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </UniformGrid>
+                                        <WrapPanel Margin="0,12,0,0">
+                                            <Button Content="{DynamicResource EqReset}" Click="EqReset_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/>
+                                        </WrapPanel>
                                     </StackPanel>
                                 </Border>
-                                <Border Style="{StaticResource Card}">
-                                    <StackPanel>
-                                        <TextBlock Text="{DynamicResource Ui050}" Style="{StaticResource CardTitle}"/>
-                                        <CheckBox x:Name="GateEnabledCheck" Click="Param_Clicked" Content="{DynamicResource Ui051}" Margin="0,0,0,9"/>
-                                        <TextBlock Text="{DynamicResource Ui052}" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,0,0,12"/>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <TextBlock Text="{DynamicResource Ui053}" Style="{StaticResource Label}"/>
-                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=GateSlider, StringFormat={}{0:0}%}"/>
-                                        </Grid>
-                                        <Slider x:Name="GateSlider" Minimum="0" Maximum="100" ValueChanged="Param_Changed"/>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <TextBlock Text="{DynamicResource Ui054}" Style="{StaticResource Label}"/>
-                                            <TextBlock Grid.Column="1" Style="{StaticResource Value}" Text="{Binding Value, ElementName=GateDepthSlider, StringFormat={}{0:0} dB}"/>
-                                        </Grid>
-                                        <Slider x:Name="GateDepthSlider" Minimum="0" Maximum="60" ValueChanged="Param_Changed"/>
-                                    </StackPanel>
-                                </Border>
+                                <WrapPanel>
+                                    <Border Style="{StaticResource Card}" Width="222" Margin="0,0,12,12">
+                                        <StackPanel>
+                                            <TextBlock Text="{DynamicResource InputStrip}" Style="{StaticResource CardTitle}"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Ui041}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=InputGainSlider, StringFormat={}{0:+0.0;-0.0;0} dB}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="InputGainSlider" Minimum="-12" Maximum="18" ValueChanged="Param_Changed" Orientation="Vertical" Height="100" HorizontalAlignment="Center" Width="36"/>
+                                            <CheckBox x:Name="HighPassCheck" Content="{DynamicResource HighPassEnable}" Click="Param_Clicked" Margin="0,0,0,10"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource HighPassFrequency}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=HighPassHzSlider, StringFormat={}{0:0} Hz}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="HighPassHzSlider" Minimum="40" Maximum="200" ValueChanged="Param_Changed"/>
+                                            <TextBlock x:Name="StudioInputRms" Style="{StaticResource Value}" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{DynamicResource InputHint}" Style="{StaticResource Label}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Card}" Width="222" Margin="0,0,12,12">
+                                        <StackPanel>
+                                            <TextBlock Text="{DynamicResource DeEsserTitle}" Style="{StaticResource CardTitle}"/>
+                                            <CheckBox x:Name="DeEsserCheck" Content="{DynamicResource DeEsserEnable}" Click="Param_Clicked" Margin="0,0,0,10"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Frequency}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=DeEsserHzSlider, StringFormat={}{0:0} Hz}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="DeEsserHzSlider" Minimum="2500" Maximum="9000" ValueChanged="Param_Changed"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource DeEsserThreshold}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=DeEsserThresholdSlider, StringFormat={}{0:0} dB}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="DeEsserThresholdSlider" Minimum="-48" Maximum="-6" ValueChanged="Param_Changed"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource MaxReduction}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=DeEsserReductionSlider, StringFormat={}{0:0.0} dB}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="DeEsserReductionSlider" Minimum="0" Maximum="12" ValueChanged="Param_Changed"/>
+                                            <ProgressBar x:Name="DeEsserReductionMeter" Maximum="12" Height="8" Margin="0,8"/>
+                                            <TextBlock x:Name="DeEsserReductionText" Style="{StaticResource Value}"/>
+                                            <TextBlock Text="{DynamicResource DeEsserHint}" Style="{StaticResource Label}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Card}" Width="222" Margin="0,0,12,12">
+                                        <StackPanel>
+                                            <TextBlock Text="{DynamicResource CompressorTitle}" Style="{StaticResource CardTitle}"/>
+                                            <CheckBox x:Name="CompCheck" Content="{DynamicResource Ui047}" Click="Param_Clicked" Margin="0,0,0,10"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Ui048}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=CompThresholdSlider, StringFormat={}{0:0} dB}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="CompThresholdSlider" Minimum="-40" Maximum="-6" ValueChanged="Param_Changed"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Ui049}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=CompRatioSlider, StringFormat={}{0:0.0}:1}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="CompRatioSlider" Minimum="1" Maximum="8" ValueChanged="Param_Changed"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Attack}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=CompAttackSlider, StringFormat={}{0:0} ms}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="CompAttackSlider" Minimum="1" Maximum="100" ValueChanged="Param_Changed"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Release}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=CompReleaseSlider, StringFormat={}{0:0} ms}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="CompReleaseSlider" Minimum="20" Maximum="1000" ValueChanged="Param_Changed"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Knee}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=CompKneeSlider, StringFormat={}{0:0.0} dB}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="CompKneeSlider" Minimum="0" Maximum="12" ValueChanged="Param_Changed"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Makeup}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=CompMakeupSlider, StringFormat={}{0:0.0} dB}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="CompMakeupSlider" Minimum="0" Maximum="12" ValueChanged="Param_Changed"/>
+                                            <ProgressBar x:Name="CompReductionMeter" Maximum="24" Height="8" Margin="0,8"/>
+                                            <TextBlock x:Name="CompReductionText" Style="{StaticResource Value}"/>
+                                            <TextBlock Text="{DynamicResource CompressionHint}" Style="{StaticResource Label}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Card}" Width="222" Margin="0,0,12,12">
+                                        <StackPanel>
+                                            <TextBlock Text="{DynamicResource OutputStrip}" Style="{StaticResource CardTitle}"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Ui042}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=OutputGainSlider, StringFormat={}{0:+0.0;-0.0;0} dB}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="OutputGainSlider" Minimum="-12" Maximum="12" ValueChanged="Param_Changed" Orientation="Vertical" Height="100" HorizontalAlignment="Center" Width="36"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource OutputCeiling}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=OutputCeilingSlider, StringFormat={}{0:0.0} dBFS}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="OutputCeilingSlider" Minimum="-6" Maximum="-0.3" ValueChanged="Param_Changed"/>
+                                            <TextBlock x:Name="StudioOutputRms" Style="{StaticResource Value}" TextWrapping="Wrap"/>
+                                            <ProgressBar x:Name="LimiterReductionMeter" Maximum="24" Height="8" Margin="0,8"/>
+                                            <TextBlock x:Name="LimiterReductionText" Style="{StaticResource Value}" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{DynamicResource CeilingHint}" Style="{StaticResource Label}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Card}" Width="222" Margin="0,0,12,12">
+                                        <StackPanel>
+                                            <TextBlock Text="{DynamicResource QuickTone}" Style="{StaticResource CardTitle}"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Ui045}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=PresenceSlider, StringFormat={}{0:0.0} dB}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="PresenceSlider" Minimum="0" Maximum="6" ValueChanged="Param_Changed"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Ui046}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=MudSlider, StringFormat={}{0:0.0} dB}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="MudSlider" Minimum="0" Maximum="6" ValueChanged="Param_Changed"/>
+                                            <TextBlock Text="{DynamicResource QuickToneHint}" Style="{StaticResource Label}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Card}" Width="222" Margin="0,0,12,12">
+                                        <StackPanel>
+                                            <TextBlock Text="{DynamicResource Ui050}" Style="{StaticResource CardTitle}"/>
+                                            <CheckBox x:Name="GateEnabledCheck" Content="{DynamicResource Ui051}" Click="Param_Clicked" Margin="0,0,0,10"/>
+                                            <TextBlock Text="{DynamicResource Ui052}" Style="{StaticResource Label}"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Ui053}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=GateSlider, StringFormat={}{0:0}%}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="GateSlider" Minimum="0" Maximum="100" ValueChanged="Param_Changed"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{DynamicResource Ui054}" Style="{StaticResource Label}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Value, ElementName=GateDepthSlider, StringFormat={}{0:0} dB}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Slider x:Name="GateDepthSlider" Minimum="0" Maximum="60" ValueChanged="Param_Changed"/>
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
                             </StackPanel>
                         </ScrollViewer>
                     </TabItem>
                     <TabItem Header="{DynamicResource Ui055}">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel Margin="0,14,0,0">
-                                <Border Style="{StaticResource Card}"><StackPanel>
-                                    <TextBlock Text="{DynamicResource StabilityTitle}" Style="{StaticResource CardTitle}"/>
-                                    <TextBlock x:Name="AdviceText" TextWrapping="Wrap" Style="{StaticResource Label}"/>
-                                    <Button x:Name="ApplyAdviceButton" Content="{DynamicResource ApplyAdvice}" Click="ApplyAdvice_Click" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left" Visibility="Collapsed"/>
-                                </StackPanel></Border>
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource StabilityTitle}" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock x:Name="AdviceText" TextWrapping="Wrap" Style="{StaticResource Label}"/>
+                                        <Button x:Name="ApplyAdviceButton" Content="{DynamicResource ApplyAdvice}" Click="ApplyAdvice_Click" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left" Visibility="Collapsed"/>
+                                    </StackPanel>
+                                </Border>
                                 <Border Style="{StaticResource Card}">
                                     <StackPanel>
                                         <TextBlock Text="{DynamicResource Ui056}" Style="{StaticResource CardTitle}"/>
@@ -273,40 +673,53 @@
                         </ScrollViewer>
                     </TabItem>
                     <TabItem Header="{DynamicResource RecordTitle}">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,14,0,0">
-                            <Border Style="{StaticResource Card}"><StackPanel>
-                                <TextBlock Text="{DynamicResource RecordTitle}" Style="{StaticResource CardTitle}"/>
-                                <TextBlock Text="{DynamicResource RecordHint}" Style="{StaticResource Label}" TextWrapping="Wrap"/>
-                                <ProgressBar x:Name="ComparisonProgress" Maximum="10" Height="8" Margin="0,14"/>
-                                <TextBlock x:Name="ComparisonStatus" Style="{StaticResource Label}" TextWrapping="Wrap"/>
-                                <WrapPanel>
-                                    <Button x:Name="RecordButton" Content="{DynamicResource RecordStart}" Style="{StaticResource PrimaryButton}" Click="RecordComparison_Click" Margin="0,0,8,8"/>
-                                    <Button x:Name="CancelRecordButton" Content="{DynamicResource RecordCancel}" Style="{StaticResource SecondaryButton}" Click="CancelComparison_Click" Margin="0,0,0,8"/>
-                                </WrapPanel>
-                                <TextBlock Text="{DynamicResource PreviewDevice}" Style="{StaticResource Label}" Margin="0,14,0,8"/>
-                                <ComboBox x:Name="PreviewOutputCombo" Margin="0,0,0,14"/>
-                                <WrapPanel>
-                                    <Button x:Name="PlayOriginalButton" Content="{DynamicResource PlayOriginal}" Click="PlayOriginal_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/>
-                                    <Button x:Name="PlayProcessedButton" Content="{DynamicResource PlayProcessed}" Click="PlayProcessed_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/>
-                                    <Button x:Name="StopPreviewButton" Content="{DynamicResource PreviewStop}" Click="StopPreview_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,0,8"/>
-                                </WrapPanel>
-                                <Border Background="{DynamicResource WarningSoft}" Padding="12" CornerRadius="8" Margin="0,10,0,0">
-                                    <TextBlock Text="{DynamicResource PreviewWarning}" TextWrapping="Wrap" Foreground="{DynamicResource Ink}"/>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="0,14,0,0">
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource RecordTitle}" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock Text="{DynamicResource RecordHint}" Style="{StaticResource Label}" TextWrapping="Wrap"/>
+                                        <ProgressBar x:Name="ComparisonProgress" Maximum="10" Height="8" Margin="0,14"/>
+                                        <TextBlock x:Name="ComparisonStatus" Style="{StaticResource Label}" TextWrapping="Wrap"/>
+                                        <WrapPanel>
+                                            <Button x:Name="RecordButton" Content="{DynamicResource RecordStart}" Style="{StaticResource PrimaryButton}" Click="RecordComparison_Click" Margin="0,0,8,8"/>
+                                            <Button x:Name="CancelRecordButton" Content="{DynamicResource RecordCancel}" Style="{StaticResource SecondaryButton}" Click="CancelComparison_Click" Margin="0,0,0,8"/>
+                                        </WrapPanel>
+                                        <TextBlock Text="{DynamicResource PreviewDevice}" Style="{StaticResource Label}" Margin="0,14,0,8"/>
+                                        <ComboBox x:Name="PreviewOutputCombo" Margin="0,0,0,14"/>
+                                        <WrapPanel>
+                                            <Button x:Name="PlayOriginalButton" Content="{DynamicResource PlayOriginal}" Click="PlayOriginal_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/>
+                                            <Button x:Name="PlayProcessedButton" Content="{DynamicResource PlayProcessed}" Click="PlayProcessed_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/>
+                                            <Button x:Name="StopPreviewButton" Content="{DynamicResource PreviewStop}" Click="StopPreview_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,0,8"/>
+                                        </WrapPanel>
+                                        <WrapPanel>
+                                            <Button x:Name="ExportOriginalButton" Content="{DynamicResource ExportOriginal}" Click="ExportOriginal_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/>
+                                            <Button x:Name="ExportProcessedButton" Content="{DynamicResource ExportProcessed}" Click="ExportProcessed_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,0,8"/>
+                                        </WrapPanel>
+                                        <TextBlock Text="{DynamicResource ExportWavHint}" Style="{StaticResource Label}" TextWrapping="Wrap"/>
+                                        <Border Background="{DynamicResource WarningSoft}" Padding="12" CornerRadius="8" Margin="0,10,0,0">
+                                            <TextBlock Text="{DynamicResource PreviewWarning}" TextWrapping="Wrap" Foreground="{DynamicResource Ink}"/>
+                                        </Border>
+                                    </StackPanel>
                                 </Border>
-                            </StackPanel></Border>
-                        </StackPanel></ScrollViewer>
+                            </StackPanel>
+                        </ScrollViewer>
                     </TabItem>
                     <TabItem Header="{DynamicResource PreferencesTitle}">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,14,0,0">
-                            <Border Style="{StaticResource Card}"><StackPanel>
-                                <TextBlock Text="{DynamicResource PreferencesTitle}" Style="{StaticResource CardTitle}"/>
-                                <CheckBox x:Name="DarkThemeCheck" Content="{DynamicResource DarkTheme}" Click="Theme_Click" Margin="0,0,0,18"/>
-                                <CheckBox x:Name="StartupCheck" Click="Startup_Click" Margin="0,0,0,8">
-                                    <TextBlock Text="{DynamicResource StartupOption}" TextWrapping="Wrap"/>
-                                </CheckBox>
-                                <TextBlock Text="{DynamicResource StartupHint}" Style="{StaticResource Label}" TextWrapping="Wrap"/>
-                            </StackPanel></Border>
-                        </StackPanel></ScrollViewer>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="0,14,0,0">
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource PreferencesTitle}" Style="{StaticResource CardTitle}"/>
+                                        <CheckBox x:Name="DarkThemeCheck" Content="{DynamicResource DarkTheme}" Click="Theme_Click" Margin="0,0,0,18"/>
+                                        <CheckBox x:Name="StartupCheck" Click="Startup_Click" Margin="0,0,0,8">
+                                            <TextBlock Text="{DynamicResource StartupOption}" TextWrapping="Wrap"/>
+                                        </CheckBox>
+                                        <TextBlock Text="{DynamicResource StartupHint}" Style="{StaticResource Label}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
                     </TabItem>
                 </TabControl>
             </Grid>

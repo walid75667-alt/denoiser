@@ -6,7 +6,7 @@ using NAudio.Wave;
 namespace MicDenoiser;
 
 public readonly record struct MeterData(float InPeak, float OutPeak, float? Vad, float GateGain,
-    bool Bypass, double FrameMs, double QueuedMs, int Underruns);
+    bool Bypass, double FrameMs, double QueuedMs, int Underruns, float InRms = 0, float OutRms = 0, float CompressorReductionDb = 0, float DeEsserReductionDb = 0, float LimiterReductionDb = 0);
 
 /// <summary>WASAPI capture only queues audio; a dedicated worker resamples and denoises it.</summary>
 public sealed class NoiseSuppressor : IDisposable
@@ -136,7 +136,9 @@ public sealed class NoiseSuppressor : IDisposable
         var input = new float[size]; var output = new float[size]; var bytes = new byte[size * 2];
         var uiClock = Stopwatch.StartNew();
         float inputPeak = 0, outputPeak = 0;
-        double maximumFrameMs = 0;
+        double maximumFrameMs = 0, inputEnergy = 0, outputEnergy = 0;
+        int meterFrames = 0;
+        float compReduction = 0, deEssReduction = 0, limitReduction = 0;
         try
         {
             using var priority = new AudioThreadPriority();
@@ -166,6 +168,10 @@ public sealed class NoiseSuppressor : IDisposable
                         ComparisonCompleted?.Invoke(comparison);
                     }
                     inputPeak = Math.Max(inputPeak, meters.InPeak); outputPeak = Math.Max(outputPeak, meters.OutPeak);
+                    inputEnergy += (double)meters.InRms * meters.InRms; outputEnergy += (double)meters.OutRms * meters.OutRms; meterFrames++;
+                    compReduction = Math.Max(compReduction, meters.CompressorReductionDb);
+                    deEssReduction = Math.Max(deEssReduction, meters.DeEsserReductionDb);
+                    limitReduction = Math.Max(limitReduction, meters.LimiterReductionDb);
                     for (int i = 0; i < size; i++)
                     {
                         short value = (short)Math.Clamp(output[i], short.MinValue, short.MaxValue);
@@ -183,8 +189,10 @@ public sealed class NoiseSuppressor : IDisposable
                         }
                         Meters?.Invoke(new MeterData(inputPeak, outputPeak, meters.Vad, meters.GateGain, settings.Bypass,
                             maximumFrameMs, _captureBuffer.BufferedDuration.TotalMilliseconds + _outputBuffer.BufferedDuration.TotalMilliseconds,
-                            _monitor.Underruns));
-                        inputPeak = outputPeak = 0; maximumFrameMs = 0; uiClock.Restart();
+                            _monitor.Underruns, (float)Math.Sqrt(inputEnergy / meterFrames), (float)Math.Sqrt(outputEnergy / meterFrames),
+                            compReduction, deEssReduction, limitReduction));
+                        inputPeak = outputPeak = 0; maximumFrameMs = inputEnergy = outputEnergy = 0; meterFrames = 0;
+                        compReduction = deEssReduction = limitReduction = 0; uiClock.Restart();
                     }
                 }
             }

@@ -1,4 +1,4 @@
-MicDenoiser 2.1 — Windows 10/11 x64
+MicDenoiser 2.2 — Windows 10/11 x64
 
 العربية
 - المثبّت يتضمن البرنامج و.NET وDeepFilterNet3 ومكتبات الصوت. لا يحتاج تنزيل النموذج.
@@ -19,6 +19,10 @@ MicDenoiser 2.1 — Windows 10/11 x64
 - التفضيلات: واجهة داكنة، وتشغيل اختياري مع ويندوز بالأجهزة المحفوظة، مصغّرًا بجوار الساعة.
 - عند فصل جهاز صوت، اختار جهازًا آخر ثم ابدأ العزل؛ لا يتم التبديل تلقائيًا.
 
+- الميكسر: EQ بارامتري، ضغط الصوت، تخفيف السين والشين، وسقف الخرج، مع حفظ/تحميل المؤثرات.
+- للغناء: ابدأ بـ«غناء طبيعي»؛ العزل والبوابة متوقفان للحفاظ على النوتات. للتعليق جرّب «تعليق صوتي».
+- اختبار المايك يتيح حفظ WAV أحادي 48kHz Float32 لمدة 10 ثوانٍ بالمستوى الأصلي. التسجيل الكامل يتم في برنامج التسجيل.
+
 English
 - Setup includes the application, .NET runtime, DeepFilterNet3 model and audio libraries.
 - Install VB-Cable separately: https://vb-audio.com/Cable/ and restart Windows.
@@ -37,6 +41,10 @@ English
 - Automatic buffering displays recommendations in Health. Applying a recommendation restarts denoising.
 - Preferences: saved dark theme and optional Windows startup, minimized with saved devices.
 - Device removal stops audio. Choose another device and start again; no automatic device switch.
+
+- Mixer: parametric EQ, compressor, de-esser and output ceiling, with effects preset save/load.
+- For singing, start with Natural singing: denoiser mix and gate are off to preserve notes. For narration, try Voice-over.
+- Mic test exports 10-second mono 48 kHz Float32 WAV at captured levels. Record full sessions in your recording software.
 
 This build was compiled and checked on Linux. Physical Windows microphone playback,
 installer execution/uninstallation and listening quality still need Windows validation.

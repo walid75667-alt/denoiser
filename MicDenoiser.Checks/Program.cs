@@ -139,6 +139,184 @@ Check("use-case presets preserve quiet speech and survive saved configuration", 
         }
 });
 
+Check("parametric EQ reaches its specified gain without changing neutral audio", () =>
+{
+    var eq=new ParametricEqualizer(); var s=new ProcessingSettings { EqEnabled=true, EqPresenceHz=1000, EqPresenceGainDb=6 };
+    var signal=new float[480]; double inputEnergy=0, outputEnergy=0;
+    for(int frame=0;frame<150;frame++)
+    {
+        for(int i=0;i<480;i++) signal[i]=(float)(2000*Math.Sin(2*Math.PI*1000*(frame*480+i)/48000));
+        if(frame>=100) inputEnergy+=signal.Sum(x=>(double)x*x);
+        eq.Process(signal,s);
+        if(frame>=100) outputEnergy+=signal.Sum(x=>(double)x*x);
+    }
+    Require(Math.Abs(10*Math.Log10(outputEnergy/inputEnergy)-6)<.05,"EQ band gain is incorrect.");
+    var neutral=new ParametricEqualizer(); s=new ProcessingSettings { EqEnabled=true };
+    for(int frame=0;frame<20;frame++)
+    {
+        for(int i=0;i<480;i++) signal[i]=(float)(2000*Math.Sin((frame*480+i)*.13));
+        var original=(float[])signal.Clone(); neutral.Process(signal,s);
+        Require(signal.Zip(original,(a,b)=>Math.Abs(a-b)).Max()<.01,"Neutral EQ colors the input.");
+    }
+});
+
+Check("EQ live changes remain finite and bypass is gradual", () =>
+{
+    var eq=new ParametricEqualizer(); var s=new ProcessingSettings(); var x=new float[480]; float previous=0; double jump=0;
+    for(int frame=0;frame<250;frame++)
+    {
+        if(frame==30) { s.EqEnabled=true; s.EqLowGainDb=9; s.EqLowQ=3; }
+        if(frame==80) { s.EqLowHz=400; s.EqLowGainDb=-9; s.EqLowQ=.35f; }
+        if(frame==130) { s.EqEnabled=false; }
+        if(frame==180) { s.EqEnabled=true; s.EqLowHz=40; s.EqLowGainDb=9; s.EqLowQ=3; }
+        for(int i=0;i<480;i++) x[i]=(float)(2000*Math.Sin(2*Math.PI*120*(frame*480+i)/48000));
+        eq.Process(x,s);
+        foreach(float value in x) { Require(float.IsFinite(value) && Math.Abs(value)<20000,"EQ sweep is unstable."); jump=Math.Max(jump,Math.Abs(value-previous)); previous=value; }
+    }
+    Require(jump<600,$"EQ change produced a discontinuity of {jump:0.0} PCM units.");
+});
+
+Check("target EQ response agrees with a measured filter and bypass", () =>
+{
+    var s=new ProcessingSettings { EqEnabled=true, EqPresenceGainDb=6, EqPresenceHz=1000 };
+    var curve=EqualizerResponse.Curve(s,1024);
+    int index=(int)Math.Round(Math.Log(1000/40.0)/Math.Log(400)*1023);
+    Require(Math.Abs(curve[index]-6)<.05,"Displayed response is incorrect.");
+    s.EqEnabled=false;
+    Require(EqualizerResponse.Curve(s).All(v=>Math.Abs(v)<1e-8),"Disabled EQ remains on the graph.");
+    s.HighPassEnabled=true; s.HighPassHz=100;
+    var hp=EqualizerResponse.Curve(s);
+    Require(hp[0]<-15 && Math.Abs(hp[^1])<.01,"High-pass response is incorrect.");
+});
+
+Check("de-esser selectively attenuates highs while retaining low fundamentals", () =>
+{
+    double Render(double frequency,bool enabled)
+    {
+        var deess=new DeEsser();var s=new ProcessingSettings { DeEsserEnabled=enabled, DeEsserThresholdDb=-36, DeEsserMaxReductionDb=6 };
+        var x=new float[480]; double energy=0;
+        for(int frame=0;frame<150;frame++)
+        {
+            for(int i=0;i<480;i++) x[i]=(float)(12000*Math.Sin(2*Math.PI*frequency*(frame*480+i)/48000));
+            var copy=(float[])x.Clone(); deess.Process(x,s);
+            Require(x.All(float.IsFinite),"De-esser produced invalid audio.");
+            if(!enabled) Require(x.SequenceEqual(copy),"Disabled de-esser changed input.");
+            if(frame>=100) energy+=x.Sum(v=>(double)v*v);
+        }
+        return energy;
+    }
+    double high=10*Math.Log10(Render(9000,true)/Render(9000,false));
+    double low=10*Math.Log10(Render(200,true)/Render(200,false));
+    Require(high<-2 && high>-7,$"Sibilant band reduction is wrong: {high:0.00} dB.");
+    Require(Math.Abs(low)<.1,$"Low fundamental was affected: {low:0.00} dB.");
+});
+
+Check("compressor has a continuous soft knee and configurable attack", () =>
+{
+    Require(Math.Abs(Compressor.GainCurveDb(-6,-18,4,6)+9)<.001,"Steady ratio is incorrect.");
+    Require(Compressor.GainCurveDb(-24,-18,4,6)==0,"Below-knee audio was compressed.");
+    foreach(float level in new[]{-21f,-15f}) Require(Math.Abs(Compressor.GainCurveDb(level-.001f,-18,4,6)-Compressor.GainCurveDb(level+.001f,-18,4,6))<.002,"Soft knee is discontinuous.");
+    float Attack(float milliseconds)
+    {
+        var comp=new Compressor(); var signal=Enumerable.Repeat(12000f,480).ToArray();
+        comp.Process(signal,signal.Length,-30,4,48000,milliseconds,120,6);
+        return comp.GainReductionDb;
+    }
+    Require(Attack(1)>Attack(100)+2,"Attack control does not affect the transient.");
+});
+
+Check("output protection respects each configured ceiling and reports reduction", () =>
+{
+    foreach(float ceilingDb in new[]{-.3f,-.5f,-3f,-6f})
+    {
+        using var pipeline=new AudioPipeline(new DelayedIdentityEngine(0));
+        var s=new ProcessingSettings { OutputCeilingDb=ceilingDb, OutputGainDb=12 };
+        var input=Enumerable.Repeat(15000f,480).ToArray(); var output=new float[480]; FrameMeters meters=default;
+        for(int i=0;i<30;i++) meters=pipeline.Process(input,output,s);
+        float ceiling=MathF.Pow(10,ceilingDb/20)*32768;
+        Require(output.All(x=>float.IsFinite(x) && Math.Abs(x)<=ceiling+1),"Output exceeded the sample ceiling.");
+        Require(meters.LimiterReductionDb>1 && meters.OutRms<=meters.OutPeak+.001,"Metered reduction/RMS is incorrect.");
+    }
+});
+
+Check("professional settings and exchanged profiles are bounded and preserve routing choices", () =>
+{
+    var settings=new ProcessingSettings { EqLowHz=float.NaN, EqAirQ=float.PositiveInfinity, EqBodyGainDb=100, CompAttackMs=0, CompReleaseMs=99999, OutputCeilingDb=1, DeEsserHz=-30 };
+    var s=settings.SanitizedClone();
+    Require(s.EqLowHz==120 && s.EqAirQ==.7f && s.EqBodyGainDb==9 && s.CompAttackMs==1 && s.CompReleaseMs==1000 && s.OutputCeilingDb==-.3f && s.DeEsserHz==2500,"Professional settings escaped bounds.");
+    var current=new ProcessingSettings { Engine=DenoiserKind.RNNoise, BufferMode=AudioBufferMode.Stable, Bypass=true };
+    var saved=ProcessingSettings.FromPreset("voiceover"); saved.GateEnabled=true;
+    var loaded=EffectsProfile.Read(EffectsProfile.Serialize(saved),current,true);
+    Require(loaded.Engine==current.Engine && loaded.BufferMode==current.BufferMode && loaded.Bypass && !loaded.GateEnabled,"Profile changed processing ownership/routing or activated a live VAD.");
+    Require(loaded.EqEnabled && loaded.CompKneeDb==6 && loaded.DeEsserEnabled,"Profile lost effects.");
+    bool invalid=false; try { EffectsProfile.Read("{\"Settings\":{}}",current,false); } catch(ArgumentException) { invalid=true; }
+    Require(invalid,"Untagged settings were accepted as an effects profile.");
+    var copied=new ProcessingSettings(); copied.CopyFrom(saved);
+    Require(System.Text.Json.JsonSerializer.Serialize(copied)==System.Text.Json.JsonSerializer.Serialize(saved),"CopyFrom lost an effect setting.");
+});
+
+Check("natural singing preset keeps sustained notes out of the denoiser and gate", () =>
+{
+    foreach(var engine in Enum.GetValues<DenoiserKind>())
+    {
+        var singing=ProcessingSettings.FromPreset("singing",engine);
+        Require(singing.Strength==0 && !singing.GateEnabled && !singing.HighPassEnabled && !singing.DeEsserEnabled,"Singing preset imposes speech suppression.");
+    }
+    using var pipeline=new AudioPipeline(new DelayedIdentityEngine(1440));
+    var s=ProcessingSettings.FromPreset("singing"); s.CompressorOn=false;
+    var input=new float[480]; var output=new float[480]; int delay=(int)Math.Round(pipeline.AlgorithmicDelayMs*48);
+    for(int frame=0;frame<100;frame++)
+    {
+        for(int i=0;i<480;i++) input[i]=(float)(3000*Math.Sin(2*Math.PI*220*(frame*480+i)/48000));
+        pipeline.Process(input,output,s);
+        for(int i=0;i<480;i++)
+        {
+            int pos=frame*480+i-delay; float expected=pos<0?0:(float)(3000*Math.Sin(2*Math.PI*220*pos/48000));
+            Require(Math.Abs(output[i]-expected)<.01,"Sustained dry note lost samples or was colored.");
+        }
+    }
+});
+
+Check("WAV export retains captured levels, precision format and sample count", () =>
+{
+    var capture=new ComparisonCapture(480,0,960);
+    var raw=Enumerable.Repeat(6000f,480).ToArray(); var wet=Enumerable.Repeat(1500f,480).ToArray();
+    capture.Add(raw,wet); capture.Add(raw,wet); var result=ComparisonResult.Create(capture);
+    string path=Path.Combine(Path.GetTempPath(),Guid.NewGuid().ToString("N")+".wav");
+    try
+    {
+        foreach(bool original in new[]{true,false})
+        {
+            result.SaveWaveFile(path,original);
+            using var reader=new WaveFileReader(path);
+            Require(reader.WaveFormat.SampleRate==48000 && reader.WaveFormat.Channels==1 && reader.WaveFormat.BitsPerSample==32
+                && reader.WaveFormat.Encoding==WaveFormatEncoding.IeeeFloat,"Export format is incorrect.");
+            Require(reader.Length==960*4,"WAV lost or added samples.");
+            var samples=new float[960]; Require(reader.ToSampleProvider().Read(samples,0,960)==960,"WAV cannot be read back.");
+            Require(samples.All(x=>Math.Abs(x-(original?6000f:1500f)/32768)<1e-7),"Export applied preview loudness/fades or changed capture levels.");
+        }
+    }
+    finally { File.Delete(path); }
+});
+
+Check("live parameter fades settle to exact silence without subnormal tails", () =>
+{
+    var gain=new SmoothedValue(); gain.SetTarget(1); gain.Next(); gain.SetTarget(0);
+    float value=1;
+    for(int sample=0;sample<96000;sample++) value=gain.Next();
+    Require(value==0,"A completed fade retained a subnormal tail.");
+});
+
+Check("professional effects do not allocate on a warmed audio worker", () =>
+{
+    using var pipeline=new AudioPipeline(new DelayedIdentityEngine(0));
+    var s=ProcessingSettings.FromPreset("broadcast"); var input=Enumerable.Repeat(1000f,480).ToArray(); var output=new float[480];
+    for(int frame=0;frame<100;frame++) pipeline.Process(input,output,s);
+    long before=GC.GetAllocatedBytesForCurrentThread();
+    for(int frame=0;frame<100;frame++) pipeline.Process(input,output,s);
+    Require(GC.GetAllocatedBytesForCurrentThread()==before,"Effects allocate memory on the audio worker.");
+});
+
 Check("output starvation and recovery avoid abrupt zero-fill clicks", () =>
 {
     byte[] Tone(short value, int samples)
