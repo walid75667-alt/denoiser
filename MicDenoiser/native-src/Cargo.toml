@@ -1,0 +1,26 @@
+[package]
+name = "micdenoiser_df"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.90"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+deep_filter = { git = "https://github.com/Rikorose/DeepFilterNet", rev = "d375b2d8309e0935d165700c91da9de862a99c31", default-features = false, features = ["tract"] }
+ndarray = "0.15"
+# Match upstream's tested lockfile: later 0.21 releases changed ndarray and graph APIs.
+tract-core = "=0.21.4"
+tract-onnx = "=0.21.4"
+tract-pulse = "=0.21.4"
+tract-hir = "=0.21.4"
+tract-data = "=0.21.4"
+tract-linalg = "=0.21.4"
+tract-nnef = "=0.21.4"
+tract-onnx-opl = "=0.21.4"
+tract-pulse-opl = "=0.21.4"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
