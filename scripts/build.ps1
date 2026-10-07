@@ -12,8 +12,11 @@ if ($LASTEXITCODE -ne 0) { throw 'Application build failed.' }
 $checks = Join-Path $root 'MicDenoiser.Checks/MicDenoiser.Checks.csproj'
 & dotnet restore $checks --locked-mode
 if ($LASTEXITCODE -ne 0) { throw 'Check dependency restoration failed.' }
-& dotnet run --project $checks -c Release --no-restore
-if ($LASTEXITCODE -ne 0) { throw 'Processing checks failed.' }
+$tests = Join-Path $root 'MicDenoiser.Tests/MicDenoiser.Tests.csproj'
+& dotnet restore $tests --locked-mode
+if ($LASTEXITCODE -ne 0) { throw 'xUnit dependency restoration failed.' }
+& dotnet test $tests -c Release --no-restore --logger 'trx;LogFileName=windows.trx' --results-directory (Join-Path $root 'artifacts/test-results')
+if ($LASTEXITCODE -ne 0) { throw 'xUnit native/DSP regressions failed.' }
 if ($Publish) {
     & dotnet publish $project -c Release -r win-x64 --self-contained true -o (Join-Path $root 'artifacts/windows') -p:PublishSingleFile=false
     if ($LASTEXITCODE -ne 0) { throw 'Publishing failed.' }

@@ -37,7 +37,9 @@ public partial class MainWindow
         catch { StatusText.Text = T("DeviceWatchUnavailable"); }
         Loaded += async (_, _) =>
         {
-            if (!_startWithWindows || !Environment.GetCommandLineArgs().Contains("--startup")) return;
+            bool startup = Environment.GetCommandLineArgs().Contains("--startup");
+            if (!_setupCompleted && !startup) ShowSetup();
+            if (!_startWithWindows || !startup) return;
             TrayMinimize_Click(this, new RoutedEventArgs());
             if (_savedDevicesAvailable) await StartProcessing();
             else ShowDeviceRecovery("StartupMissingDevices");

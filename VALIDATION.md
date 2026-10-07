@@ -1,3 +1,20 @@
+# Version 2.5 validation update
+
+The previous version's evidence and limitations are retained below. For 2.5:
+
+- WPF/.NET 8 x64 build and self-contained publish succeeded on this Linux host with no warnings/errors. This is cross-compilation, not WPF execution.
+- xUnit: 48 passed, 2 explicitly skipped Windows-native checks. The Windows workflow runs the real pinned RNNoise DLL, its 960-sample impulse-delay probe, and DeepFilterNet sidechain VAD; its remote result is not yet verified here.
+- RNNoise 0.4.5 Linux impulse peak measured 960 samples. The shipped Windows DLL has unknown original source revision; the Linux measurement does not independently prove Windows timing. The Windows hash is pinned in its executable test.
+- The call gate now has hysteresis, 300 ms hold, 6 dB depth. In the initial 12 dB experiment a -5 dB SNR pink-noise speech frame lost about 11.9 dB; this motivated a gentler default. Singing/whisper gates remain off.
+- The 36-scene benchmark uses three recorded voices (isolated 8 kHz digits upsampled), fan/pink/brown/keyboard+hum and -5/0/10 dB SNR. Published baseline metrics and fixture hashes are in benchmarks/. Tone and compression are disabled to isolate gate loss. Float32 output prevents PCM16 quantization from inflating quiet-frame loss.
+- Timing tests verify individual-frame p99, rare stalls, window expiry and retained session maximum. Recording tests verify short histories, bounded ring wrap and delay alignment including non-frame-multiple delays.
+- The 36-scene Float32 benchmark reproduced every committed scene metric exactly on a second run and passed the regression thresholds. Maximum gate speech loss was 5.998 dB; pause attenuation ranged 40.39–41.12 dB (fan), 9.51–18.50 (pink), 8.45–18.17 (brown) and 18.88–31.04 (keyboard/hum) on these fixtures only.
+- NSIS setup and the portable ZIP were built; all 484 payload files matched the self-contained publish by SHA-256 after extracting setup. This does not test installer execution.
+- GUI wizard, dialogs, recording export interactions, physical audio, SmartScreen/signing and installer execution require Windows. No cause of the user's actual speech crackling or Krisp equivalence is claimed.
+- Future tagged packages publish to GitHub prereleases after both CI jobs succeed. Existing tracked 2.4 downloads remain until replacement assets can be verified; no history rewrite has occurred. Direct GitHub API calls are currently blocked by the environment's restricted-domain list. The draft adds api.github.com and uploads.github.com, but saving the draft is not runtime activation.
+
+---
+
 # Validation of MicDenoiser 2.4
 
 The Windows application was imported from the user's uploaded project. The

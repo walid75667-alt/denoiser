@@ -119,7 +119,8 @@ public sealed class ProcessingSettings
                 s.DeEsserEnabled = true; s.DeEsserMaxReductionDb = 3;
                 break;
             case "calls":
-                s.GateEnabled = false; s.NoiseReductionDb = 35;
+                s.GateEnabled = true; s.NoiseReductionDb = 35;
+                s.GateThreshold = .35f; s.GateDepthDb = 6; s.GateHoldMs = 300; s.GateReleaseMs = 200;
                 s.CompressorOn = true; s.CompThresholdDb = -22; s.CompRatio = 2; s.PresenceDb = 1;
                 break;
             case "streaming":

@@ -43,7 +43,9 @@ public sealed class RNNoiseEngine : IDenoiseEngine
     private readonly RNNoise _state = new();
     public string Name => "RNNoise";
     public int FrameSize => RNNoise.FrameSize;
-    public int DelaySamples => RNNoise.FrameSize;
+    // The bundled RNNoise model has one analysis frame and one recurrent look-ahead frame.
+    // Keep wet/dry and bypass aligned; the Windows native impulse check guards this value.
+    public int DelaySamples => 2 * RNNoise.FrameSize;
     public float? Process(float[] input, float[] output)
     {
         Array.Copy(input, output, FrameSize);

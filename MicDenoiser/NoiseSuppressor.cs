@@ -7,7 +7,7 @@ namespace MicDenoiser;
 
 public readonly record struct MeterData(float InPeak, float OutPeak, float? Vad, float GateGain,
     bool Bypass, double FrameMs, double QueuedMs, int Underruns, float InRms = 0, float OutRms = 0, float CompressorReductionDb = 0, float DeEsserReductionDb = 0, float LimiterReductionDb = 0,
-    DiagnosticSnapshot Diagnostic = default);
+    DiagnosticSnapshot Diagnostic = default, FrameTimingSnapshot Timing = default);
 
 /// <summary>WASAPI capture only queues audio; a dedicated worker resamples and denoises it.</summary>
 public sealed class NoiseSuppressor : IDisposable
@@ -26,6 +26,8 @@ public sealed class NoiseSuppressor : IDisposable
     private ComparisonCapture? _comparison;
     private readonly StabilityAdvisor _advisor;
     private readonly AudioDiagnostics _diagnostics = new();
+    private readonly FrameTiming _timing = new();
+    private readonly RollingAudio? _history;
     private readonly bool _fastSinging;
     private long _lastInputAt;
     private int _running, _faulted, _playbackStarted, _disposed;
@@ -38,7 +40,7 @@ public sealed class NoiseSuppressor : IDisposable
     public int PlaybackBufferTargetMs { get; }
     public string InputFormatDescription => $"{_capture.WaveFormat.SampleRate / 1000.0:0.#} kHz / {_capture.WaveFormat.Channels} channels";
 
-    public NoiseSuppressor(string inputId, string outputId, ProcessingSettings settings)
+    public NoiseSuppressor(string inputId, string outputId, ProcessingSettings settings, bool recordHistory = false)
     {
         _settings = settings.SanitizedClone();
         _fastSinging = _settings.FastSinging;
@@ -48,6 +50,7 @@ public sealed class NoiseSuppressor : IDisposable
         _pipeline = new AudioPipeline(engine);
         try
         {
+            if (recordHistory) _history = new RollingAudio(_pipeline.FrameSize, (int)Math.Round(AlgorithmicDelayMs * 48));
             // Initialize model/DSP buffers and optional VAD before starting capture.
             var silent = new float[_pipeline.FrameSize]; var discard = new float[_pipeline.FrameSize];
             for (int i = 0; i < 10; i++) _pipeline.Process(silent, discard, _settings);
@@ -100,6 +103,16 @@ public sealed class NoiseSuppressor : IDisposable
         return capture;
     }
     public void CancelComparison() => Interlocked.Exchange(ref _comparison, null)?.Cancel();
+    public AudioHistory? HistoryAfterStop()
+    {
+        if (_worker.IsAlive) throw new InvalidOperationException("Stop the audio worker before reading history.");
+        return _history?.SnapshotAfterStop();
+    }
+    public FrameTimingSnapshot TimingAfterStop()
+    {
+        if (_worker.IsAlive) throw new InvalidOperationException("Stop the audio worker before reading timing.");
+        return _timing.Snapshot();
+    }
     public void Start()
     {
         if (Interlocked.CompareExchange(ref _running, 1, 0) != 0) return;
@@ -167,7 +180,10 @@ public sealed class NoiseSuppressor : IDisposable
                     var settings = Volatile.Read(ref _settings);
                     long started = Stopwatch.GetTimestamp();
                     FrameMeters meters = _pipeline.Process(input, output, settings);
-                    maximumFrameMs = Math.Max(maximumFrameMs, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+                    double elapsedMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds;
+                    maximumFrameMs = Math.Max(maximumFrameMs, elapsedMs);
+                    _timing.Observe(elapsedMs);
+                    _history?.Add(input, output);
                     var comparison = Volatile.Read(ref _comparison);
                     if (comparison != null && comparison.Add(input, output))
                     {
@@ -199,7 +215,7 @@ public sealed class NoiseSuppressor : IDisposable
                         Meters?.Invoke(new MeterData(inputPeak, outputPeak, meters.Vad, meters.GateGain, settings.Bypass,
                             maximumFrameMs, _captureBuffer.BufferedDuration.TotalMilliseconds + _outputBuffer.BufferedDuration.TotalMilliseconds,
                             _monitor.Underruns, (float)Math.Sqrt(inputEnergy / meterFrames), (float)Math.Sqrt(outputEnergy / meterFrames),
-                            compReduction, deEssReduction, limitReduction, diagnostic));
+                            compReduction, deEssReduction, limitReduction, diagnostic, _timing.Snapshot()));
                         inputPeak = outputPeak = rawPeak = 0; maximumFrameMs = inputEnergy = outputEnergy = 0; meterFrames = 0;
                         compReduction = deEssReduction = limitReduction = 0; uiClock.Restart();
                     }

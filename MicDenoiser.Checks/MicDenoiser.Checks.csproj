@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="../MicDenoiser/Localization/*.json" Link="UiValidation/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../MicDenoiser/MainWindow.xaml;../MicDenoiser/App.xaml" Link="UiValidation/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../MicDenoiser/MainWindow.xaml;../MicDenoiser/App.xaml;../MicDenoiser/SetupWindow.xaml" Link="UiValidation/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="NAudio.Core" Version="2.2.1" />
     <Compile Include="../MicDenoiser/AudioSampleProviders.cs" Link="AudioSampleProviders.cs" />
     <Compile Include="../MicDenoiser/StablePlaybackProvider.cs" Link="StablePlaybackProvider.cs" />
@@ -17,6 +17,8 @@
     <Compile Include="../MicDenoiser/EffectsProfile.cs" Link="EffectsProfile.cs" />
     <Compile Include="../MicDenoiser/VoiceEffects.cs" Link="VoiceEffects.cs" />
     <Compile Include="../MicDenoiser/SpatialEffects.cs" Link="SpatialEffects.cs" />
+    <Compile Include="../MicDenoiser/FrameTiming.cs" Link="FrameTiming.cs" />
+    <Compile Include="../MicDenoiser/RollingAudio.cs" Link="RollingAudio.cs" />
     <Compile Include="../MicDenoiser/AudioDiagnostics.cs" Link="AudioDiagnostics.cs" />
     <Compile Include="../MicDenoiser/AbComparison.cs" Link="AbComparison.cs" />
     <Compile Include="../MicDenoiser/Dsp.cs" Link="Dsp.cs" />

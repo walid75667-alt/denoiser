@@ -86,6 +86,8 @@ public sealed class VadGate
     private const float AttackMs = 5f;
 
     private float _gain = 1f;
+    private float _smoothedVad;
+    private bool _open;
     private int _hold;
 
     public float Gain => _gain;
@@ -95,10 +97,18 @@ public sealed class VadGate
         float floor = MathF.Pow(10f, -s.GateDepthDb / 20f);
         int holdFrames = Math.Max(0, (int)(s.GateHoldMs / FrameMs));
 
-        float target;
-        if (vad >= s.GateThreshold) { _hold = holdFrames; target = 1f; }
-        else if (_hold > 0) { _hold--; target = 1f; }
-        else target = floor;
+        // Open immediately on speech evidence. A slower falling probability and separate
+        // closing threshold protect weak syllables after a detected onset from VAD jitter.
+        // This cannot identify a target speaker or recover speech missed by the detector.
+        vad = float.IsFinite(vad) ? Math.Clamp(vad, 0, 1) : 1;
+        _smoothedVad = vad >= _smoothedVad ? vad
+            : vad + (_smoothedVad - vad) * MathF.Exp(-FrameMs / 30);
+        float closeThreshold = s.GateThreshold * .65f;
+        if (vad >= s.GateThreshold) { _open = true; _hold = holdFrames; }
+        else if (_open && _smoothedVad >= closeThreshold) _hold = holdFrames;
+        else if (_hold > 0) _hold--;
+        else _open = false;
+        float target = _open || _hold > 0 ? 1 : floor;
 
         float tau = target > _gain ? AttackMs : Math.Max(10f, s.GateReleaseMs);
         float coef = 1f - MathF.Exp(-FrameMs / tau);

@@ -1,5 +1,17 @@
 # MicDenoiser
 
+Version 2.5 adds the corrected 960-sample RNNoise delay (40 ms total fixed
+pipeline delay), a conservative call gate with hysteresis, per-frame p99 and
+session maximum timing, optional last-30-second audio diagnosis, and a
+first-run illustrated VB-Cable guide. The recording stays in local RAM until
+you explicitly save it; saving stops audio to avoid blocking the live worker.
+
+New packages are built for GitHub Releases after both Linux and Windows CI
+pass on a version tag. See [release workflow](docs/RELEASING.md),
+[release notes](docs/RELEASE-NOTES.md) and [real-speech benchmark](benchmarks/README.md).
+The checked-in downloads below remain version 2.4 until new release assets
+are uploaded and verified; version 2.5 binaries are not added to Git history.
+
 Windows x64 microphone noise suppression with DeepFilterNet3 (default) and a
 lightweight RNNoise option. The WPF/.NET 8 application was imported from the
 attached MicDenoiser project and upgraded with a streaming native engine,

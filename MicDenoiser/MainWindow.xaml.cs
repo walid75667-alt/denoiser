@@ -344,6 +344,8 @@ public partial class MainWindow : Window
         InputCombo.IsEnabled = OutputCombo.IsEnabled = EngineCombo.IsEnabled = BufferModeCombo.IsEnabled = RefreshDevicesButton.IsEnabled = GateEnabledCheck.IsEnabled = idle;
         EngineCombo.IsEnabled = GateEnabledCheck.IsEnabled = idle && !_settings.FastSinging;
         FastSingingCheck.IsEnabled = idle;
+        HistoryCheck.IsEnabled = idle;
+        SaveHistoryButton.IsEnabled = !_starting && !_abBusy && _comparison == null;
         ToggleButton.IsEnabled = !_starting && _preview == null && !_abBusy;
         LoadingProgress.Visibility = _starting ? Visibility.Visible : Visibility.Collapsed;
         _tray?.Refresh(_suppressor != null, _starting || _preview != null);
@@ -365,7 +367,8 @@ public partial class MainWindow : Window
         try
         {
             var settings = _settings.SanitizedClone();
-            var suppressor = await Task.Run(() => new NoiseSuppressor(input.Id, output.Id, settings));
+            bool recordHistory = HistoryCheck.IsChecked == true;
+            var suppressor = await Task.Run(() => new NoiseSuppressor(input.Id, output.Id, settings, recordHistory));
             if (_closed || generation != _deviceGeneration) { suppressor.Dispose(); if (!_closed) ShowDeviceRecovery("DeviceDisconnected"); return; }
             _suppressor = suppressor; suppressor.UpdateSettings(_settings);
             _advice = StabilityAdvice.Observing; RefreshAdvice();
@@ -389,6 +392,7 @@ public partial class MainWindow : Window
             _lastUnderruns = 0; _gapUntil = _clippingUntil = DateTime.MinValue;
             RenderDiagnostic(default);
             _diagnosticSettings = null;
+            _lastHistory = null; _lastTiming = default; HistoryStatus.Text = "";
             suppressor.Start(); DeviceRecoveryPanel.Visibility = Visibility.Collapsed; ToggleButton.Content = T("Stop"); ToggleButton.Background = (Brush)FindResource("Danger");
             SetStatus(true); StatusText.Text = T("ActiveStatus", suppressor.EngineName);
             RefreshFormat(); RefreshPresetHint(); SaveConfig();
@@ -410,6 +414,12 @@ public partial class MainWindow : Window
         if (last.HasValue) RenderDiagnostic(last.Value);
         Exception? error = null;
         try { suppressor?.Dispose(); } catch (Exception ex) { error = ex; }
+        if (suppressor != null)
+        {
+            try { _lastHistory = suppressor.HistoryAfterStop(); _lastTiming = suppressor.TimingAfterStop(); }
+            catch (Exception ex) { error ??= ex; }
+            lock (_meterLock) { if (_meterSource == suppressor) { _meterSource = null; _hasMeters = false; } }
+        }
         SetDeviceControls(); ResetMeters(); SetStatus(false);
         RefreshPresetHint(); StatusText.Text = error == null ? T("Stopped") : T("Error", UiStrings.ErrorDetail(error.Message));
     }
@@ -425,6 +435,8 @@ public partial class MainWindow : Window
     private void ResetMeters()
     {
         ResetStudioMeters();
+        TimingText.Text = T("FrameTiming", _lastTiming.P99UpperBoundMs, _lastTiming.SessionMaximumMs,
+            _lastTiming.WindowFrames, _lastTiming.OverBudgetFrames);
         _inDisp = _outDisp = 0; SetMask(InMask, InTrack, 0); SetMask(OutMask, OutTrack, 0);
         InDbText.Text = OutDbText.Text = "— dBFS";
         VoiceDot.Fill = (Brush)FindResource("Muted"); VoiceText.Text = T("Ui025"); GateText.Text = "";
@@ -435,6 +447,9 @@ public partial class MainWindow : Window
     private void RenderMeters(MeterData m)
     {
         RenderDiagnostic(m.Diagnostic);
+        _lastTiming = m.Timing;
+        TimingText.Text = T("FrameTiming", m.Timing.P99UpperBoundMs, m.Timing.SessionMaximumMs,
+            m.Timing.WindowFrames, m.Timing.OverBudgetFrames);
         RenderStudioMeters(m);
         _inDisp = Math.Max(ToMeter(m.InPeak), _inDisp * .88); _outDisp = Math.Max(ToMeter(m.OutPeak), _outDisp * .88);
         SetMask(InMask, InTrack, _inDisp); SetMask(OutMask, OutTrack, _outDisp);
@@ -457,7 +472,7 @@ public partial class MainWindow : Window
         try
         {
             // No device identifiers or microphone recordings are included.
-            Clipboard.SetText($"MicDenoiser 2.4\n{FormatText.Text}\n{PerformanceText.Text}\n{HealthText.Text}\nEngine: {_settings.Engine}\nBuffer: {_settings.BufferMode}\nNoise limit: {_settings.NoiseReductionDb:0} dB\nInput gain: {_settings.InputGainDb:0} dB\nGate: {_settings.GateEnabled}\nBypass: {_settings.Bypass}");
+            Clipboard.SetText($"MicDenoiser 2.5\n{FormatText.Text}\n{PerformanceText.Text}\n{HealthText.Text}\nEngine: {_settings.Engine}\nBuffer: {_settings.BufferMode}\nNoise limit: {_settings.NoiseReductionDb:0} dB\nInput gain: {_settings.InputGainDb:0} dB\nGate: {_settings.GateEnabled}\nBypass: {_settings.Bypass}");
             StatusText.Text = T("Copied");
         }
         catch (Exception ex) { StatusText.Text = T("Error", UiStrings.ErrorDetail(ex.Message)); }
@@ -477,6 +492,7 @@ public partial class MainWindow : Window
         public bool MinimizeToTray { get; set; } = true;
         public bool DarkTheme { get; set; }
         public bool SimpleMode { get; set; }
+        public bool SetupCompleted { get; set; }
         public ProcessingSettings? SnapshotA { get; set; }
         public ProcessingSettings? SnapshotB { get; set; }
         public ProcessingSettings? Settings { get; set; }
@@ -490,7 +506,7 @@ public partial class MainWindow : Window
             _preset = cfg.Preset is "natural" or "studio" or "podcast" or "max" or "custom" or "calls" or "streaming" or "weakmic" or "whisper" or "singing" or "voiceover" or "broadcast" or "vocalroom" or "vocalhall" or "slapback" ? cfg.Preset : "studio";
             _language = cfg.Language == "en" ? "en" : "ar";
             _minimizeToTray = cfg.MinimizeToTray; _darkTheme = cfg.DarkTheme;
-            _simpleMode = cfg.SimpleMode; _snapshotA = cfg.SnapshotA?.SanitizedClone(); _snapshotB = cfg.SnapshotB?.SanitizedClone();
+            _setupCompleted = cfg.SetupCompleted; _simpleMode = cfg.SimpleMode; _snapshotA = cfg.SnapshotA?.SanitizedClone(); _snapshotB = cfg.SnapshotB?.SanitizedClone();
             if (cfg.Settings != null) _settings.CopyFrom(cfg.Settings.SanitizedClone());
             InputCombo.SelectedItem = InputCombo.Items.Cast<DeviceItem>().FirstOrDefault(d => d.Id == cfg.InputDeviceId)
                 ?? InputCombo.Items.Cast<DeviceItem>().FirstOrDefault(d => d.Name == cfg.InputDevice) ?? InputCombo.SelectedItem;
@@ -510,7 +526,7 @@ public partial class MainWindow : Window
                 OutputDevice = (OutputCombo.SelectedItem as DeviceItem)?.Name,
                 InputDeviceId = (InputCombo.SelectedItem as DeviceItem)?.Id, OutputDeviceId = (OutputCombo.SelectedItem as DeviceItem)?.Id,
                 Preset = _preset, Language = _language, MinimizeToTray = _minimizeToTray, DarkTheme = _darkTheme, Settings = _settings.SanitizedClone(),
-                SimpleMode = _simpleMode, SnapshotA = _snapshotA?.SanitizedClone(), SnapshotB = _snapshotB?.SanitizedClone() };
+                SetupCompleted = _setupCompleted, SimpleMode = _simpleMode, SnapshotA = _snapshotA?.SanitizedClone(), SnapshotB = _snapshotB?.SanitizedClone() };
             Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath)!);
             File.WriteAllText(ConfigPath, JsonSerializer.Serialize(cfg, new JsonSerializerOptions { WriteIndented = true }));
         }

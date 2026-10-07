@@ -1,0 +1,52 @@
+{
+  "dataset": "Free Spoken Digit Dataset",
+  "revision": "26eb9aaf76e81b692f806f9140c2d2777410d7a1",
+  "license": "CC BY-SA 4.0",
+  "sources": [
+    {
+      "file": "speech/0_jackson_0.wav",
+      "url": "https://raw.githubusercontent.com/Jakobovski/free-spoken-digit-dataset/26eb9aaf76e81b692f806f9140c2d2777410d7a1/recordings/0_jackson_0.wav",
+      "sha256": "eea86018ce1730baaf7f5dd6ec88c1f727dd90203521a9115b489310a248ea05"
+    },
+    {
+      "file": "speech/1_jackson_0.wav",
+      "url": "https://raw.githubusercontent.com/Jakobovski/free-spoken-digit-dataset/26eb9aaf76e81b692f806f9140c2d2777410d7a1/recordings/1_jackson_0.wav",
+      "sha256": "b3739400f793620875bb7849bfd8629dc6b2966ed6bda8276aa14178a612f13a"
+    },
+    {
+      "file": "speech/2_jackson_0.wav",
+      "url": "https://raw.githubusercontent.com/Jakobovski/free-spoken-digit-dataset/26eb9aaf76e81b692f806f9140c2d2777410d7a1/recordings/2_jackson_0.wav",
+      "sha256": "214bac0c813b584410e3cb8cace2673d256b3fd735810bd516b2bfd0c2298620"
+    },
+    {
+      "file": "speech/0_nicolas_0.wav",
+      "url": "https://raw.githubusercontent.com/Jakobovski/free-spoken-digit-dataset/26eb9aaf76e81b692f806f9140c2d2777410d7a1/recordings/0_nicolas_0.wav",
+      "sha256": "527b1d27c2b931204b24995f035580dd248b908978a27756b4698ce0aa7e1aa8"
+    },
+    {
+      "file": "speech/1_nicolas_0.wav",
+      "url": "https://raw.githubusercontent.com/Jakobovski/free-spoken-digit-dataset/26eb9aaf76e81b692f806f9140c2d2777410d7a1/recordings/1_nicolas_0.wav",
+      "sha256": "d57a29689b0abf1ab609ab401dd4053dbc18c317a4ed9ebed6a9aa034e9bab0a"
+    },
+    {
+      "file": "speech/2_nicolas_0.wav",
+      "url": "https://raw.githubusercontent.com/Jakobovski/free-spoken-digit-dataset/26eb9aaf76e81b692f806f9140c2d2777410d7a1/recordings/2_nicolas_0.wav",
+      "sha256": "e55aea8bd4d83d0ae4de1b5a4b67a613f17aa00406cd726c352a061001308beb"
+    },
+    {
+      "file": "speech/0_theo_0.wav",
+      "url": "https://raw.githubusercontent.com/Jakobovski/free-spoken-digit-dataset/26eb9aaf76e81b692f806f9140c2d2777410d7a1/recordings/0_theo_0.wav",
+      "sha256": "d5833196a91e5da8703a8afe1f944cbf0d0bae55e5af6a4eb7e92e62070bf280"
+    },
+    {
+      "file": "speech/1_theo_0.wav",
+      "url": "https://raw.githubusercontent.com/Jakobovski/free-spoken-digit-dataset/26eb9aaf76e81b692f806f9140c2d2777410d7a1/recordings/1_theo_0.wav",
+      "sha256": "a856fff7bcb68328a76b269c0d8b1d4269c28ac7e3d6725fe9da5bdd05405b55"
+    },
+    {
+      "file": "speech/2_theo_0.wav",
+      "url": "https://raw.githubusercontent.com/Jakobovski/free-spoken-digit-dataset/26eb9aaf76e81b692f806f9140c2d2777410d7a1/recordings/2_theo_0.wav",
+      "sha256": "226a6abb912b3f1039a66f472748fb155cff0da00f3f2a7c091b74f937803a29"
+    }
+  ]
+}

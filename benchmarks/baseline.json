@@ -1,0 +1,334 @@
+{
+  "seed": 75667,
+  "output_format": "Float32 to avoid PCM16 quantization bias in quiet speech-loss metrics",
+  "fixture_revision": "26eb9aaf76e81b692f806f9140c2d2777410d7a1",
+  "linux_rnnoise": "pyrnnoise 0.4.5; does not establish Windows DLL provenance",
+  "speech": "Three speakers, isolated digits, 8 kHz upsampled to 48 kHz; not full-band conversation",
+  "scenes": [
+    {
+      "scene": "jackson_fan_-5",
+      "input_si_sdr_db": -5.06267407360093,
+      "native_si_sdr_db": 11.024744098886195,
+      "gate_si_sdr_db": 11.02485638759968,
+      "native_pause_reduction_db": 34.73144698104635,
+      "gate_pause_reduction_db": 40.6351056108022,
+      "worst_gate_speech_loss_db": 2.5528871493997203
+    },
+    {
+      "scene": "jackson_fan_0",
+      "input_si_sdr_db": -0.035135825825182904,
+      "native_si_sdr_db": 12.293223202846095,
+      "gate_si_sdr_db": 12.29323516808704,
+      "native_pause_reduction_db": 34.88341122281667,
+      "gate_pause_reduction_db": 40.785143066746755,
+      "worst_gate_speech_loss_db": 0.03189114719603861
+    },
+    {
+      "scene": "jackson_fan_10",
+      "input_si_sdr_db": 9.988986587208045,
+      "native_si_sdr_db": 13.37644948323809,
+      "gate_si_sdr_db": 13.376454000562237,
+      "native_pause_reduction_db": 35.093156152446426,
+      "gate_pause_reduction_db": 41.00858871409073,
+      "worst_gate_speech_loss_db": 0.024812224706590745
+    },
+    {
+      "scene": "jackson_pink_-5",
+      "input_si_sdr_db": -4.97257358510551,
+      "native_si_sdr_db": 2.2851000932958945,
+      "gate_si_sdr_db": 2.493071183594735,
+      "native_pause_reduction_db": 11.745582684225313,
+      "gate_pause_reduction_db": 11.90765818917554,
+      "worst_gate_speech_loss_db": 5.971753551343015
+    },
+    {
+      "scene": "jackson_pink_0",
+      "input_si_sdr_db": 0.01847040291940848,
+      "native_si_sdr_db": 7.587475345688866,
+      "gate_si_sdr_db": 7.629774262369901,
+      "native_pause_reduction_db": 11.20615817104956,
+      "gate_pause_reduction_db": 14.071214317681983,
+      "worst_gate_speech_loss_db": 3.096849424276135
+    },
+    {
+      "scene": "jackson_pink_10",
+      "input_si_sdr_db": 10.010594299807119,
+      "native_si_sdr_db": 13.550041231242737,
+      "gate_si_sdr_db": 13.55300861740881,
+      "native_pause_reduction_db": 12.726989978315615,
+      "gate_pause_reduction_db": 18.501394992110775,
+      "worst_gate_speech_loss_db": 1.830879659856354
+    },
+    {
+      "scene": "jackson_brown_-5",
+      "input_si_sdr_db": -4.028001673668151,
+      "native_si_sdr_db": 9.501744912142483,
+      "gate_si_sdr_db": 9.502419067791426,
+      "native_pause_reduction_db": 8.451533588019336,
+      "gate_pause_reduction_db": 14.328692108462256,
+      "worst_gate_speech_loss_db": 0.049868197316410214
+    },
+    {
+      "scene": "jackson_brown_0",
+      "input_si_sdr_db": 0.9656811520355753,
+      "native_si_sdr_db": 12.35192770751624,
+      "gate_si_sdr_db": 12.352761015989117,
+      "native_pause_reduction_db": 7.561074591312923,
+      "gate_pause_reduction_db": 13.463025936898688,
+      "worst_gate_speech_loss_db": 0.046161481124513966
+    },
+    {
+      "scene": "jackson_brown_10",
+      "input_si_sdr_db": 10.960127283976217,
+      "native_si_sdr_db": 16.334544691257694,
+      "gate_si_sdr_db": 16.334625174941625,
+      "native_pause_reduction_db": 7.475038711152385,
+      "gate_pause_reduction_db": 13.386964500921646,
+      "worst_gate_speech_loss_db": 0.007578429005309553
+    },
+    {
+      "scene": "jackson_keyboard_hum_-5",
+      "input_si_sdr_db": -4.909842808656212,
+      "native_si_sdr_db": 9.858006785197498,
+      "gate_si_sdr_db": 9.864964721134395,
+      "native_pause_reduction_db": 25.051699951425963,
+      "gate_pause_reduction_db": 30.889742813400055,
+      "worst_gate_speech_loss_db": 5.998369617689574
+    },
+    {
+      "scene": "jackson_keyboard_hum_0",
+      "input_si_sdr_db": 0.05087958801483186,
+      "native_si_sdr_db": 13.007117330777493,
+      "gate_si_sdr_db": 13.010380845440553,
+      "native_pause_reduction_db": 20.374685970026363,
+      "gate_pause_reduction_db": 26.245829465810697,
+      "worst_gate_speech_loss_db": 5.998198971405734
+    },
+    {
+      "scene": "jackson_keyboard_hum_10",
+      "input_si_sdr_db": 10.016224316641903,
+      "native_si_sdr_db": 13.42630544134998,
+      "gate_si_sdr_db": 13.426123180399284,
+      "native_pause_reduction_db": 15.738548864581883,
+      "gate_pause_reduction_db": 21.625590433059863,
+      "worst_gate_speech_loss_db": 1.800551906042947
+    },
+    {
+      "scene": "nicolas_fan_-5",
+      "input_si_sdr_db": -5.275695370140263,
+      "native_si_sdr_db": 11.819747443691952,
+      "gate_si_sdr_db": 11.819902636537766,
+      "native_pause_reduction_db": 34.66083572679495,
+      "gate_pause_reduction_db": 40.3943348798976,
+      "worst_gate_speech_loss_db": 0.29690167927766486
+    },
+    {
+      "scene": "nicolas_fan_0",
+      "input_si_sdr_db": -0.19253423374910675,
+      "native_si_sdr_db": 15.506362193350217,
+      "gate_si_sdr_db": 15.506346474213863,
+      "native_pause_reduction_db": 34.87220992270998,
+      "gate_pause_reduction_db": 40.72226285847415,
+      "worst_gate_speech_loss_db": 0.02349292274056822
+    },
+    {
+      "scene": "nicolas_fan_10",
+      "input_si_sdr_db": 9.879877245812727,
+      "native_si_sdr_db": 19.181602273109863,
+      "gate_si_sdr_db": 19.181492895760364,
+      "native_pause_reduction_db": 35.23401955946212,
+      "gate_pause_reduction_db": 41.120940698367335,
+      "worst_gate_speech_loss_db": 0.021856287564636073
+    },
+    {
+      "scene": "nicolas_pink_-5",
+      "input_si_sdr_db": -5.220921066054336,
+      "native_si_sdr_db": 3.849564440501963,
+      "gate_si_sdr_db": 4.272946002615786,
+      "native_pause_reduction_db": 9.491652725910289,
+      "gate_pause_reduction_db": 9.51000371052514,
+      "worst_gate_speech_loss_db": 5.785061355058642
+    },
+    {
+      "scene": "nicolas_pink_0",
+      "input_si_sdr_db": -0.14864482446266108,
+      "native_si_sdr_db": 8.26029732202886,
+      "gate_si_sdr_db": 8.785490651696998,
+      "native_pause_reduction_db": 9.241028292816267,
+      "gate_pause_reduction_db": 10.771049281813173,
+      "worst_gate_speech_loss_db": 5.970293492320651
+    },
+    {
+      "scene": "nicolas_pink_10",
+      "input_si_sdr_db": 9.914362305530522,
+      "native_si_sdr_db": 15.254689265449148,
+      "gate_si_sdr_db": 15.256946448822426,
+      "native_pause_reduction_db": 8.80752102433955,
+      "gate_pause_reduction_db": 12.987702351754717,
+      "worst_gate_speech_loss_db": 0.31793009400868455
+    },
+    {
+      "scene": "nicolas_brown_-5",
+      "input_si_sdr_db": -4.4460742424647,
+      "native_si_sdr_db": 5.3826519802204,
+      "gate_si_sdr_db": 5.384948039914391,
+      "native_pause_reduction_db": 9.762864075831395,
+      "gate_pause_reduction_db": 15.682006031649662,
+      "worst_gate_speech_loss_db": 0.0466797711457552
+    },
+    {
+      "scene": "nicolas_brown_0",
+      "input_si_sdr_db": 0.44965849250294065,
+      "native_si_sdr_db": 12.518701894786595,
+      "gate_si_sdr_db": 12.522039217795536,
+      "native_pause_reduction_db": 11.314674483175477,
+      "gate_pause_reduction_db": 17.241908977438086,
+      "worst_gate_speech_loss_db": 0.04650360356516155
+    },
+    {
+      "scene": "nicolas_brown_10",
+      "input_si_sdr_db": 10.357008072339976,
+      "native_si_sdr_db": 17.183582286905562,
+      "gate_si_sdr_db": 17.183836266102695,
+      "native_pause_reduction_db": 12.24319107257556,
+      "gate_pause_reduction_db": 18.17128145008587,
+      "worst_gate_speech_loss_db": 0.005560086240688762
+    },
+    {
+      "scene": "nicolas_keyboard_hum_-5",
+      "input_si_sdr_db": -5.067967832070504,
+      "native_si_sdr_db": 13.657398236467307,
+      "gate_si_sdr_db": 13.696356833081678,
+      "native_pause_reduction_db": 20.87168619054635,
+      "gate_pause_reduction_db": 26.599570155973097,
+      "worst_gate_speech_loss_db": 5.709430132745008
+    },
+    {
+      "scene": "nicolas_keyboard_hum_0",
+      "input_si_sdr_db": -0.07650567882773915,
+      "native_si_sdr_db": 17.09622112892713,
+      "gate_si_sdr_db": 17.098708197962765,
+      "native_pause_reduction_db": 19.514406074443883,
+      "gate_pause_reduction_db": 25.342201412915525,
+      "worst_gate_speech_loss_db": 0.2522251443212501
+    },
+    {
+      "scene": "nicolas_keyboard_hum_10",
+      "input_si_sdr_db": 9.915986301073724,
+      "native_si_sdr_db": 19.592423649421598,
+      "gate_si_sdr_db": 19.592553438857664,
+      "native_pause_reduction_db": 12.999968794763156,
+      "gate_pause_reduction_db": 18.884122001507514,
+      "worst_gate_speech_loss_db": 0.03301586284133651
+    },
+    {
+      "scene": "theo_fan_-5",
+      "input_si_sdr_db": -5.016820206767202,
+      "native_si_sdr_db": 13.834911557182128,
+      "gate_si_sdr_db": 13.833145210557289,
+      "native_pause_reduction_db": 34.839576150595,
+      "gate_pause_reduction_db": 40.532984437986215,
+      "worst_gate_speech_loss_db": 0.030099702608606598
+    },
+    {
+      "scene": "theo_fan_0",
+      "input_si_sdr_db": -0.009446895743910532,
+      "native_si_sdr_db": 16.461008415145454,
+      "gate_si_sdr_db": 16.460726538847847,
+      "native_pause_reduction_db": 34.96692566587599,
+      "gate_pause_reduction_db": 40.81557260879063,
+      "worst_gate_speech_loss_db": 0.030246034826608655
+    },
+    {
+      "scene": "theo_fan_10",
+      "input_si_sdr_db": 9.99702590628589,
+      "native_si_sdr_db": 21.006829141882175,
+      "gate_si_sdr_db": 21.005894199685052,
+      "native_pause_reduction_db": 35.18413919440831,
+      "gate_pause_reduction_db": 41.06066510130468,
+      "worst_gate_speech_loss_db": 0.004375383534162364
+    },
+    {
+      "scene": "theo_pink_-5",
+      "input_si_sdr_db": -5.218150089156617,
+      "native_si_sdr_db": 3.9162525266623534,
+      "gate_si_sdr_db": 3.9919478985193164,
+      "native_pause_reduction_db": 9.838657452961796,
+      "gate_pause_reduction_db": 10.871400577035004,
+      "worst_gate_speech_loss_db": 5.663512776164815
+    },
+    {
+      "scene": "theo_pink_0",
+      "input_si_sdr_db": -0.0979733636540552,
+      "native_si_sdr_db": 8.414373725803854,
+      "gate_si_sdr_db": 8.418018025012616,
+      "native_pause_reduction_db": 8.87676728675814,
+      "gate_pause_reduction_db": 10.705344939799406,
+      "worst_gate_speech_loss_db": 0.3280214584647714
+    },
+    {
+      "scene": "theo_pink_10",
+      "input_si_sdr_db": 10.006255262043629,
+      "native_si_sdr_db": 15.627023679573737,
+      "gate_si_sdr_db": 15.625397914645749,
+      "native_pause_reduction_db": 8.497995522409955,
+      "gate_pause_reduction_db": 11.260787229494614,
+      "worst_gate_speech_loss_db": 0.038091573719049227
+    },
+    {
+      "scene": "theo_brown_-5",
+      "input_si_sdr_db": -4.900154178970878,
+      "native_si_sdr_db": -1.7472790376959404,
+      "gate_si_sdr_db": -1.746091572643449,
+      "native_pause_reduction_db": 2.6145540200141486,
+      "gate_pause_reduction_db": 8.451503337147424,
+      "worst_gate_speech_loss_db": 0.04498788506055764
+    },
+    {
+      "scene": "theo_brown_0",
+      "input_si_sdr_db": 0.10387218414264901,
+      "native_si_sdr_db": 7.764028467537775,
+      "gate_si_sdr_db": 7.7651415085395055,
+      "native_pause_reduction_db": 5.053180540827661,
+      "gate_pause_reduction_db": 10.903336597401232,
+      "worst_gate_speech_loss_db": 0.04797759504144256
+    },
+    {
+      "scene": "theo_brown_10",
+      "input_si_sdr_db": 10.107408082753278,
+      "native_si_sdr_db": 11.857373083684084,
+      "gate_si_sdr_db": 11.85738419529879,
+      "native_pause_reduction_db": 2.898206649321084,
+      "gate_pause_reduction_db": 8.750564367485497,
+      "worst_gate_speech_loss_db": 0.006173410025167582
+    },
+    {
+      "scene": "theo_keyboard_hum_-5",
+      "input_si_sdr_db": -4.992844038809368,
+      "native_si_sdr_db": 9.754220856279783,
+      "gate_si_sdr_db": 9.562876636093595,
+      "native_pause_reduction_db": 25.373284953835487,
+      "gate_pause_reduction_db": 31.041374519386686,
+      "worst_gate_speech_loss_db": 5.995974059193861
+    },
+    {
+      "scene": "theo_keyboard_hum_0",
+      "input_si_sdr_db": 0.004033082112606885,
+      "native_si_sdr_db": 12.02791900392665,
+      "gate_si_sdr_db": 11.959982415594489,
+      "native_pause_reduction_db": 23.487537268052584,
+      "gate_pause_reduction_db": 29.171312449052277,
+      "worst_gate_speech_loss_db": 1.6342964573922367
+    },
+    {
+      "scene": "theo_keyboard_hum_10",
+      "input_si_sdr_db": 10.001288490222237,
+      "native_si_sdr_db": 13.705792055794216,
+      "gate_si_sdr_db": 13.636420141330397,
+      "native_pause_reduction_db": 15.15748185874736,
+      "gate_pause_reduction_db": 21.04602174000091,
+      "worst_gate_speech_loss_db": 1.6357629420805195
+    }
+  ],
+  "numpy_version": "2.3.5"
+}
