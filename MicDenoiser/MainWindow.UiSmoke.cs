@@ -22,7 +22,11 @@ public partial class MainWindow
             using (var context = drawing.RenderOpen())
             {
                 context.DrawRectangle((Brush)FindResource("Surface"), null, new Rect(0, 0, width, height));
+                // A detached RTL visual retains its layout mirror; restore the window's coordinate direction.
+                if (window.FlowDirection == FlowDirection.RightToLeft)
+                    context.PushTransform(new MatrixTransform(-1, 0, 0, 1, width, 0));
                 context.DrawRectangle(new VisualBrush(content), null, new Rect(margin.Left, margin.Top, content.ActualWidth, content.ActualHeight));
+                if (window.FlowDirection == FlowDirection.RightToLeft) context.Pop();
             }
             bitmap.Render(drawing);
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
