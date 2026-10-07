@@ -359,5 +359,6 @@
   "WizardRouteObs": "OBS → Settings → Audio → Mic/Auxiliary Audio",
   "WizardReady": "Ready to test",
   "WizardRecord": "Record 10 seconds",
-  "RecordUnmute": "Unmute before recording the comparison."
+  "RecordUnmute": "Unmute before recording the comparison.",
+  "LevelHintcustom": "Custom Studio settings; choosing a level replaces the current sound profile."
 }

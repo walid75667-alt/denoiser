@@ -68,6 +68,9 @@ internal static class ExperienceChecks
                 var settings = SuppressionLevel.Create(level, current);
                 require(settings.BufferMode == current.BufferMode && settings.InputGainDb == 3 && settings.OutputGainDb == -2 && settings.Bypass && settings.Muted && !settings.FastSinging && !settings.ReverbEnabled, "Level changed routing/gains/mute or retained studio effects.");
                 require(level == "light" ? settings.Engine == DenoiserKind.RNNoise && !settings.GateEnabled : settings.Engine == DenoiserKind.DeepFilterNet3 && settings.GateEnabled, "Incorrect engine/gate choice.");
+                require(SuppressionLevel.Matches(level, settings), "Applied level is not identified correctly.");
+                var custom = settings.SanitizedClone(); custom.ReverbEnabled = true;
+                require(!SuppressionLevel.Matches(level, custom), "Custom Studio effects are labeled as an isolation level.");
                 if (level == "balanced") require(settings.GateDepthDb == 6 && settings.GateThreshold == .35f, "Balanced mode uses an aggressive gate.");
             }
         });

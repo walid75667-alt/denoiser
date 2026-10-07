@@ -62,7 +62,7 @@ public partial class MainWindow
         if (_starting || _closed || _comparison != null || _abBusy) return;
         HoldOriginal(false); _settings.Muted = !_settings.Muted;
         _suppressor?.UpdateSettings(_settings); RefreshCompact(); SaveConfig();
-        _tray?.Refresh(_suppressor != null, _starting, _settings.Muted, _level);
+        _tray?.Refresh(_suppressor != null, _starting, _settings.Muted, EffectiveLevel);
     }
     private void Mute_Click(object sender, RoutedEventArgs e) => ToggleMute();
     private void HoldOriginal(bool pressed)
@@ -97,10 +97,11 @@ public partial class MainWindow
         ApplySettingsToUi(); _suppressor?.UpdateSettings(_settings); SaveConfig(); RefreshCompact();
         if (restart) await StartProcessing();
     }
+    private string EffectiveLevel => SuppressionLevel.Matches(_level, _settings) ? _level : "custom";
     private void RefreshCompact()
     {
         if (!_ready) return;
-        Compact.Refresh(_suppressor != null, _starting || _abBusy || _comparison != null || _preview != null, _settings, _level, StatusText.Text);
+        Compact.Refresh(_suppressor != null, _starting || _abBusy || _comparison != null || _preview != null, _settings, EffectiveLevel, StatusText.Text);
         Compact.SetDevices(InputCombo.Items.Cast<DeviceItem>().Select(d => new SimpleView.Choice(d.Id, d.Name)).ToArray(),
             OutputCombo.Items.Cast<DeviceItem>().Select(d => new SimpleView.Choice(d.Id, d.Name)).ToArray(),
             (InputCombo.SelectedItem as DeviceItem)?.Id, (OutputCombo.SelectedItem as DeviceItem)?.Id, !_starting && !_abBusy && _preview == null);

@@ -270,6 +270,7 @@ public partial class MainWindow : Window
             ChorusDepthSlider.Value=s.ChorusDepthMs;
             EqPlot.SetSettings(s);
             foreach (var rb in PresetRadios()) rb.IsChecked = (string?)rb.Tag == _preset;
+            if (_hotkeys != null) HotkeyStatus.Text = T(_hotkeys.MuteRegistered && _hotkeys.PowerRegistered ? "HotkeysReady" : "HotkeysConflict");
             RefreshPresetHint(); RefreshBufferHint(); RefreshRouting(); RefreshAdvice(); RefreshComparison();
             ApplyInterfaceMode();
         }
@@ -356,7 +357,7 @@ public partial class MainWindow : Window
         SaveHistoryButton.IsEnabled = !_starting && !_abBusy && _comparison == null;
         ToggleButton.IsEnabled = !_starting && _preview == null && !_abBusy;
         LoadingProgress.Visibility = _starting ? Visibility.Visible : Visibility.Collapsed;
-        _tray?.Refresh(_suppressor != null, _starting || _preview != null, _settings.Muted, _level);
+        _tray?.Refresh(_suppressor != null, _starting || _preview != null, _settings.Muted, EffectiveLevel);
         RefreshComparison(); RefreshCompact();
     }
     private async void ToggleButton_Click(object sender, RoutedEventArgs e)
@@ -439,7 +440,7 @@ public partial class MainWindow : Window
         StatusPill.Text = T(running ? "Running" : "Ui001");
         StatusDot.Fill = (Brush)FindResource(running ? "Accent" : "Muted");
         ToggleButton.Content = T(running ? "Stop" : "Ui019");
-        _tray?.Refresh(running, _starting, _settings.Muted, _level);
+        _tray?.Refresh(running, _starting, _settings.Muted, EffectiveLevel);
         RefreshCompact();
     }
     private void ResetMeters()
