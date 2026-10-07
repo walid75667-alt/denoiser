@@ -1,6 +1,10 @@
-MicDenoiser 2.3 — Windows 10/11 x64
+MicDenoiser 2.4 — Windows 10/11 x64
 
 العربية
+- الإصدار 2.4: واجهة بسيطة أو استديو، غناء سريع، مؤشرات الخرفشة، ومقارنة A/B.
+- الغناء السريع يُفعّل والصوت متوقف، ويتخطى نموذج العزل والبوابة مع إبقاء المؤثرات. التأخير الكلي يعتمد على الجهاز والبافر؛ إلغاؤه يعيد العزل إلى 100%.
+- من اختبار المايك: احفظ A وB، سجّل 10 ثوانٍ، ثم جهّز المقارنة لسماع الضبطتين على نفس التسجيل بمستوى متقارب. التجهيز والسماع يوقفان الصوت الحي؛ يمكنك إلغاء التجهيز.
+- من الصحة: احفظ تقرير المؤشرات بدون صوت أو أسماء الأجهزة. المؤشرات تساعد على التحقيق ولا تثبت سبب الخرفشة.
 - المثبّت يتضمن البرنامج و.NET وDeepFilterNet3 ومكتبات الصوت. لا يحتاج تنزيل النموذج.
 - ثبّت VB-Cable بشكل منفصل: https://vb-audio.com/Cable/ ثم أعد تشغيل ويندوز.
 - اختار المايك الحقيقي، ومخرج CABLE Input. في برنامج المكالمات اختار CABLE Output.
@@ -28,6 +32,10 @@ MicDenoiser 2.3 — Windows 10/11 x64
 - BM800 مايك؛ هذه مؤثرات برمجية، والخرج أحادي دون تصحيح نشاز. تأخير الغناء الحي يحتاج تجربة على جهازك.
 
 English
+- Version 2.4: Simple/Studio views, Fast singing, crackle evidence and A/B comparison.
+- Enable Fast singing while stopped to skip denoising/VAD models while retaining effects. Total latency depends on devices/buffers; turning it off restores 100% denoiser mix.
+- In Mic test: save A/B, record ten seconds and prepare comparison to preview both settings on identical input at matched levels. Rendering/listening stop live audio; rendering can be canceled.
+- In Health: save an evidence report without audio/device names. Indicators support investigation; they do not prove a crackle cause.
 - Setup includes the application, .NET runtime, DeepFilterNet3 model and audio libraries.
 - Install VB-Cable separately: https://vb-audio.com/Cable/ and restart Windows.
 - Select your microphone and CABLE Input. Select CABLE Output in the calling app.

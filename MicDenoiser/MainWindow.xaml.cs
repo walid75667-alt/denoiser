@@ -167,10 +167,11 @@ public partial class MainWindow : Window
     private void SetPreset(string key)
     {
         _preset = key;
-        bool bypass = _settings.Bypass, gate = _settings.GateEnabled;
+        bool bypass = _settings.Bypass, gate = _settings.GateEnabled, fast = _settings.FastSinging;
         var mode = _settings.BufferMode;
         _settings.CopyFrom(ProcessingSettings.FromPreset(key, _settings.Engine));
         _settings.Bypass = bypass; _settings.BufferMode = mode;
+        _settings.FastSinging = fast; _settings.CopyFrom(_settings.SanitizedClone());
         _gatePreserved = (_suppressor != null || _starting) && !gate && _settings.GateEnabled;
         if (_gatePreserved) _settings.GateEnabled = false; // Never allocate a new VAD model on the live worker.
         ApplySettingsToUi(); _suppressor?.UpdateSettings(_settings);
@@ -205,6 +206,9 @@ public partial class MainWindow : Window
         try
         {
             var s = _settings;
+            FastSingingCheck.IsChecked = s.FastSinging;
+            FastSingingHint.Text = T(s.FastSinging ? "FastSingingActive" : "FastSingingHint");
+            InterfaceModeCombo.SelectedIndex = _simpleMode ? 0 : 1;
             BrandText.HorizontalAlignment = _language == "ar" ? HorizontalAlignment.Right : HorizontalAlignment.Left;
             BrandPanel.HorizontalAlignment = BrandText.HorizontalAlignment;
             MinimizeToTrayCheck.IsChecked = _tray != null && _minimizeToTray;
@@ -212,7 +216,8 @@ public partial class MainWindow : Window
             LanguageCombo.SelectedIndex = _language == "en" ? 1 : 0;
             BufferModeCombo.SelectedIndex = (int)s.BufferMode;
             StrengthSlider.Value = s.Strength * 100; NoiseLimitSlider.Value = s.NoiseReductionDb;
-            NoiseLimitSlider.IsEnabled = s.Engine == DenoiserKind.DeepFilterNet3;
+            NoiseLimitSlider.IsEnabled = s.Engine == DenoiserKind.DeepFilterNet3 && !s.FastSinging;
+            StrengthSlider.IsEnabled = !s.FastSinging;
             GateSlider.Value = (s.GateThreshold - 0.15) / 0.70 * 100; GateDepthSlider.Value = s.GateDepthDb;
             EngineCombo.SelectedIndex = s.Engine == DenoiserKind.DeepFilterNet3 ? 0 : 1;
             GateEnabledCheck.IsChecked = s.GateEnabled; HighPassCheck.IsChecked = s.HighPassEnabled;
@@ -256,6 +261,7 @@ public partial class MainWindow : Window
             EqPlot.SetSettings(s);
             foreach (var rb in PresetRadios()) rb.IsChecked = (string?)rb.Tag == _preset;
             RefreshPresetHint(); RefreshBufferHint(); RefreshRouting(); RefreshAdvice(); RefreshComparison();
+            ApplyInterfaceMode();
         }
         finally { _loading = false; }
     }
@@ -309,6 +315,7 @@ public partial class MainWindow : Window
         s.ChorusMix=(float)ChorusMixSlider.Value / 100;
         s.ChorusRateHz=(float)ChorusRateSlider.Value;
         s.ChorusDepthMs=(float)ChorusDepthSlider.Value;
+        if (s.FastSinging) { s.Strength = 0; s.GateEnabled = false; }
         EqPlot.SetSettings(s);
         if (IsCustomSound())
         {
@@ -324,26 +331,30 @@ public partial class MainWindow : Window
         if (_preset == "custom") return false;
         var p = ProcessingSettings.FromPreset(_preset, _settings.Engine);
         p.BufferMode = _settings.BufferMode; p.Bypass = _settings.Bypass;
+        p.FastSinging = _settings.FastSinging; p = p.SanitizedClone();
         if (_suppressor != null || _starting) p.GateEnabled = _settings.GateEnabled;
         return JsonSerializer.Serialize(p) != JsonSerializer.Serialize(_settings);
     }
     private IEnumerable<RadioButton> PresetRadios() => PresetPanel.Children.OfType<RadioButton>();
     private void SetDeviceControls()
     {
-        bool idle = _suppressor == null && !_starting && _preview == null;
+        bool idle = _suppressor == null && !_starting && _preview == null && !_abBusy;
         InputCombo.IsEnabled = OutputCombo.IsEnabled = EngineCombo.IsEnabled = BufferModeCombo.IsEnabled = RefreshDevicesButton.IsEnabled = GateEnabledCheck.IsEnabled = idle;
-        ToggleButton.IsEnabled = !_starting && _preview == null;
+        EngineCombo.IsEnabled = GateEnabledCheck.IsEnabled = idle && !_settings.FastSinging;
+        FastSingingCheck.IsEnabled = idle;
+        ToggleButton.IsEnabled = !_starting && _preview == null && !_abBusy;
         LoadingProgress.Visibility = _starting ? Visibility.Visible : Visibility.Collapsed;
         _tray?.Refresh(_suppressor != null, _starting || _preview != null);
         RefreshComparison();
     }
     private async void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_starting || _preview != null) return;
+        if (_starting || _preview != null || _abBusy) return;
         if (_suppressor == null) await StartProcessing(); else StopProcessing();
     }
     private async Task StartProcessing()
     {
+        if (_abBusy || _starting || _preview != null || _closed) return;
         if (InputCombo.SelectedItem is not DeviceItem input || OutputCombo.SelectedItem is not DeviceItem output)
         { StatusText.Text = T("ChooseDevices"); return; }
         int generation = _deviceGeneration;
@@ -367,13 +378,15 @@ public partial class MainWindow : Window
                 StopProcessing(); ShowDeviceRecovery("DeviceAudioStopped");
                 if (error is AudioProcessingOverloadException && _settings.BufferMode == AudioBufferMode.Automatic)
                 {
-                    _advice = _settings.Engine == DenoiserKind.DeepFilterNet3 ? StabilityAdvice.Lightweight : StabilityAdvice.MoreBuffer;
+                    _advice = _settings.Engine == DenoiserKind.DeepFilterNet3 && !_settings.FastSinging ? StabilityAdvice.Lightweight : StabilityAdvice.MoreBuffer;
                     RefreshAdvice();
                 }
                 StatusText.Text = T("Failed", UiStrings.ErrorDetail(error.Message));
                 if (!IsVisible) _tray?.ShowNotice(T("TrayAudioStopped"), UiStrings.ErrorDetail(error.Message), error: true);
             });
             _lastUnderruns = 0; _gapUntil = _clippingUntil = DateTime.MinValue;
+            RenderDiagnostic(default);
+            _diagnosticSettings = null;
             suppressor.Start(); DeviceRecoveryPanel.Visibility = Visibility.Collapsed; ToggleButton.Content = T("Stop"); ToggleButton.Background = (Brush)FindResource("Danger");
             SetStatus(true); StatusText.Text = T("ActiveStatus", suppressor.EngineName);
             RefreshFormat(); RefreshPresetHint(); SaveConfig();
@@ -390,6 +403,9 @@ public partial class MainWindow : Window
     {
         CancelComparison();
         var suppressor = _suppressor; _suppressor = null;
+        DiagnosticSnapshot? last = null;
+        lock (_meterLock) { if (suppressor != null && _meterSource == suppressor) last = _latestMeters.Diagnostic; }
+        if (last.HasValue) RenderDiagnostic(last.Value);
         Exception? error = null;
         try { suppressor?.Dispose(); } catch (Exception ex) { error = ex; }
         SetDeviceControls(); ResetMeters(); SetStatus(false);
@@ -416,6 +432,7 @@ public partial class MainWindow : Window
     }
     private void RenderMeters(MeterData m)
     {
+        RenderDiagnostic(m.Diagnostic);
         RenderStudioMeters(m);
         _inDisp = Math.Max(ToMeter(m.InPeak), _inDisp * .88); _outDisp = Math.Max(ToMeter(m.OutPeak), _outDisp * .88);
         SetMask(InMask, InTrack, _inDisp); SetMask(OutMask, OutTrack, _outDisp);
@@ -438,7 +455,7 @@ public partial class MainWindow : Window
         try
         {
             // No device identifiers or microphone recordings are included.
-            Clipboard.SetText($"MicDenoiser 2.3\n{FormatText.Text}\n{PerformanceText.Text}\n{HealthText.Text}\nEngine: {_settings.Engine}\nBuffer: {_settings.BufferMode}\nNoise limit: {_settings.NoiseReductionDb:0} dB\nInput gain: {_settings.InputGainDb:0} dB\nGate: {_settings.GateEnabled}\nBypass: {_settings.Bypass}");
+            Clipboard.SetText($"MicDenoiser 2.4\n{FormatText.Text}\n{PerformanceText.Text}\n{HealthText.Text}\nEngine: {_settings.Engine}\nBuffer: {_settings.BufferMode}\nNoise limit: {_settings.NoiseReductionDb:0} dB\nInput gain: {_settings.InputGainDb:0} dB\nGate: {_settings.GateEnabled}\nBypass: {_settings.Bypass}");
             StatusText.Text = T("Copied");
         }
         catch (Exception ex) { StatusText.Text = T("Error", UiStrings.ErrorDetail(ex.Message)); }
@@ -457,6 +474,9 @@ public partial class MainWindow : Window
         public string Language { get; set; } = "ar";
         public bool MinimizeToTray { get; set; } = true;
         public bool DarkTheme { get; set; }
+        public bool SimpleMode { get; set; }
+        public ProcessingSettings? SnapshotA { get; set; }
+        public ProcessingSettings? SnapshotB { get; set; }
         public ProcessingSettings? Settings { get; set; }
     }
     private void LoadConfig()
@@ -468,6 +488,7 @@ public partial class MainWindow : Window
             _preset = cfg.Preset is "natural" or "studio" or "podcast" or "max" or "custom" or "calls" or "streaming" or "weakmic" or "whisper" or "singing" or "voiceover" or "broadcast" or "vocalroom" or "vocalhall" or "slapback" ? cfg.Preset : "studio";
             _language = cfg.Language == "en" ? "en" : "ar";
             _minimizeToTray = cfg.MinimizeToTray; _darkTheme = cfg.DarkTheme;
+            _simpleMode = cfg.SimpleMode; _snapshotA = cfg.SnapshotA?.SanitizedClone(); _snapshotB = cfg.SnapshotB?.SanitizedClone();
             if (cfg.Settings != null) _settings.CopyFrom(cfg.Settings.SanitizedClone());
             InputCombo.SelectedItem = InputCombo.Items.Cast<DeviceItem>().FirstOrDefault(d => d.Id == cfg.InputDeviceId)
                 ?? InputCombo.Items.Cast<DeviceItem>().FirstOrDefault(d => d.Name == cfg.InputDevice) ?? InputCombo.SelectedItem;
@@ -486,7 +507,8 @@ public partial class MainWindow : Window
             var cfg = new AppConfig { InputDevice = (InputCombo.SelectedItem as DeviceItem)?.Name,
                 OutputDevice = (OutputCombo.SelectedItem as DeviceItem)?.Name,
                 InputDeviceId = (InputCombo.SelectedItem as DeviceItem)?.Id, OutputDeviceId = (OutputCombo.SelectedItem as DeviceItem)?.Id,
-                Preset = _preset, Language = _language, MinimizeToTray = _minimizeToTray, DarkTheme = _darkTheme, Settings = _settings.SanitizedClone() };
+                Preset = _preset, Language = _language, MinimizeToTray = _minimizeToTray, DarkTheme = _darkTheme, Settings = _settings.SanitizedClone(),
+                SimpleMode = _simpleMode, SnapshotA = _snapshotA?.SanitizedClone(), SnapshotB = _snapshotB?.SanitizedClone() };
             Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath)!);
             File.WriteAllText(ConfigPath, JsonSerializer.Serialize(cfg, new JsonSerializerOptions { WriteIndented = true }));
         }

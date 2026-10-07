@@ -21,7 +21,8 @@ public static class EffectsProfile
             throw new ArgumentException("Unsupported effects profile.");
         var result = document.Settings.SanitizedClone();
         result.Engine = current.Engine; result.BufferMode = current.BufferMode; result.Bypass = current.Bypass;
+        result.FastSinging = current.FastSinging;
         if (processing && !current.GateEnabled) result.GateEnabled = false;
-        return result;
+        return result.SanitizedClone();
     }
 }

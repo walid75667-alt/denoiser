@@ -11,6 +11,7 @@ public sealed class ProcessingSettings
     public bool GateEnabled { get; set; }
     public bool HighPassEnabled { get; set; }
     public bool Bypass { get; set; }
+    public bool FastSinging { get; set; }
 
     // ── Input ──────────────────────────────────────────────
     public float InputGainDb { get; set; } = 0f;
@@ -169,6 +170,7 @@ public sealed class ProcessingSettings
         GateEnabled = o.GateEnabled;
         HighPassEnabled = o.HighPassEnabled;
         Bypass = o.Bypass;
+        FastSinging = o.FastSinging;
         InputGainDb = o.InputGainDb;
         Strength = o.Strength;
         GateThreshold = o.GateThreshold;
@@ -264,6 +266,7 @@ public sealed class ProcessingSettings
         s.ChorusMix = Bound(s.ChorusMix, 0, .5f, .15f);
         s.ChorusRateHz = Bound(s.ChorusRateHz, .1f, 3, .8f);
         s.ChorusDepthMs = Bound(s.ChorusDepthMs, 1, 10, 3);
+        if (s.FastSinging) { s.Strength = 0; s.GateEnabled = false; }
         return s;
     }
 }

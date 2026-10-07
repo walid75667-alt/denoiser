@@ -6,7 +6,8 @@ using NAudio.Wave;
 namespace MicDenoiser;
 
 public readonly record struct MeterData(float InPeak, float OutPeak, float? Vad, float GateGain,
-    bool Bypass, double FrameMs, double QueuedMs, int Underruns, float InRms = 0, float OutRms = 0, float CompressorReductionDb = 0, float DeEsserReductionDb = 0, float LimiterReductionDb = 0);
+    bool Bypass, double FrameMs, double QueuedMs, int Underruns, float InRms = 0, float OutRms = 0, float CompressorReductionDb = 0, float DeEsserReductionDb = 0, float LimiterReductionDb = 0,
+    DiagnosticSnapshot Diagnostic = default);
 
 /// <summary>WASAPI capture only queues audio; a dedicated worker resamples and denoises it.</summary>
 public sealed class NoiseSuppressor : IDisposable
@@ -24,6 +25,8 @@ public sealed class NoiseSuppressor : IDisposable
     private ProcessingSettings _settings;
     private ComparisonCapture? _comparison;
     private readonly StabilityAdvisor _advisor;
+    private readonly AudioDiagnostics _diagnostics = new();
+    private readonly bool _fastSinging;
     private long _lastInputAt;
     private int _running, _faulted, _playbackStarted, _disposed;
     public event Action<MeterData>? Meters;
@@ -38,10 +41,10 @@ public sealed class NoiseSuppressor : IDisposable
     public NoiseSuppressor(string inputId, string outputId, ProcessingSettings settings)
     {
         _settings = settings.SanitizedClone();
-        _advisor = new StabilityAdvisor(_settings.Engine, _settings.BufferMode);
-        PlaybackBufferTargetMs = _settings.BufferMode switch { AudioBufferMode.Stable => 100, AudioBufferMode.LowLatency => 30, _ => 60 };
-        IDenoiseEngine engine = _settings.Engine == DenoiserKind.DeepFilterNet3
-            ? new DeepFilterNetEngine() : new RNNoiseEngine();
+        _fastSinging = _settings.FastSinging;
+        _advisor = new StabilityAdvisor(_settings.Engine, _settings.BufferMode, _fastSinging);
+        PlaybackBufferTargetMs = AudioEngineFactory.PlaybackTargetMs(_settings);
+        IDenoiseEngine engine = AudioEngineFactory.Create(_settings);
         _pipeline = new AudioPipeline(engine);
         try
         {
@@ -69,7 +72,7 @@ public sealed class NoiseSuppressor : IDisposable
             };
             _monitor = new StablePlaybackProvider(_outputBuffer, PlaybackBufferTargetMs);
             _playback = new WasapiOut(_outputDevice, AudioClientShareMode.Shared, true,
-                _settings.BufferMode switch { AudioBufferMode.Stable => 60, AudioBufferMode.LowLatency => 20, _ => 40 });
+                _settings.BufferMode switch { AudioBufferMode.Stable => _fastSinging ? 40 : 60, AudioBufferMode.LowLatency => 20, _ => _fastSinging ? 20 : 40 });
             _playback.Init(_monitor);
             _capture.DataAvailable += OnData;
             _capture.RecordingStopped += (_, e) => { if (e.Exception != null) ReportFailure(e.Exception); };
@@ -84,7 +87,11 @@ public sealed class NoiseSuppressor : IDisposable
         }
     }
 
-    public void UpdateSettings(ProcessingSettings settings) => Volatile.Write(ref _settings, settings.SanitizedClone());
+    public void UpdateSettings(ProcessingSettings settings)
+    {
+        if (settings.FastSinging != _fastSinging) throw new InvalidOperationException("Stop audio before changing the singing path.");
+        Volatile.Write(ref _settings, settings.SanitizedClone());
+    }
     public ComparisonCapture BeginComparison()
     {
         if (Volatile.Read(ref _running) == 0) throw new InvalidOperationException("Audio processing is stopped.");
@@ -135,7 +142,7 @@ public sealed class NoiseSuppressor : IDisposable
         int size = _pipeline.FrameSize, pending = 0;
         var input = new float[size]; var output = new float[size]; var bytes = new byte[size * 2];
         var uiClock = Stopwatch.StartNew();
-        float inputPeak = 0, outputPeak = 0;
+        float inputPeak = 0, outputPeak = 0, rawPeak = 0;
         double maximumFrameMs = 0, inputEnergy = 0, outputEnergy = 0;
         int meterFrames = 0;
         float compReduction = 0, deEssReduction = 0, limitReduction = 0;
@@ -168,6 +175,7 @@ public sealed class NoiseSuppressor : IDisposable
                         ComparisonCompleted?.Invoke(comparison);
                     }
                     inputPeak = Math.Max(inputPeak, meters.InPeak); outputPeak = Math.Max(outputPeak, meters.OutPeak);
+                    rawPeak = Math.Max(rawPeak, meters.RawInputPeak);
                     inputEnergy += (double)meters.InRms * meters.InRms; outputEnergy += (double)meters.OutRms * meters.OutRms; meterFrames++;
                     compReduction = Math.Max(compReduction, meters.CompressorReductionDb);
                     deEssReduction = Math.Max(deEssReduction, meters.DeEsserReductionDb);
@@ -187,11 +195,12 @@ public sealed class NoiseSuppressor : IDisposable
                             var advice = _advisor.Observe(maximumFrameMs, _monitor.Underruns);
                             if (advice != null) AdviceChanged?.Invoke(advice.Value);
                         }
+                        var diagnostic = _diagnostics.Observe(rawPeak, inputPeak, limitReduction, maximumFrameMs, _monitor.Underruns);
                         Meters?.Invoke(new MeterData(inputPeak, outputPeak, meters.Vad, meters.GateGain, settings.Bypass,
                             maximumFrameMs, _captureBuffer.BufferedDuration.TotalMilliseconds + _outputBuffer.BufferedDuration.TotalMilliseconds,
                             _monitor.Underruns, (float)Math.Sqrt(inputEnergy / meterFrames), (float)Math.Sqrt(outputEnergy / meterFrames),
-                            compReduction, deEssReduction, limitReduction));
-                        inputPeak = outputPeak = 0; maximumFrameMs = inputEnergy = outputEnergy = 0; meterFrames = 0;
+                            compReduction, deEssReduction, limitReduction, diagnostic));
+                        inputPeak = outputPeak = rawPeak = 0; maximumFrameMs = inputEnergy = outputEnergy = 0; meterFrames = 0;
                         compReduction = deEssReduction = limitReduction = 0; uiClock.Restart();
                     }
                 }

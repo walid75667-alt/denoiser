@@ -18,6 +18,26 @@ public interface IDenoiseEngine : IDisposable
     float? Process(float[] input, float[] output);
 }
 
+/// <summary>No native model or VAD; frame size is retained for WASAPI and effects.</summary>
+public sealed class DirectVoiceEngine : IDenoiseEngine
+{
+    public string Name => "Direct voice";
+    public int FrameSize => 480;
+    public int DelaySamples => 0;
+    public float? Process(float[] input, float[] output)
+    { Array.Copy(input, output, FrameSize); return null; }
+    public void Dispose() { }
+}
+
+public static class AudioEngineFactory
+{
+    public static IDenoiseEngine Create(ProcessingSettings settings) => settings.FastSinging
+        ? new DirectVoiceEngine() : settings.Engine == DenoiserKind.DeepFilterNet3 ? new DeepFilterNetEngine() : new RNNoiseEngine();
+    public static int PlaybackTargetMs(ProcessingSettings settings) => settings.FastSinging
+        ? settings.BufferMode switch { AudioBufferMode.Stable => 60, AudioBufferMode.LowLatency => 20, _ => 30 }
+        : settings.BufferMode switch { AudioBufferMode.Stable => 100, AudioBufferMode.LowLatency => 30, _ => 60 };
+}
+
 public sealed class RNNoiseEngine : IDenoiseEngine
 {
     private readonly RNNoise _state = new();

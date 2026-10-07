@@ -1,4 +1,4 @@
-# Validation of MicDenoiser 2.3
+# Validation of MicDenoiser 2.4
 
 The Windows application was imported from the user's uploaded project. The
 repository initially contained only a README. This development environment is
@@ -12,7 +12,7 @@ Verified:
   pinned upstream revision and locked dependencies. ABI version 2 and the
   live attenuation setter are exported by the Windows DLL. Its imports use
   only Windows system DLLs.
-- All 38 checks passed: Arabic/English catalog parity and XAML resource
+- All 45 checks passed: Arabic/English catalog parity and XAML resource
   references; output starvation/recovery fades; startup rebuffering and byte
   offsets; gain/compressor continuity; malformed persisted settings;
   fragmented live resampling at 16/44.1/96 kHz; sample delay; aligned wet/dry
@@ -44,6 +44,17 @@ Verified:
   bounded parameters and complete copy/profile round trips. The warmed
   allocation check now enables reverb, echo and chorus too. These checks do
   not establish perceptual quality or predict clicks for every microphone.
+- Version 2.4 checks prove Fast singing constructs a DirectVoiceEngine,
+  retains undelayed dry audio with zero model/gate delay, preserves settings
+  and selects smaller buffer targets. Raw and post-gain peaks are measured
+  separately. Diagnostics distinguish source/gain/load/gaps/output pressure,
+  expire stale evidence, retain counters, reject nonfinite input and allocate
+  no managed memory on the warmed worker. Direct-path overload advice does
+  not recommend replacing a model that is not running. A/B checks use the
+  identical immutable input, compensate differing pipeline delays, preserve
+  a non-frame-multiple length, apply gain and match preview loudness without
+  boosting. Cancellation releases the active engine before starting B.
+  Snapshot/profile application retains the local path and live gate ownership.
 - The starvation regression reproduces a 12,000 PCM-unit jump in the old
   zero-fill output. The guarded output fades the same transition over 5 ms,
   with adjacent sample changes at most 51 units, and counts a continuous
@@ -77,6 +88,10 @@ Verified:
 
 Still to validate on Windows:
 
+- Simple/Studio selection and saved state, linked quick gain sliders, fast-path
+  start/stop and total physical latency, diagnosis/report controls, persisted
+  snapshots, A/B dialogs/preview/cancellation/close and device removal during
+  rendering. Offline checks do not validate WPF interaction or live routing.
 - Reverb/echo/chorus controls, combined effect listening, rapid changes on real
   singing, stored profiles/presets and monitoring delay on a physical BM800
   or other microphone. No hardware sound-card emulation is claimed.

@@ -24,12 +24,13 @@ public sealed class SampleDelay
     }
 }
 
-public readonly record struct FrameMeters(float InPeak, float OutPeak, float? Vad, float GateGain, float InRms = 0, float OutRms = 0, float CompressorReductionDb = 0, float DeEsserReductionDb = 0, float LimiterReductionDb = 0);
+public readonly record struct FrameMeters(float InPeak, float OutPeak, float? Vad, float GateGain, float InRms = 0, float OutRms = 0, float CompressorReductionDb = 0, float DeEsserReductionDb = 0, float LimiterReductionDb = 0, float RawInputPeak = 0);
 
 public sealed class AudioPipeline : IDisposable
 {
     public const int SampleRate = 48000;
-    private const int GateLookAheadSamples = 960;
+    private readonly int _gateLookAheadSamples;
+    private readonly bool _direct;
     private readonly IDenoiseEngine _engine;
     private readonly SampleDelay _dryDelay, _bypassDelay, _lookAhead, _vadDelay;
     private readonly Biquad _hpf = new(), _mud = new(), _presence = new();
@@ -47,17 +48,19 @@ public sealed class AudioPipeline : IDisposable
     private float _lastMud = float.NaN, _lastPresence = float.NaN, _bypassMix, _highPassMix;
     public int FrameSize => _engine.FrameSize;
     public string EngineName => _engine.Name;
-    public double AlgorithmicDelayMs => (_engine.DelaySamples + GateLookAheadSamples) * 1000.0 / SampleRate;
+    public double AlgorithmicDelayMs => (_engine.DelaySamples + _gateLookAheadSamples) * 1000.0 / SampleRate;
 
     public AudioPipeline(IDenoiseEngine engine)
     {
         _engine = engine;
+        _direct = engine is DirectVoiceEngine;
+        _gateLookAheadSamples = _direct ? 0 : 960;
         _input = new float[FrameSize]; _dry = new float[FrameSize]; _wet = new float[FrameSize];
         _mixed = new float[FrameSize]; _bypass = new float[FrameSize]; _vadInput = new float[FrameSize];
         _compressed = new float[FrameSize];
         _dryDelay = new SampleDelay(engine.DelaySamples);
-        _bypassDelay = new SampleDelay(engine.DelaySamples + GateLookAheadSamples);
-        _lookAhead = new SampleDelay(GateLookAheadSamples);
+        _bypassDelay = new SampleDelay(engine.DelaySamples + _gateLookAheadSamples);
+        _lookAhead = new SampleDelay(_gateLookAheadSamples);
         // Optional RNNoise VAD is a parallel detector; its audio is discarded.
         _vadDelay = new SampleDelay(Math.Max(0, engine.DelaySamples / FrameSize - 1));
         _hpf.SetHighPass(SampleRate, 70);
@@ -74,11 +77,12 @@ public sealed class AudioPipeline : IDisposable
         _ceiling.SetTarget(MathF.Pow(10, s.OutputCeilingDb / 20) * 32768);
         _hpf.SetHighPass(SampleRate, s.HighPassHz, smooth: true);
         _mudDb.SetTarget(s.MudCutDb); _presenceDb.SetTarget(s.PresenceDb);
-        float inPeak = 0, outPeak = 0, limiterReduction = 0, compBlend = 0;
+        float inPeak = 0, outPeak = 0, limiterReduction = 0, compBlend = 0, rawPeak = 0;
         double inputEnergy = 0, outputEnergy = 0;
         for (int i = 0; i < FrameSize; i++)
         {
             if (!float.IsFinite(source[i])) throw new ArgumentException("Invalid microphone sample.");
+            rawPeak = Math.Max(rawPeak, Math.Abs(source[i]) / 32768);
             _input[i] = source[i] * _inputGain.Next();
             inPeak = Math.Max(inPeak, Math.Abs(_input[i]) / 32768f);
             inputEnergy += (double)_input[i] * _input[i] / (32768.0 * 32768);
@@ -95,7 +99,7 @@ public sealed class AudioPipeline : IDisposable
         _dryDelay.Process(_input, _dry);
         _engine.Configure(s);
         float? vad = _engine.Process(_input, _wet);
-        if (vad is null && s.GateEnabled)
+        if (vad is null && s.GateEnabled && !_direct)
         {
             _vadDetector ??= new RNNoise();
             Array.Copy(_input, _vadInput, FrameSize);
@@ -110,7 +114,7 @@ public sealed class AudioPipeline : IDisposable
         }
         _lookAhead.Process(_mixed, destination);
         // The newest aligned VAD opens the gate ahead of delayed audio onset.
-        _gate.Process(destination, FrameSize, s.GateEnabled ? vad ?? 1f : 1f, s);
+        _gate.Process(destination, FrameSize, s.GateEnabled && !_direct ? vad ?? 1f : 1f, s);
         float mud = _mudDb.Next(FrameSize), presence = _presenceDb.Next(FrameSize);
         if (mud != _lastMud) { _mud.SetPeaking(SampleRate, 280, 1, -mud, smooth: true); _lastMud = mud; }
         if (presence != _lastPresence) { _presence.SetPeaking(SampleRate, 3500, 0.9, presence, smooth: true); _lastPresence = presence; }
@@ -141,7 +145,7 @@ public sealed class AudioPipeline : IDisposable
         }
         _bypassMix = target;
         return new FrameMeters(inPeak, outPeak, vad, _gate.Gain, (float)Math.Sqrt(inputEnergy / FrameSize), (float)Math.Sqrt(outputEnergy / FrameSize),
-            s.Bypass ? 0 : _comp.GainReductionDb * compBlend, s.Bypass ? 0 : _deEsser.GainReductionDb, limiterReduction);
+            s.Bypass ? 0 : _comp.GainReductionDb * compBlend, s.Bypass ? 0 : _deEsser.GainReductionDb, limiterReduction, rawPeak);
     }
     public void Dispose() { _vadDetector?.Dispose(); _engine.Dispose(); }
 }

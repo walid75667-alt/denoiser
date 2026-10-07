@@ -119,3 +119,35 @@ This is a software effects rack, not hardware emulation, pitch correction,
 echo cancellation, stereo processing or a low-latency ASIO interface. BM800
 is a microphone; it can be used as the selected physical input. Use headphones
 for monitoring and validate actual Windows latency before live singing.
+
+Version 2.4 adds Simple/Studio views, a model-free Fast singing path,
+rolling crackle evidence and matched A/B preview. New installations start in
+Simple view; existing configurations retain Studio view. Switching views
+preserves settings. Simple view includes devices, input/output gain, common
+presets and the mic test; Studio exposes engine/buffer selection and the mixer.
+
+Enable Fast singing while stopped. No denoising or VAD model is loaded; gate
+look-ahead and model delay are removed, while EQ/dynamics/effects remain.
+Playback targets are 30 ms Balanced/Automatic, 60 ms Stable and 20 ms Low
+latency (regular targets remain 60/100/30 ms). Disabling Fast singing restores
+the full denoiser mix; gate stays off until chosen while stopped. This does
+not establish total round-trip latency or ASIO support.
+
+Health separates near-full-scale source levels, gain-induced overflow,
+sustained processing windows over 10 ms, recent output gaps and frequent
+heavy output protection. A 2.5-second rolling window lets old evidence expire;
+session counters remain. Reports contain observed settings/counters, without
+recordings or device names/IDs. Source levels cannot prove ADC clipping, and
+absence of telemetry evidence cannot rule out model/audio artifacts.
+
+In Mic test, save two settings slots A/B, record ten seconds, then Prepare
+comparison. Fresh offline engines process exactly the same recorded input;
+model/look-ahead delays are compensated and preview loudness is attenuated
+to match, with peak headroom and no boosts. The current engine, Fast singing
+path and buffering are retained for both slots; live bypass is ignored for
+rendering. Rendering/listening pause live audio and rendering can be canceled.
+Snapshots survive restart, but recordings/rendered previews stay in memory.
+The preview retains the ten-second duration; wet tails beyond it are omitted.
+Apply A/B preserves the current path and cannot enable a stopped VAD on the
+live worker. Applying a slot uses its actual gain settings; only preview is
+loudness-matched.

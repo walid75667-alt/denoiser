@@ -43,6 +43,7 @@ public partial class MainWindow
             else ShowDeviceRecovery("StartupMissingDevices");
         };
         ResetStudioMeters(); RefreshAdvice(); RefreshComparison();
+        RenderDiagnostic(default); SetDeviceControls();
     }
 
     private void ShowDeviceRecovery(string key)
@@ -91,11 +92,11 @@ public partial class MainWindow
         AdviceText.Text = T(_settings.BufferMode == AudioBufferMode.Automatic ? "Advice" + _advice : "AdviceEnableAuto");
         ApplyAdviceButton.Visibility = _settings.BufferMode == AudioBufferMode.Automatic
             && _advice is StabilityAdvice.MoreBuffer or StabilityAdvice.Lightweight ? Visibility.Visible : Visibility.Collapsed;
-        ApplyAdviceButton.IsEnabled = !_starting && _comparison == null && _preview == null;
+        ApplyAdviceButton.IsEnabled = !_starting && _comparison == null && _preview == null && !_abBusy;
     }
     private async void ApplyAdvice_Click(object sender, RoutedEventArgs e)
     {
-        if (_starting || _comparison != null || _preview != null) return;
+        if (_starting || _comparison != null || _preview != null || _abBusy) return;
         var advice = _advice;
         StopProcessing();
         if (advice == StabilityAdvice.MoreBuffer) _settings.BufferMode = AudioBufferMode.Stable;
@@ -114,6 +115,7 @@ public partial class MainWindow
         try
         {
             _comparisonResult = null;
+            _abResult = null; _abError = null;
             _comparison = _suppressor.BeginComparison();
             _comparisonTimer!.Start(); RefreshComparison(); SetDeviceControls();
         }
@@ -148,22 +150,28 @@ public partial class MainWindow
     {
         ComparisonProgress.Value = _comparison?.SampleCount / 48000.0 ?? (_comparisonResult != null ? 10 : 0);
         if (_comparison != null) ComparisonStatus.Text = T(_comparison.IsComplete ? "RecordMatching" : "RecordProgress", _comparison.SampleCount / 48000.0);
-        else ComparisonStatus.Text = T(_preview != null ? (_previewOriginal ? "PlayingOriginal" : "PlayingProcessed") : _comparisonResult == null ? "RecordIdle" : "RecordReady");
-        bool busy = _comparison != null || _starting || _preview != null;
+        else ComparisonStatus.Text = T(_preview != null ? _previewTextKey : _comparisonResult == null ? "RecordIdle" : "RecordReady");
+        bool busy = _comparison != null || _starting || _preview != null || _abBusy;
         RecordButton.IsEnabled = !busy;
         CancelRecordButton.IsEnabled = _comparison != null;
         PlayOriginalButton.IsEnabled = PlayProcessedButton.IsEnabled = _comparisonResult != null && !busy;
         StopPreviewButton.IsEnabled = _preview != null;
         ExportOriginalButton.IsEnabled=ExportProcessedButton.IsEnabled=_comparisonResult!=null && !busy && !_exporting;
         PreviewOutputCombo.IsEnabled = !busy;
-        SoundOptions.IsEnabled = CustomOptions.IsEnabled = _comparison == null;
+        SoundOptions.IsEnabled = CustomOptions.IsEnabled = _comparison == null && !_abBusy;
+        ReduceGainButton.IsEnabled = _comparison == null && !_abBusy;
+        RefreshAb();
         RefreshAdvice();
     }
     private void PlayOriginal_Click(object sender, RoutedEventArgs e) => PlayComparison(true);
     private void PlayProcessed_Click(object sender, RoutedEventArgs e) => PlayComparison(false);
     private void PlayComparison(bool original)
     {
-        if (_comparisonResult == null || _comparison != null || _starting || PreviewOutputCombo.SelectedItem is not DeviceItem device) return;
+        if (_comparisonResult != null) PlayResult(_comparisonResult, original, original ? "PlayingOriginal" : "PlayingProcessed");
+    }
+    private void PlayResult(ComparisonResult result, bool original, string label)
+    {
+        if (_comparison != null || _starting || _abBusy || PreviewOutputCombo.SelectedItem is not DeviceItem device) return;
         // The visible test instructions explain that listening pauses live denoising.
         StopProcessing(); StopPreview();
         try
@@ -171,8 +179,8 @@ public partial class MainWindow
             using var enumerator = new MMDeviceEnumerator();
             _previewDevice = enumerator.GetDevice(device.Id);
             var playback = new WasapiOut(_previewDevice, AudioClientShareMode.Shared, true, 60);
-            _preview = playback; _previewOriginal = original;
-            playback.Init(_comparisonResult.CreatePlayback(original).ToWaveProvider());
+            _preview = playback; _previewOriginal = original; _previewTextKey = label;
+            playback.Init(result.CreatePlayback(original).ToWaveProvider());
             playback.PlaybackStopped += (_, args) => Dispatcher.BeginInvoke(() =>
             {
                 if (_preview != playback || _closed) return;
@@ -180,7 +188,7 @@ public partial class MainWindow
                 if (args.Exception != null) ComparisonStatus.Text = T("Error", UiStrings.ErrorDetail(args.Exception.Message));
             });
             playback.Play(); RefreshComparison(); SetDeviceControls();
-            ComparisonStatus.Text = T(original ? "PlayingOriginal" : "PlayingProcessed");
+            ComparisonStatus.Text = T(label);
         }
         catch (Exception ex) { StopPreview(); ComparisonStatus.Text = T("Error", UiStrings.ErrorDetail(ex.Message)); }
     }
@@ -197,6 +205,7 @@ public partial class MainWindow
     private void DisposeFeatures()
     {
         _comparisonTimer?.Stop(); CancelComparison(); StopPreview();
+        _abCancellation?.Cancel();
         try { _deviceWatcher?.Dispose(); } catch { }
         _deviceWatcher = null; _comparisonResult = null;
     }

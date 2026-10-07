@@ -318,6 +318,102 @@ Check("professional effects do not allocate on a warmed audio worker", () =>
     Require(GC.GetAllocatedBytesForCurrentThread()==before,"Effects allocate memory on the audio worker.");
 });
 
+Check("fast singing creates a model-free path with no algorithmic delay", () =>
+{
+    var s=new ProcessingSettings { FastSinging=true, GateEnabled=true, Strength=1 };
+    var clean=s.SanitizedClone();
+    Require(clean.Strength==0 && !clean.GateEnabled,"Fast singing retains speech suppression.");
+    using var engine=AudioEngineFactory.Create(clean);
+    Require(engine is DirectVoiceEngine && engine.DelaySamples==0,"Fast singing creates a neural engine.");
+    using var pipeline=new AudioPipeline(new DirectVoiceEngine());
+    var input=Enumerable.Range(0,480).Select(i=>(float)(4000*Math.Sin(i*.03)+1000)).ToArray();var output=new float[480];
+    pipeline.Process(input,output,clean);
+    Require(pipeline.AlgorithmicDelayMs==0 && input.Zip(output).All(pair=>Math.Abs(pair.First-pair.Second)<.01),"Direct voice has look-ahead or changes dry input.");
+    s=ProcessingSettings.FromPreset("vocalroom");s.FastSinging=true;
+    var copy=new ProcessingSettings();copy.CopyFrom(s.SanitizedClone());
+    var roundtrip=System.Text.Json.JsonSerializer.Deserialize<ProcessingSettings>(System.Text.Json.JsonSerializer.Serialize(copy))!;
+    Require(roundtrip.FastSinging && roundtrip.ReverbEnabled,"Saved fast singing loses mode or effects.");
+    Require(AudioEngineFactory.PlaybackTargetMs(new ProcessingSettings { FastSinging=true })==30
+        && AudioEngineFactory.PlaybackTargetMs(new ProcessingSettings { FastSinging=true, BufferMode=AudioBufferMode.LowLatency })==20
+        && AudioEngineFactory.PlaybackTargetMs(new ProcessingSettings())==60,"Fast mode buffer targets are incorrect.");
+});
+
+Check("raw source and app gain peaks are measured independently", () =>
+{
+    using var pipeline=new AudioPipeline(new DirectVoiceEngine());
+    var s=new ProcessingSettings { FastSinging=true, InputGainDb=6 };
+    var input=Enumerable.Repeat(24000f,480).ToArray();var output=new float[480];
+    var m=pipeline.Process(input,output,s);
+    Require(Math.Abs(m.RawInputPeak-24000f/32768)<.001 && m.InPeak>1.4,"Gain overflow cannot be distinguished from source level.");
+    var diagnostics=new AudioDiagnostics();diagnostics.Observe(m.RawInputPeak,m.InPeak,0,1,0);
+    Require(diagnostics.Observe(m.RawInputPeak,m.InPeak,0,1,0).Concern==AudioConcern.InputGain,"App gain is blamed on the source.");
+});
+
+Check("diagnostics distinguish source, gain, processing, gaps and output pressure", () =>
+{
+    var d=new AudioDiagnostics();DiagnosticSnapshot x=default;
+    for(int i=0;i<10;i++)x=d.Observe(.3f,.3f,0,1,0);
+    Require(x.Concern==AudioConcern.NoEvidence,"Healthy audio is diagnosed as broken.");
+    d.Observe(.3f,.3f,0,20,0);
+    Require(d.Observe(.3f,.3f,0,1,0).Concern==AudioConcern.NoEvidence,"An isolated slow frame is called sustained load.");
+    for(int i=0;i<5;i++)x=d.Observe(.3f,.3f,0,12,2);
+    Require(x.Concern==AudioConcern.ProcessingLoad && x.WorstFrameMs==20,"Sustained load or worst frame is lost.");
+    for(int i=0;i<25;i++)x=d.Observe(.3f,.3f,0,1,2);
+    Require(x.Concern==AudioConcern.NoEvidence && x.Underruns==2 && x.SlowWindows==6,"Old evidence does not expire or counters reset.");
+    Require(d.Observe(.3f,.3f,0,1,3).Concern==AudioConcern.OutputGaps,"A new output gap is missed.");
+    for(int i=0;i<2;i++)x=d.Observe(1,.4f,0,1,3);
+    Require(x.Concern==AudioConcern.SourceLevel,"A hot source is hidden by app attenuation.");
+    d=new AudioDiagnostics();for(int i=0;i<5;i++)x=d.Observe(.3f,.3f,8,1,0);
+    Require(x.Concern==AudioConcern.OutputPressure,"Heavy output limiting is undetected.");
+    var advisor=new StabilityAdvisor(DenoiserKind.DeepFilterNet3,AudioBufferMode.Automatic,true);
+    for(int i=0;i<50;i++)advisor.Observe(12,0);
+    Require(advisor.Current==StabilityAdvice.CheckDevice,"Direct voice recommends switching an inactive model.");
+});
+
+Check("diagnostics use bounded state and reject nonfinite telemetry", () =>
+{
+    var d=new AudioDiagnostics();for(int i=0;i<100;i++)d.Observe(.2f,.2f,0,1,0);
+    long before=GC.GetAllocatedBytesForCurrentThread();
+    for(int i=0;i<10000;i++)d.Observe(.2f,.2f,0,1,0);
+    Require(GC.GetAllocatedBytesForCurrentThread()==before,"Diagnostics allocate on the audio worker.");
+    bool rejected=false;try { d.Observe(float.NaN,0,0,0,0); }catch(ArgumentOutOfRangeException) { rejected=true; }
+    Require(rejected,"Invalid telemetry enters the evidence report.");
+});
+
+Check("A/B renders identical input with compensated delays and matched preview levels", () =>
+{
+    var source=Enumerable.Range(0,25001).Select(i=>(float)(3000*Math.Sin(2*Math.PI*1000*i/48000))).ToArray();
+    var untouched=(float[])source.Clone();
+    var a=new ProcessingSettings { Strength=0 };var b=new ProcessingSettings { FastSinging=true, OutputGainDb=6 };
+    var result=AbComparison.Render(source,a,b,factory:s=>s.FastSinging?new DirectVoiceEngine():new DelayedIdentityEngine(480));
+    Require(source.SequenceEqual(untouched) && result.Original.Length==source.Length && result.Processed.Length==source.Length,"A/B mutates input or changes duration.");
+    Require(source.Zip(result.Original).All(p=>Math.Abs(p.First-p.Second)<.05),"A rendering is misaligned.");
+    float ratio=MathF.Pow(10,6f/20);
+    Require(source.Zip(result.Processed).All(p=>Math.Abs(p.First*ratio-p.Second)<.05),"B rendering is misaligned or gain is wrong.");
+    Require(Math.Abs((result.OriginalLufs+20*Math.Log10(result.OriginalGain))-(result.ProcessedLufs+20*Math.Log10(result.ProcessedGain)))<.001,
+        "A louder preset remains louder in preview.");
+    Require(result.OriginalGain<=1 && result.ProcessedGain<=1,"A/B loudness matching boosts audio.");
+});
+
+Check("A/B cancellation releases the active engine and skips the second render", () =>
+{
+    var cancellation=new CancellationTokenSource();var engine=new CancelingEngine(cancellation);int created=0;bool canceled=false;
+    try { AbComparison.Render(new float[48000],new(),new(),cancellation.Token,s=>{created++;return engine;}); }
+    catch(OperationCanceledException) { canceled=true; }
+    Require(canceled && created==1 && engine.Disposed,"Canceled rendering leaks an engine or starts B.");
+    bool rejected=false;try { AbComparison.Render(new[]{float.NaN},new(),new()); }catch(ArgumentException) { rejected=true; }
+    Require(rejected,"Invalid A/B input initializes a native engine.");
+});
+
+Check("snapshot and imported effects preserve the local singing path and live gate ownership", () =>
+{
+    var snapshot=ProcessingSettings.FromPreset("broadcast");snapshot.GateEnabled=true;
+    var current=new ProcessingSettings { FastSinging=true, Engine=DenoiserKind.RNNoise, BufferMode=AudioBufferMode.LowLatency };
+    var loaded=EffectsProfile.Read(EffectsProfile.Serialize(snapshot),current,true);
+    Require(loaded.FastSinging && loaded.Strength==0 && !loaded.GateEnabled && loaded.Engine==current.Engine
+        && loaded.BufferMode==current.BufferMode && loaded.EqEnabled && loaded.CompressorOn,"Snapshot changes live routing or loses effects.");
+});
+
 Check("new effects remain transparent for existing settings and old profiles", () =>
 {
     var s=System.Text.Json.JsonSerializer.Deserialize<ProcessingSettings>("{\"Strength\":0.5}")!;
@@ -754,4 +850,20 @@ static class WavEnhancer
         foreach (short value in result) writer.Write(value);
         Console.WriteLine($"Enhanced {samples / 48000.0:0.00}s using {pipeline.EngineName} in {Stopwatch.GetElapsedTime(begin).TotalSeconds:0.00}s; compensated {delay / 48.0:0}ms delay.");
     }
+}
+
+sealed class CancelingEngine(CancellationTokenSource cancellation) : IDenoiseEngine
+{
+    private int _calls;
+    public bool Disposed { get; private set; }
+    public string Name => "Cancellation test";
+    public int FrameSize => 480;
+    public int DelaySamples => 0;
+    public float? Process(float[] input,float[] output)
+    {
+        Array.Copy(input,output,480);
+        if(++_calls==12)cancellation.Cancel();
+        return null;
+    }
+    public void Dispose() => Disposed=true;
 }

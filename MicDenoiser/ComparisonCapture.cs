@@ -39,16 +39,21 @@ public sealed record ComparisonResult(float[] Original, float[] Processed, doubl
     public static ComparisonResult Create(ComparisonCapture capture)
     {
         if (!capture.IsComplete) throw new InvalidOperationException("Comparison is incomplete.");
-        double raw = IntegratedLoudness.Measure(capture.Original), wet = IntegratedLoudness.Measure(capture.Processed);
+        return Create(capture.Original, capture.Processed);
+    }
+    public static ComparisonResult Create(float[] original, float[] processed)
+    {
+        if (original.Length == 0 || original.Length != processed.Length || original.Length > 480000) throw new ArgumentException("Invalid paired audio.");
+        double raw = IntegratedLoudness.Measure(original), wet = IntegratedLoudness.Measure(processed);
         // Attenuate to the quieter clip (and at most -20 LUFS); never boost quiet noise or clip.
         double target = Math.Min(-20, Math.Min(double.IsFinite(raw) ? raw : -20, double.IsFinite(wet) ? wet : -20));
         double a = double.IsFinite(raw) ? Math.Min(1, Math.Pow(10, (target - raw) / 20)) : 1;
         double b = double.IsFinite(wet) ? Math.Min(1, Math.Pow(10, (target - wet) / 20)) : 1;
         double peak = 0;
-        for (int i = 0; i < capture.Original.Length; i++)
-            peak = Math.Max(peak, Math.Max(Math.Abs(capture.Original[i] / 32768.0 * a), Math.Abs(capture.Processed[i] / 32768.0 * b)));
+        for (int i = 0; i < original.Length; i++)
+            peak = Math.Max(peak, Math.Max(Math.Abs(original[i] / 32768.0 * a), Math.Abs(processed[i] / 32768.0 * b)));
         double headroom = peak > .89 ? .89 / peak : 1;
-        return new(capture.Original, capture.Processed, a * headroom, b * headroom, raw, wet);
+        return new(original, processed, a * headroom, b * headroom, raw, wet);
     }
     public void SaveWaveFile(string path, bool original)
     {

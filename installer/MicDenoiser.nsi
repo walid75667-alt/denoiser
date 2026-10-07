@@ -11,16 +11,16 @@ Unicode true
 !ifndef UNINSTALL_MANIFEST
   !define UNINSTALL_MANIFEST "..\artifacts\uninstall-files.nsh"
 !endif
-Name "MicDenoiser 2.3"
+Name "MicDenoiser 2.4"
 OutFile "${OUT_FILE}"
 InstallDir "$LOCALAPPDATA\Programs\MicDenoiser"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
 SetCompressorDictSize 32
-VIProductVersion "2.3.0.0"
+VIProductVersion "2.4.0.0"
 VIAddVersionKey /LANG=1033 "ProductName" "MicDenoiser"
 VIAddVersionKey /LANG=1033 "FileDescription" "MicDenoiser Windows x64 Setup"
-VIAddVersionKey /LANG=1033 "FileVersion" "2.3.0"
+VIAddVersionKey /LANG=1033 "FileVersion" "2.4.0"
 VIAddVersionKey /LANG=1033 "LegalCopyright" "MicDenoiser contributors; see bundled component licenses"
 !define MUI_ABORTWARNING
 !define MUI_ICON "..\MicDenoiser\Assets\MicDenoiser.ico"
@@ -73,6 +73,9 @@ Function .onInit
   ${If} $0 == 0
     FindWindow $0 "" "MicDenoiser 2.3"
   ${EndIf}
+  ${If} $0 == 0
+    FindWindow $0 "" "MicDenoiser 2.4"
+  ${EndIf}
   ${If} $0 != 0
     MessageBox MB_OK|MB_ICONEXCLAMATION "$(CloseApp)"
     Abort
@@ -96,8 +99,8 @@ Section "$(AppSection)" SEC_APP
   CreateDirectory "$SMPROGRAMS\MicDenoiser"
   CreateShortcut "$SMPROGRAMS\MicDenoiser\MicDenoiser.lnk" "$INSTDIR\MicDenoiser.exe"
   CreateShortcut "$SMPROGRAMS\MicDenoiser\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "DisplayName" "MicDenoiser 2.3"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "DisplayVersion" "2.3.0"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "DisplayName" "MicDenoiser 2.4"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "DisplayVersion" "2.4.0"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "DisplayIcon" "$INSTDIR\MicDenoiser.exe"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "InstallLocation" "$INSTDIR"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MicDenoiser" "UninstallString" '"$INSTDIR\Uninstall.exe"'
@@ -121,6 +124,9 @@ Function un.onInit
   ${EndIf}
   ${If} $0 == 0
     FindWindow $0 "" "MicDenoiser 2.3"
+  ${EndIf}
+  ${If} $0 == 0
+    FindWindow $0 "" "MicDenoiser 2.4"
   ${EndIf}
   ${If} $0 != 0
     MessageBox MB_OK|MB_ICONEXCLAMATION "$(CloseApp)"
