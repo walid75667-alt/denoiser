@@ -187,6 +187,7 @@ public partial class MainWindow : Window
         if (!_ready || _loading || _suppressor != null || _starting) return;
         if (EngineCombo.SelectedItem is not ComboBoxItem { Tag: string kind } || !Enum.TryParse<DenoiserKind>(kind, out var engine)) return;
         _settings.Engine = engine;
+        _abResult = null; _abError = null;
         if (_preset != "custom") SetPreset(_preset);
         else { _settings.GateEnabled = engine == DenoiserKind.RNNoise; ApplySettingsToUi(); }
     }
@@ -194,7 +195,8 @@ public partial class MainWindow : Window
     {
         if (!_ready || _loading || _suppressor != null || _starting) return;
         if (BufferModeCombo.SelectedIndex is >= 0 and <= 3) _settings.BufferMode = (AudioBufferMode)BufferModeCombo.SelectedIndex;
-        RefreshBufferHint(); RefreshAdvice();
+        _abResult = null; _abError = null;
+        RefreshBufferHint(); RefreshAdvice(); RefreshAb();
     }
     private void RefreshBufferHint() => BufferHint.Text = T(_settings.BufferMode switch
         { AudioBufferMode.Automatic => "AutomaticHint", AudioBufferMode.Stable => "StableHint", AudioBufferMode.LowLatency => "FastHint", _ => "BalancedHint" });
@@ -265,7 +267,7 @@ public partial class MainWindow : Window
         }
         finally { _loading = false; }
     }
-    private void RefreshPresetHint() => PresetHint.Text = T("Preset" + _preset)
+    private void RefreshPresetHint() => PresetHint.Text = T(_settings.FastSinging ? "FastSingingActive" : "Preset" + _preset)
         + (_gatePreserved && _preset != "custom" ? T("PreservedGate") : "");
     private void OutputDevice_Changed(object sender, SelectionChangedEventArgs e) => RefreshRouting();
     private void RefreshRouting() => RoutingText.Text = T(OutputCombo.SelectedItem is DeviceItem item

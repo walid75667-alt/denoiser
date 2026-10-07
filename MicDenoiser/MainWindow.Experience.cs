@@ -36,6 +36,7 @@ public partial class MainWindow
     {
         if (_suppressor != null || _starting || _preview != null || _abBusy) { ApplySettingsToUi(); return; }
         _settings.FastSinging = FastSingingCheck.IsChecked == true;
+        _abResult = null; _abError = null;
         if (!_settings.FastSinging) _settings.Strength = 1;
         _settings.CopyFrom(_settings.SanitizedClone()); _preset = "custom";
         ApplySettingsToUi(); SetDeviceControls(); SaveConfig();
