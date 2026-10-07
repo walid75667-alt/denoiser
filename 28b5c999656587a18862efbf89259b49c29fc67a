@@ -1,0 +1,58 @@
+{
+  "commit": "28b5c999656587a18862efbf89259b49c29fc67a",
+  "ref": "refs/heads/codex/micdenoiser-2.4-experience",
+  "run_url": "https://github.com/walid75667-alt/denoiser/actions/runs/37703958120",
+  "linux": "success",
+  "windows": "failure",
+  "release": "skipped",
+  "ui_error": "System.InvalidOperationException: '\u0645\u0643\u062a\u0648\u0645' is not a valid value for property 'Foreground'.\n   at System.Windows.DependencyObject.EvaluateExpression(EntryIndex entryIndex, DependencyProperty dp, Expression expr, PropertyMetadata metadata, EffectiveValueEntry oldEntry, EffectiveValueEntry newEntry)\n   at System.Windows.DependencyObject.EvaluateEffectiveValue(EntryIndex entryIndex, DependencyProperty dp, PropertyMetadata metadata, EffectiveValueEntry oldEntry, EffectiveValueEntry newEntry, OperationType operationType)\n   at System.Windows.DependencyObject.UpdateEffectiveValue(EntryIndex entryIndex, DependencyProperty dp, PropertyMetadata metadata, EffectiveValueEntry oldEntry, EffectiveValueEntry& newEntry, Boolean coerceWithDeferredReference, Boolean coerceWithCurrentValue, OperationType operationType)\n   at System.Windows.DependencyObject.InvalidateProperty(DependencyProperty dp, Boolean preserveCurrentValue)\n   at System.Windows.ResourceReferenceExpression.InvalidateExpressionValue(Object sender, EventArgs e)\n   at System.Windows.TreeWalkHelper.InvalidateResourceReferences(DependencyObject d, ResourcesChangeInfo info)\n   at System.Windows.TreeWalkHelper.OnResourcesChanged(DependencyObject d, ResourcesChangeInfo info, Boolean raiseResourceChangedEvent)\n   at System.Windows.TreeWalkHelper.OnResourcesChangedCallback(DependencyObject d, ResourcesChangeInfo info, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1._VisitNode(DependencyObject d, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1.WalkLogicalChildren(FrameworkElement feParent, FrameworkContentElement fceParent, IEnumerator logicalChildren)\n   at System.Windows.DescendentsWalker`1.WalkFrameworkElementLogicalThenVisualChildren(FrameworkElement feParent, Boolean hasLogicalChildren)\n   at System.Windows.DescendentsWalker`1.IterateChildren(DependencyObject d)\n   at System.Windows.DescendentsWalker`1._VisitNode(DependencyObject d, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1.WalkLogicalChildren(FrameworkElement feParent, FrameworkContentElement fceParent, IEnumerator logicalChildren)\n   at System.Windows.DescendentsWalker`1.WalkFrameworkElementLogicalThenVisualChildren(FrameworkElement feParent, Boolean hasLogicalChildren)\n   at System.Windows.DescendentsWalker`1.IterateChildren(DependencyObject d)\n   at System.Windows.DescendentsWalker`1._VisitNode(DependencyObject d, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1.WalkLogicalChildren(FrameworkElement feParent, FrameworkContentElement fceParent, IEnumerator logicalChildren)\n   at System.Windows.DescendentsWalker`1.WalkFrameworkElementLogicalThenVisualChildren(FrameworkElement feParent, Boolean hasLogicalChildren)\n   at System.Windows.DescendentsWalker`1.IterateChildren(DependencyObject d)\n   at System.Windows.DescendentsWalker`1._VisitNode(DependencyObject d, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1.WalkLogicalChildren(FrameworkElement feParent, FrameworkContentElement fceParent, IEnumerator logicalChildren)\n   at System.Windows.DescendentsWalker`1.WalkFrameworkElementLogicalThenVisualChildren(FrameworkElement feParent, Boolean hasLogicalChildren)\n   at System.Windows.DescendentsWalker`1.IterateChildren(DependencyObject d)\n   at System.Windows.DescendentsWalker`1._VisitNode(DependencyObject d, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1.WalkLogicalChildren(FrameworkElement feParent, FrameworkContentElement fceParent, IEnumerator logicalChildren)\n   at System.Windows.DescendentsWalker`1.WalkFrameworkElementLogicalThenVisualChildren(FrameworkElement feParent, Boolean hasLogicalChildren)\n   at System.Windows.DescendentsWalker`1.IterateChildren(DependencyObject d)\n   at System.Windows.DescendentsWalker`1.StartWalk(DependencyObject startNode, Boolean skipStartNode)\n   at System.Windows.TreeWalkHelper.InvalidateOnResourcesChange(FrameworkElement fe, FrameworkContentElement fce, ResourcesChangeInfo info)\n   at System.Windows.ResourceDictionary.NotifyOwners(ResourcesChangeInfo info)\n   at System.Windows.ResourceDictionary.SetValueWithoutLock(Object key, Object value)\n   at System.Windows.ResourceDictionary.set_Item(Object key, Object value)\n   at MicDenoiser.UiStrings.Apply(Window window, String language) in D:\\a\\denoiser\\denoiser\\MicDenoiser\\UiStrings.cs:line 23\n   at MicDenoiser.MainWindow..ctor() in D:\\a\\denoiser\\denoiser\\MicDenoiser\\MainWindow.xaml.cs:line 36\n   at MicDenoiser.App.OnStartup(StartupEventArgs e) in D:\\a\\denoiser\\denoiser\\MicDenoiser\\App.xaml.cs:line 15",
+  "windows_test_counts": {
+    "total": "55",
+    "executed": "55",
+    "passed": "55",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "windows_test_failures": [],
+  "runs": {
+    "refs/heads/codex/micdenoiser-2.4-experience": {
+      "commit": "28b5c999656587a18862efbf89259b49c29fc67a",
+      "ref": "refs/heads/codex/micdenoiser-2.4-experience",
+      "run_url": "https://github.com/walid75667-alt/denoiser/actions/runs/37703958120",
+      "linux": "success",
+      "windows": "failure",
+      "release": "skipped",
+      "ui_error": "System.InvalidOperationException: '\u0645\u0643\u062a\u0648\u0645' is not a valid value for property 'Foreground'.\n   at System.Windows.DependencyObject.EvaluateExpression(EntryIndex entryIndex, DependencyProperty dp, Expression expr, PropertyMetadata metadata, EffectiveValueEntry oldEntry, EffectiveValueEntry newEntry)\n   at System.Windows.DependencyObject.EvaluateEffectiveValue(EntryIndex entryIndex, DependencyProperty dp, PropertyMetadata metadata, EffectiveValueEntry oldEntry, EffectiveValueEntry newEntry, OperationType operationType)\n   at System.Windows.DependencyObject.UpdateEffectiveValue(EntryIndex entryIndex, DependencyProperty dp, PropertyMetadata metadata, EffectiveValueEntry oldEntry, EffectiveValueEntry& newEntry, Boolean coerceWithDeferredReference, Boolean coerceWithCurrentValue, OperationType operationType)\n   at System.Windows.DependencyObject.InvalidateProperty(DependencyProperty dp, Boolean preserveCurrentValue)\n   at System.Windows.ResourceReferenceExpression.InvalidateExpressionValue(Object sender, EventArgs e)\n   at System.Windows.TreeWalkHelper.InvalidateResourceReferences(DependencyObject d, ResourcesChangeInfo info)\n   at System.Windows.TreeWalkHelper.OnResourcesChanged(DependencyObject d, ResourcesChangeInfo info, Boolean raiseResourceChangedEvent)\n   at System.Windows.TreeWalkHelper.OnResourcesChangedCallback(DependencyObject d, ResourcesChangeInfo info, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1._VisitNode(DependencyObject d, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1.WalkLogicalChildren(FrameworkElement feParent, FrameworkContentElement fceParent, IEnumerator logicalChildren)\n   at System.Windows.DescendentsWalker`1.WalkFrameworkElementLogicalThenVisualChildren(FrameworkElement feParent, Boolean hasLogicalChildren)\n   at System.Windows.DescendentsWalker`1.IterateChildren(DependencyObject d)\n   at System.Windows.DescendentsWalker`1._VisitNode(DependencyObject d, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1.WalkLogicalChildren(FrameworkElement feParent, FrameworkContentElement fceParent, IEnumerator logicalChildren)\n   at System.Windows.DescendentsWalker`1.WalkFrameworkElementLogicalThenVisualChildren(FrameworkElement feParent, Boolean hasLogicalChildren)\n   at System.Windows.DescendentsWalker`1.IterateChildren(DependencyObject d)\n   at System.Windows.DescendentsWalker`1._VisitNode(DependencyObject d, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1.WalkLogicalChildren(FrameworkElement feParent, FrameworkContentElement fceParent, IEnumerator logicalChildren)\n   at System.Windows.DescendentsWalker`1.WalkFrameworkElementLogicalThenVisualChildren(FrameworkElement feParent, Boolean hasLogicalChildren)\n   at System.Windows.DescendentsWalker`1.IterateChildren(DependencyObject d)\n   at System.Windows.DescendentsWalker`1._VisitNode(DependencyObject d, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1.WalkLogicalChildren(FrameworkElement feParent, FrameworkContentElement fceParent, IEnumerator logicalChildren)\n   at System.Windows.DescendentsWalker`1.WalkFrameworkElementLogicalThenVisualChildren(FrameworkElement feParent, Boolean hasLogicalChildren)\n   at System.Windows.DescendentsWalker`1.IterateChildren(DependencyObject d)\n   at System.Windows.DescendentsWalker`1._VisitNode(DependencyObject d, Boolean visitedViaVisualTree)\n   at System.Windows.DescendentsWalker`1.WalkLogicalChildren(FrameworkElement feParent, FrameworkContentElement fceParent, IEnumerator logicalChildren)\n   at System.Windows.DescendentsWalker`1.WalkFrameworkElementLogicalThenVisualChildren(FrameworkElement feParent, Boolean hasLogicalChildren)\n   at System.Windows.DescendentsWalker`1.IterateChildren(DependencyObject d)\n   at System.Windows.DescendentsWalker`1.StartWalk(DependencyObject startNode, Boolean skipStartNode)\n   at System.Windows.TreeWalkHelper.InvalidateOnResourcesChange(FrameworkElement fe, FrameworkContentElement fce, ResourcesChangeInfo info)\n   at System.Windows.ResourceDictionary.NotifyOwners(ResourcesChangeInfo info)\n   at System.Windows.ResourceDictionary.SetValueWithoutLock(Object key, Object value)\n   at System.Windows.ResourceDictionary.set_Item(Object key, Object value)\n   at MicDenoiser.UiStrings.Apply(Window window, String language) in D:\\a\\denoiser\\denoiser\\MicDenoiser\\UiStrings.cs:line 23\n   at MicDenoiser.MainWindow..ctor() in D:\\a\\denoiser\\denoiser\\MicDenoiser\\MainWindow.xaml.cs:line 36\n   at MicDenoiser.App.OnStartup(StartupEventArgs e) in D:\\a\\denoiser\\denoiser\\MicDenoiser\\App.xaml.cs:line 15",
+      "windows_test_counts": {
+        "total": "55",
+        "executed": "55",
+        "passed": "55",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "windows_test_failures": []
+    }
+  }
+}
