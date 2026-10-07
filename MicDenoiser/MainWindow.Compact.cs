@@ -107,6 +107,7 @@ public partial class MainWindow
             (InputCombo.SelectedItem as DeviceItem)?.Id, (OutputCombo.SelectedItem as DeviceItem)?.Id, !_starting && !_abBusy && _preview == null);
         StudioPowerButton.Content = T(_starting ? "Starting" : _suppressor == null ? "Ui019" : "Stop");
         StudioMuteButton.Content = T(_settings.Muted ? "Unmute" : "Mute");
+        _tray?.Refresh(_suppressor != null, _starting || _abBusy || _comparison != null || _preview != null, _settings.Muted, EffectiveLevel);
     }
     private void ApplyCompactLayout()
     {

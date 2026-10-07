@@ -13,8 +13,8 @@
 </ControlTemplate></Setter.Value></Setter></Style>
 <!-- Palette -->
         <SolidColorBrush x:Key="HeaderBg" Color="#142A37"/>
-        <SolidColorBrush x:Key="SelectedPresetBg" Color="#142A37"/>
-        <SolidColorBrush x:Key="PrimaryAccent" Color="#087F8C"/>
+        <SolidColorBrush x:Key="SelectedPresetBg" Color="#0B7D6E"/>
+        <SolidColorBrush x:Key="PrimaryAccent" Color="#0B7D6E"/>
         <SolidColorBrush x:Key="Ink" Color="#142A37"/>
         <SolidColorBrush x:Key="Accent" Color="#087F8C"/>
         <SolidColorBrush x:Key="AccentSoft" Color="#E6F4F3"/>

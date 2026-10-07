@@ -13,7 +13,7 @@ internal sealed class NotificationTray : IDisposable
     private readonly Forms.ToolStripMenuItem _restore, _toggle, _exit, _mute, _levels;
     private readonly Dictionary<string, Forms.ToolStripMenuItem> _levelItems = new();
 
-    public NotificationTray(Action restore, Action toggle, Action exit, Action mute, Action<string> level, Action settings)
+    public NotificationTray(Action restore, Action toggle, Action exit, Action mute, Action<string> level, Action settings, Action refresh)
     {
         var resource = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/MicDenoiser.ico"))
             ?? throw new InvalidOperationException("The embedded application icon is missing.");
@@ -33,13 +33,13 @@ internal sealed class NotificationTray : IDisposable
         }
         var preferences = new Forms.ToolStripMenuItem(); preferences.Click += (_, _) => settings();
         preferences.Name = "preferences";
-        _menu.Items.Add(preferences);
+        _menu.Opening += (_, _) => refresh();
         _restore.Click += (_, _) => restore();
         _toggle.Click += (_, _) => toggle();
         _exit.Click += (_, _) => exit();
         _menu.Items.AddRange(new Forms.ToolStripItem[]
         {
-            _restore, _toggle, _mute, _levels, new Forms.ToolStripSeparator(), _exit
+            _restore, _toggle, _mute, _levels, preferences, new Forms.ToolStripSeparator(), _exit
         });
         _notification = new Forms.NotifyIcon { Icon = _icon, ContextMenuStrip = _menu };
         _notification.MouseDoubleClick += (_, e) => { if (e.Button == Forms.MouseButtons.Left) restore(); };

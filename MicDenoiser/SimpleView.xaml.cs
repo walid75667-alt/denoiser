@@ -35,7 +35,7 @@ public partial class SimpleView : UserControl
             LightLevel.IsChecked = level == "light"; BalancedLevel.IsChecked = level == "balanced"; StrongLevel.IsChecked = level == "strong";
             LightLevel.IsEnabled = BalancedLevel.IsEnabled = StrongLevel.IsEnabled = !starting;
             LevelHint.Text = UiStrings.Get("LevelHint" + level);
-            Headline.Text = UiStrings.Get(starting ? "SwitchingEngine" : !running ? "Ui001" : settings.Muted ? "Muted" : settings.Bypass ? "OriginalActive" : "Running");
+            Headline.Text = UiStrings.Get(starting ? "SwitchingEngine" : !running ? "Ui001" : settings.Muted ? "MuteStatus" : settings.Bypass ? "OriginalActive" : "Running");
             Subline.Text = UiStrings.Get(!running ? "CompactIdle" : settings.Muted ? "CompactMuted" : settings.Bypass ? "HoldRelease" : "CompactRunning");
             MuteButton.Content = UiStrings.Get(settings.Muted ? "Unmute" : "Mute");
             MuteButton.IsEnabled = !starting;
@@ -54,7 +54,7 @@ public partial class SimpleView : UserControl
         static double Display(float rms) => rms <= .001f ? 0 : Math.Clamp((20 * Math.Log10(rms) + 60) / 60, 0, 1);
         InputMeter.Value = Display(meters.InRms); OutputMeter.Value = Display(meters.OutRms);
         ReductionText.Text = meters.BackgroundReductionDb is { } reduction ? $"{reduction:0.0} dB" : "— dB";
-        VoiceStatus.Text = UiStrings.Get(settings.Muted ? "Muted" : settings.Bypass ? "OriginalActive" : meters.Vad == null ? "VadUnavailable" : meters.Vad >= .35f ? "Voice" : "LowVoiceEvidence");
+        VoiceStatus.Text = UiStrings.Get(settings.Muted ? "MuteStatus" : settings.Bypass ? "OriginalActive" : meters.Vad == null ? "VadUnavailable" : meters.Vad >= .35f ? "Voice" : "LowVoiceEvidence");
     }
     private void Power_Click(object sender, RoutedEventArgs e) => Power?.Invoke();
     private void Mute_Click(object sender, RoutedEventArgs e) => Mute?.Invoke();

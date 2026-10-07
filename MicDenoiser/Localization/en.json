@@ -311,7 +311,6 @@
   "CompactMuted": "Output muted; processing continues",
   "Mute": "Mute",
   "Unmute": "Unmute",
-  "Muted": "Muted",
   "HoldOriginal": "Hold for original",
   "HoldOriginalHint": "Hold with mouse or Space to compare. Use headphones.",
   "HoldRelease": "Release to return to suppression",
@@ -360,5 +359,6 @@
   "WizardReady": "Ready to test",
   "WizardRecord": "Record 10 seconds",
   "RecordUnmute": "Unmute before recording the comparison.",
-  "LevelHintcustom": "Custom Studio settings; choosing a level replaces the current sound profile."
+  "LevelHintcustom": "Custom Studio settings; choosing a level replaces the current sound profile.",
+  "MuteStatus": "Muted"
 }

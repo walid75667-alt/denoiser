@@ -28,6 +28,7 @@ Check("interface catalogs and XAML resource references are complete", () =>
     var xkey = System.Xml.Linq.XName.Get("Key", "http://schemas.microsoft.com/winfx/2006/xaml");
     var application = System.Xml.Linq.XDocument.Load(Path.Combine(assets, "App.xaml"));
     var staticKeys = application.Descendants().SelectMany(e => e.Attributes(xkey)).Select(a => a.Value).ToHashSet();
+    Require(!ar.Keys.Intersect(staticKeys).Any(), "Translation names shadow brush or style resources.");
     foreach (string file in new[] { "MainWindow.xaml", "App.xaml", "SetupWindow.xaml", "SimpleView.xaml", "AboutWindow.xaml" })
     {
         foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(

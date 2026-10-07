@@ -90,7 +90,7 @@ public partial class MainWindow : Window
         try
         {
             _tray = new NotificationTray(() => Post(RestoreFromTray),
-                () => Post(() => ToggleButton_Click(this, new RoutedEventArgs())), () => Post(Close), () => Post(ToggleMute), level => Post(async () => await SetIsolationLevel(level)), () => Post(() => OpenStudio(4)));
+                () => Post(() => ToggleButton_Click(this, new RoutedEventArgs())), () => Post(Close), () => Post(ToggleMute), level => Post(async () => await SetIsolationLevel(level)), () => Post(() => OpenStudio(4)), RefreshCompact);
         }
         catch (Exception) { StatusText.Text = T("TrayUnavailable"); }
         TrayMinimizeButton.IsEnabled = MinimizeToTrayCheck.IsEnabled = _tray != null;
