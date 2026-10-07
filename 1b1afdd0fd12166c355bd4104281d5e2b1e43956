@@ -1,0 +1,18 @@
+{
+  "commit": "1b1afdd0fd12166c355bd4104281d5e2b1e43956",
+  "ref": "refs/heads/codex/micdenoiser-2.4-experience",
+  "run_url": "https://github.com/walid75667-alt/denoiser/actions/runs/37702893237",
+  "linux": "success",
+  "windows": "failure",
+  "release": "skipped",
+  "runs": {
+    "refs/heads/codex/micdenoiser-2.4-experience": {
+      "commit": "1b1afdd0fd12166c355bd4104281d5e2b1e43956",
+      "ref": "refs/heads/codex/micdenoiser-2.4-experience",
+      "run_url": "https://github.com/walid75667-alt/denoiser/actions/runs/37702893237",
+      "linux": "success",
+      "windows": "failure",
+      "release": "skipped"
+    }
+  }
+}
