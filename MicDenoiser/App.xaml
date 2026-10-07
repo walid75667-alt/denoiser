@@ -1,7 +1,7 @@
 <Application x:Class="MicDenoiser.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
+>
     <Application.Resources>
 
         <FontFamily x:Key="InterfaceFont">pack://application:,,,/MicDenoiser;component/Assets/Fonts/#IBM Plex Sans Arabic</FontFamily>

@@ -6,7 +6,7 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         bool smoke = e.Args.Contains("--ui-smoke");
-        if (smoke) StartupUri = null;
+        if (!smoke) StartupUri = new Uri("MainWindow.xaml", UriKind.Relative);
         base.OnStartup(e);
         if (!smoke) return;
         string directory = Path.GetFullPath(Path.Combine("artifacts", "ui-smoke"));
