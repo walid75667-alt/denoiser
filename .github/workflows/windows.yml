@@ -58,9 +58,9 @@ jobs:
       - name: Render actual WPF screens without recording audio
         shell: pwsh
         run: |
-          $process = Start-Process -FilePath artifacts/windows/MicDenoiser.exe -ArgumentList '--ui-smoke' -PassThru
+          $process = Start-Process -FilePath artifacts/windows/MicDenoiser.exe -ArgumentList '--ui-smoke' -WorkingDirectory $PWD.Path -PassThru
           if (!$process.WaitForExit(90000)) { $process.Kill(); throw 'WPF render smoke timed out.' }
-          if ($process.ExitCode -ne 0) { throw 'WPF render smoke failed; see UI artifacts.' }
+          if ($process.ExitCode -ne 0) { if (Test-Path artifacts/ui-smoke/error.txt) { Get-Content artifacts/ui-smoke/error.txt }; throw 'WPF render smoke failed; see UI artifacts.' }
           if ((Get-ChildItem artifacts/ui-smoke/*.png).Count -ne 21) { throw 'Expected all 21 Arabic, English and dark WPF renders.' }
       - uses: actions/upload-artifact@v4
         if: always()
@@ -158,6 +158,11 @@ jobs:
         with:
           name: MicDenoiser-WPF-screens
           path: artifacts/ui-smoke
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: Windows-xUnit-results
+          path: artifacts/windows-test-results
       - name: Record CI outcomes as Git notes without changing source branches
         env:
           LINUX_RESULT: ${{ needs.linux.result }}
@@ -176,6 +181,14 @@ jobs:
               if path.is_file() and path.stat().st_size < 1024 * 1024:
                   images[name] = base64.b64encode(path.read_bytes()).decode('ascii')
           if images: result['ui_screens'] = images
+          error = Path('artifacts/ui-smoke/error.txt')
+          if error.is_file(): result['ui_error'] = error.read_text()[:20000]
+          reports = list(Path('artifacts/windows-test-results').glob('*.trx'))
+          if reports:
+              import xml.etree.ElementTree as ET
+              report = ET.parse(reports[0]); ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+              result['windows_test_counts'] = report.find('.//t:Counters', ns).attrib
+              result['windows_test_failures'] = [{ 'name': e.get('testName'), 'output': ET.tostring(e, encoding='unicode')[:20000] } for e in report.findall('.//t:UnitTestResult', ns) if e.get('outcome') != 'Passed']
           open('ci-outcome.json', 'w').write(json.dumps(result, indent=2) + '\n')
           PY
           git config user.name 'github-actions[bot]'
