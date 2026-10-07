@@ -9,6 +9,11 @@ namespace MicDenoiser;
 public partial class MainWindow
 {
     private bool _exporting;
+    private void SpatialReset_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.ReverbEnabled = _settings.EchoEnabled = _settings.ChorusEnabled = false;
+        _preset = "custom"; ApplySettingsToUi(); _suppressor?.UpdateSettings(_settings); SaveConfig();
+    }
     private void EqBandGrid_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         if (sender is System.Windows.Controls.Primitives.UniformGrid grid)

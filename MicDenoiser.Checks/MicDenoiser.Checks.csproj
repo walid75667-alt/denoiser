@@ -16,6 +16,7 @@
     <Compile Include="../MicDenoiser/DenoiseEngines.cs" Link="DenoiseEngines.cs" />
     <Compile Include="../MicDenoiser/EffectsProfile.cs" Link="EffectsProfile.cs" />
     <Compile Include="../MicDenoiser/VoiceEffects.cs" Link="VoiceEffects.cs" />
+    <Compile Include="../MicDenoiser/SpatialEffects.cs" Link="SpatialEffects.cs" />
     <Compile Include="../MicDenoiser/Dsp.cs" Link="Dsp.cs" />
     <Compile Include="../MicDenoiser/ComparisonCapture.cs" Link="ComparisonCapture.cs" />
     <Compile Include="../MicDenoiser/StabilityAdvisor.cs" Link="StabilityAdvisor.cs" />

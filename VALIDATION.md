@@ -1,4 +1,4 @@
-# Validation of MicDenoiser 2.0
+# Validation of MicDenoiser 2.3
 
 The Windows application was imported from the user's uploaded project. The
 repository initially contained only a README. This development environment is
@@ -12,7 +12,7 @@ Verified:
   pinned upstream revision and locked dependencies. ABI version 2 and the
   live attenuation setter are exported by the Windows DLL. Its imports use
   only Windows system DLLs.
-- All 31 checks passed: Arabic/English catalog parity and XAML resource
+- All 38 checks passed: Arabic/English catalog parity and XAML resource
   references; output starvation/recovery fades; startup rebuffering and byte
   offsets; gain/compressor continuity; malformed persisted settings;
   fragmented live resampling at 16/44.1/96 kHz; sample delay; aligned wet/dry
@@ -36,6 +36,14 @@ Verified:
   Filter/envelope states also clear only below negligible levels. This is not
   a diagnosis of the user's microphone crackling.
   These are DSP/regression checks, not a listening-quality score.
+- Version 2.3 adds impulse checks for exact echo repeat timing/level and
+  feedback decay to silence, reverb pre-delay and longer-tail energy, chorus
+  modulation with retained dry onset, effect switches and rapidly changed
+  delays on constant input (adjacent steps below 15 PCM units), output ceilings
+  with all three effects active, aligned global bypass, old-profile neutrality,
+  bounded parameters and complete copy/profile round trips. The warmed
+  allocation check now enables reverb, echo and chorus too. These checks do
+  not establish perceptual quality or predict clicks for every microphone.
 - The starvation regression reproduces a 12,000 PCM-unit jump in the old
   zero-fill output. The guarded output fades the same transition over 5 ms,
   with adjacent sample changes at most 51 units, and counts a continuous
@@ -69,6 +77,9 @@ Verified:
 
 Still to validate on Windows:
 
+- Reverb/echo/chorus controls, combined effect listening, rapid changes on real
+  singing, stored profiles/presets and monitoring delay on a physical BM800
+  or other microphone. No hardware sound-card emulation is claimed.
 - Mixer layout/faders at different DPI/window sizes, EQ curve, numeric field
   entry/validation with Arabic and English, per-module switches, profile
   dialogs, Float32 WAV export and recording-software import.

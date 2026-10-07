@@ -37,6 +37,7 @@ public sealed class AudioPipeline : IDisposable
     private readonly Compressor _comp = new();
     private readonly ParametricEqualizer _eq = new();
     private readonly DeEsser _deEsser = new();
+    private readonly SpatialEffects _spatial = new();
     private readonly SmoothedValue _ceiling = new(30);
     private RNNoise? _vadDetector;
     private readonly float[] _input, _dry, _wet, _mixed, _bypass, _vadInput, _compressed;
@@ -121,11 +122,15 @@ public sealed class AudioPipeline : IDisposable
         _deEsser.Process(destination, s);
         Array.Copy(destination, _compressed, FrameSize);
         _comp.Process(_compressed, FrameSize, s.CompThresholdDb, s.CompRatio, SampleRate, s.CompAttackMs, s.CompReleaseMs, s.CompKneeDb, s.CompMakeupDb);
-        float target = s.Bypass ? 1f : 0f;
         for (int i = 0; i < FrameSize; i++)
         {
             float comp = compBlend = _compBlend.Next();
-            destination[i] = destination[i] * (1f - comp) + _compressed[i] * comp;
+            destination[i] += (_compressed[i] - destination[i]) * comp;
+        }
+        _spatial.Process(destination, s);
+        float target = s.Bypass ? 1f : 0f;
+        for (int i = 0; i < FrameSize; i++)
+        {
             float blend = _bypassMix + (target - _bypassMix) * (i + 1) / FrameSize;
             float unlimited = destination[i] * _outputGain.Next() * (1f - blend) + _bypass[i] * blend;
             destination[i] = Limiter.Process(unlimited, _ceiling.Next());

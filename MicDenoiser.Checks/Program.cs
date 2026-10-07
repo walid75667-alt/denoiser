@@ -311,10 +311,128 @@ Check("professional effects do not allocate on a warmed audio worker", () =>
 {
     using var pipeline=new AudioPipeline(new DelayedIdentityEngine(0));
     var s=ProcessingSettings.FromPreset("broadcast"); var input=Enumerable.Repeat(1000f,480).ToArray(); var output=new float[480];
+    s.ReverbEnabled=s.EchoEnabled=s.ChorusEnabled=true;
     for(int frame=0;frame<100;frame++) pipeline.Process(input,output,s);
     long before=GC.GetAllocatedBytesForCurrentThread();
     for(int frame=0;frame<100;frame++) pipeline.Process(input,output,s);
     Require(GC.GetAllocatedBytesForCurrentThread()==before,"Effects allocate memory on the audio worker.");
+});
+
+Check("new effects remain transparent for existing settings and old profiles", () =>
+{
+    var s=System.Text.Json.JsonSerializer.Deserialize<ProcessingSettings>("{\"Strength\":0.5}")!;
+    Require(!s.ReverbEnabled && !s.EchoEnabled && !s.ChorusEnabled,"An old configuration enables new effects.");
+    var fx=new SpatialEffects(); var audio=Enumerable.Range(0,480).Select(i=>(float)(12000*Math.Sin(i*.1))).ToArray();
+    var original=(float[])audio.Clone();
+    for(int frame=0;frame<200;frame++) { Array.Copy(original,audio,480); fx.Process(audio,s); Require(audio.SequenceEqual(original),"Disabled effects change dry audio."); }
+});
+
+Check("echo repeats at the selected interval and feedback decays to silence", () =>
+{
+    var s=new ProcessingSettings { EchoEnabled=true, EchoMix=.5f, EchoDelayMs=100, EchoFeedback=.5f };
+    var fx=new SpatialEffects(); var block=new float[480]; var result=new float[48000];
+    for(int frame=0;frame<100;frame++)
+    {
+        Array.Clear(block); if(frame==0) block[0]=12000;
+        fx.Process(block,s); Array.Copy(block,0,result,frame*480,480);
+    }
+    Require(result[0]==12000 && result.Take(4800).Skip(1).All(x=>x==0),"Echo changes the onset or arrives early.");
+    Require(Math.Abs(result[4800]-6000)<.001,"Echo repeat timing/level is incorrect.");
+    Require(result[9600]>0 && result[9600]<result[4800],"Feedback does not create a decaying repeat.");
+    for(int frame=0;frame<4000;frame++) { Array.Clear(block); fx.Process(block,s); Require(block.All(float.IsFinite),"Echo feedback becomes nonfinite."); }
+    Require(block.All(x=>x==0),"Echo feedback never settles to exact silence.");
+});
+
+Check("reverb has pre-delay and a longer decay retains more tail energy", () =>
+{
+    double Tail(float decay)
+    {
+        var fx=new SpatialEffects();var s=new ProcessingSettings { ReverbEnabled=true, ReverbMix=.5f, ReverbPreDelayMs=30, ReverbDecaySeconds=decay };
+        var block=new float[480]; double energy=0;
+        for(int frame=0;frame<400;frame++)
+        {
+            Array.Clear(block);if(frame==0) block[0]=12000;
+            fx.Process(block,s);
+            for(int i=0;i<480;i++)
+            {
+                int index=frame*480+i;
+                Require(float.IsFinite(block[i]),"Reverb tail is invalid.");
+                if(index>0 && index<1440+1499) Require(block[i]==0,"Reverb arrives before its pre-delay and first reflection.");
+                if(index>=1440+1499 && index<1440+1499+1) Require(Math.Abs(block[i])>1,"First reflection is missing.");
+                if(index>24000) energy+=(double)block[i]*block[i];
+            }
+        }
+        for(int frame=0;frame<2600;frame++) { Array.Clear(block); fx.Process(block,s); }
+        Require(block.All(x=>Math.Abs(x)<1e-8f),"Room tail does not decay.");
+        return energy;
+    }
+    double shortTail=Tail(.4f),longTail=Tail(1.8f);
+    Require(shortTail>0 && longTail>shortTail*4,"Decay control does not extend the tail.");
+});
+
+Check("chorus modulates a delayed voice without changing dry onset", () =>
+{
+    var fx=new SpatialEffects();var s=new ProcessingSettings { ChorusEnabled=true, ChorusMix=.25f, ChorusRateHz=1, ChorusDepthMs=5 };
+    var block=new float[480];double difference=0;float peak=0;
+    for(int frame=0;frame<200;frame++)
+    {
+        for(int i=0;i<480;i++) block[i]=(float)(8000*Math.Cos(2*Math.PI*220*(frame*480+i)/48000));
+        fx.Process(block,s);
+        if(frame==0) Require(Math.Abs(block[0]-6000)<.01,"Chorus delays the dry onset.");
+        for(int i=0;i<480;i++)
+        {
+            Require(float.IsFinite(block[i]),"Chorus output is invalid.");peak=Math.Max(peak,Math.Abs(block[i]));
+            if(frame>10) difference+=Math.Abs(block[i]-8000*Math.Cos(2*Math.PI*220*(frame*480+i)/48000));
+        }
+    }
+    Require(difference>100000 && peak<=8000.01,"Chorus lacks modulation or has uncontrolled gain.");
+});
+
+Check("effect switches and delay moves fade smoothly while running", () =>
+{
+    var fx=new SpatialEffects();var s=new ProcessingSettings();var block=new float[480];float previous=1000,maxStep=0;
+    for(int frame=0;frame<600;frame++)
+    {
+        if(frame==100) { s.ReverbEnabled=s.EchoEnabled=s.ChorusEnabled=true;s.ReverbMix=s.EchoMix=s.ChorusMix=.5f; }
+        if(frame>=250 && frame<300) { s.EchoDelayMs=frame%2==0?40:1000;s.ReverbPreDelayMs=frame%2==0?0:100; }
+        if(frame==400) s.ReverbEnabled=s.EchoEnabled=s.ChorusEnabled=false;
+        Array.Fill(block,1000);fx.Process(block,s);
+        foreach(float sample in block) { Require(float.IsFinite(sample),"Live effects became invalid.");maxStep=Math.Max(maxStep,Math.Abs(sample-previous));previous=sample; }
+    }
+    Require(maxStep<15,"An effect control produces an abrupt jump: "+maxStep);
+    Require(Math.Abs(previous-1000)<.01,"Disabling effects does not restore dry audio.");
+});
+
+Check("vocal effects are limited at output and global bypass restores aligned dry audio", () =>
+{
+    using var pipeline=new AudioPipeline(new DelayedIdentityEngine(0));
+    var s=new ProcessingSettings { Strength=0, ReverbEnabled=true, EchoEnabled=true, ChorusEnabled=true,
+        ReverbMix=.5f, EchoMix=.5f, ChorusMix=.5f, EchoFeedback=.7f, OutputGainDb=12, OutputCeilingDb=-3 };
+    var input=Enumerable.Repeat(24000f,480).ToArray();var output=new float[480];
+    float ceiling=32768*MathF.Pow(10,-3f/20);
+    for(int frame=0;frame<300;frame++) { pipeline.Process(input,output,s);Require(output.All(x=>float.IsFinite(x) && Math.Abs(x)<=ceiling+.1f),"An effect bypasses the output ceiling."); }
+    s.Bypass=true;
+    for(int frame=0;frame<300;frame++) pipeline.Process(input,output,s);
+    Require(output.All(x=>Math.Abs(x-Limiter.Process(24000,ceiling))<.1f),"Global bypass retains effects or output gain.");
+});
+
+Check("vocal presets and effect settings survive copy, save and bounded profile load", () =>
+{
+    foreach(string key in new[]{"vocalroom","vocalhall","slapback"})
+    {
+        var preset=ProcessingSettings.FromPreset(key,DenoiserKind.RNNoise);
+        Require(preset.Strength==0 && !preset.GateEnabled && preset.Engine==DenoiserKind.RNNoise,"An effect preset imposes speech suppression on singing.");
+        Require(preset.ReverbEnabled || preset.EchoEnabled,"Vocal preset lacks an effect.");
+    }
+    var s=new ProcessingSettings { ReverbEnabled=true, EchoEnabled=true, ChorusEnabled=true,
+        ReverbMix=.31f, ReverbDecaySeconds=2.5f, ReverbPreDelayMs=70, ReverbDamping=.7f,
+        EchoMix=.4f, EchoDelayMs=710, EchoFeedback=.6f, ChorusMix=.2f, ChorusRateHz=2, ChorusDepthMs=8 };
+    var copy=new ProcessingSettings();copy.CopyFrom(s);
+    var loaded=EffectsProfile.Read(EffectsProfile.Serialize(copy),new ProcessingSettings(),false);
+    Require(System.Text.Json.JsonSerializer.Serialize(s)==System.Text.Json.JsonSerializer.Serialize(loaded),"Effect save/load or copy loses settings.");
+    s.EchoDelayMs=float.NaN;s.EchoFeedback=10;s.ReverbDecaySeconds=0;s.ReverbMix=float.PositiveInfinity;s.ChorusDepthMs=100;
+    var bounded=s.SanitizedClone();
+    Require(bounded.EchoDelayMs==180 && bounded.EchoFeedback==.7f && bounded.ReverbDecaySeconds==.2f && bounded.ReverbMix==.15f && bounded.ChorusDepthMs==10,"Unsafe effect settings escape bounds.");
 });
 
 Check("output starvation and recovery avoid abrupt zero-fill clicks", () =>

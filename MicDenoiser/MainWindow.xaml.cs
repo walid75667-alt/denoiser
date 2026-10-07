@@ -242,6 +242,17 @@ public partial class MainWindow : Window
             EqAirHzSlider.Value=s.EqAirHz;
             EqAirGainSlider.Value=s.EqAirGainDb;
             EqAirQSlider.Value=s.EqAirQ;
+            ReverbCheck.IsChecked=s.ReverbEnabled; EchoCheck.IsChecked=s.EchoEnabled; ChorusCheck.IsChecked=s.ChorusEnabled;
+            ReverbMixSlider.Value=s.ReverbMix * 100;
+            ReverbDecaySlider.Value=s.ReverbDecaySeconds;
+            ReverbPreDelaySlider.Value=s.ReverbPreDelayMs;
+            ReverbDampingSlider.Value=s.ReverbDamping * 100;
+            EchoMixSlider.Value=s.EchoMix * 100;
+            EchoDelaySlider.Value=s.EchoDelayMs;
+            EchoFeedbackSlider.Value=s.EchoFeedback * 100;
+            ChorusMixSlider.Value=s.ChorusMix * 100;
+            ChorusRateSlider.Value=s.ChorusRateHz;
+            ChorusDepthSlider.Value=s.ChorusDepthMs;
             EqPlot.SetSettings(s);
             foreach (var rb in PresetRadios()) rb.IsChecked = (string?)rb.Tag == _preset;
             RefreshPresetHint(); RefreshBufferHint(); RefreshRouting(); RefreshAdvice(); RefreshComparison();
@@ -287,6 +298,17 @@ public partial class MainWindow : Window
         s.EqAirHz=(float)EqAirHzSlider.Value;
         s.EqAirGainDb=(float)EqAirGainSlider.Value;
         s.EqAirQ=(float)EqAirQSlider.Value;
+        s.ReverbEnabled=ReverbCheck.IsChecked==true; s.EchoEnabled=EchoCheck.IsChecked==true; s.ChorusEnabled=ChorusCheck.IsChecked==true;
+        s.ReverbMix=(float)ReverbMixSlider.Value / 100;
+        s.ReverbDecaySeconds=(float)ReverbDecaySlider.Value;
+        s.ReverbPreDelayMs=(float)ReverbPreDelaySlider.Value;
+        s.ReverbDamping=(float)ReverbDampingSlider.Value / 100;
+        s.EchoMix=(float)EchoMixSlider.Value / 100;
+        s.EchoDelayMs=(float)EchoDelaySlider.Value;
+        s.EchoFeedback=(float)EchoFeedbackSlider.Value / 100;
+        s.ChorusMix=(float)ChorusMixSlider.Value / 100;
+        s.ChorusRateHz=(float)ChorusRateSlider.Value;
+        s.ChorusDepthMs=(float)ChorusDepthSlider.Value;
         EqPlot.SetSettings(s);
         if (IsCustomSound())
         {
@@ -416,7 +438,7 @@ public partial class MainWindow : Window
         try
         {
             // No device identifiers or microphone recordings are included.
-            Clipboard.SetText($"MicDenoiser 2.2\n{FormatText.Text}\n{PerformanceText.Text}\n{HealthText.Text}\nEngine: {_settings.Engine}\nBuffer: {_settings.BufferMode}\nNoise limit: {_settings.NoiseReductionDb:0} dB\nInput gain: {_settings.InputGainDb:0} dB\nGate: {_settings.GateEnabled}\nBypass: {_settings.Bypass}");
+            Clipboard.SetText($"MicDenoiser 2.3\n{FormatText.Text}\n{PerformanceText.Text}\n{HealthText.Text}\nEngine: {_settings.Engine}\nBuffer: {_settings.BufferMode}\nNoise limit: {_settings.NoiseReductionDb:0} dB\nInput gain: {_settings.InputGainDb:0} dB\nGate: {_settings.GateEnabled}\nBypass: {_settings.Bypass}");
             StatusText.Text = T("Copied");
         }
         catch (Exception ex) { StatusText.Text = T("Error", UiStrings.ErrorDetail(ex.Message)); }
@@ -443,7 +465,7 @@ public partial class MainWindow : Window
         {
             if (!File.Exists(ConfigPath)) return;
             var cfg = JsonSerializer.Deserialize<AppConfig>(File.ReadAllText(ConfigPath)); if (cfg == null) return;
-            _preset = cfg.Preset is "natural" or "studio" or "podcast" or "max" or "custom" or "calls" or "streaming" or "weakmic" or "whisper" or "singing" or "voiceover" or "broadcast" ? cfg.Preset : "studio";
+            _preset = cfg.Preset is "natural" or "studio" or "podcast" or "max" or "custom" or "calls" or "streaming" or "weakmic" or "whisper" or "singing" or "voiceover" or "broadcast" or "vocalroom" or "vocalhall" or "slapback" ? cfg.Preset : "studio";
             _language = cfg.Language == "en" ? "en" : "ar";
             _minimizeToTray = cfg.MinimizeToTray; _darkTheme = cfg.DarkTheme;
             if (cfg.Settings != null) _settings.CopyFrom(cfg.Settings.SanitizedClone());

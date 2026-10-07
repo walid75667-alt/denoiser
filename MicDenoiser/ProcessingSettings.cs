@@ -64,11 +64,39 @@ public sealed class ProcessingSettings
     // ── Output ─────────────────────────────────────────────
     public float OutputGainDb { get; set; }
 
+    public bool ReverbEnabled { get; set; }
+    public float ReverbMix { get; set; } = .15f;
+    public float ReverbDecaySeconds { get; set; } = .8f;
+    public float ReverbPreDelayMs { get; set; } = 20;
+    public float ReverbDamping { get; set; } = .55f;
+    public bool EchoEnabled { get; set; }
+    public float EchoMix { get; set; } = .15f;
+    public float EchoDelayMs { get; set; } = 180;
+    public float EchoFeedback { get; set; } = .25f;
+    public bool ChorusEnabled { get; set; }
+    public float ChorusMix { get; set; } = .15f;
+    public float ChorusRateHz { get; set; } = .8f;
+    public float ChorusDepthMs { get; set; } = 3;
+
     public static ProcessingSettings FromPreset(string key, DenoiserKind engine = DenoiserKind.DeepFilterNet3)
     {
         var s = new ProcessingSettings { Engine = engine, GateEnabled = engine == DenoiserKind.RNNoise };
         switch (key)
         {
+            case "vocalroom":
+            case "vocalhall":
+            case "slapback":
+                s.CopyFrom(FromPreset("singing", engine));
+                if (key == "slapback")
+                { s.EchoEnabled = true; s.EchoDelayMs = 100; s.EchoMix = .16f; s.EchoFeedback = .12f; }
+                else
+                {
+                    s.ReverbEnabled = true;
+                    s.ReverbDecaySeconds = key == "vocalhall" ? 1.8f : .6f;
+                    s.ReverbMix = key == "vocalhall" ? .22f : .12f;
+                    s.ReverbPreDelayMs = key == "vocalhall" ? 35 : 12;
+                }
+                break;
             case "singing":
                 s.GateEnabled = false; s.Strength = 0; s.NoiseReductionDb = 10;
                 s.CompressorOn = true; s.CompThresholdDb = -16; s.CompRatio = 1.5f;
@@ -177,6 +205,12 @@ public sealed class ProcessingSettings
         CompMakeupDb = o.CompMakeupDb;
         OutputCeilingDb = o.OutputCeilingDb;
 
+        ReverbEnabled = o.ReverbEnabled; ReverbMix = o.ReverbMix;
+        ReverbDecaySeconds = o.ReverbDecaySeconds; ReverbPreDelayMs = o.ReverbPreDelayMs;
+        ReverbDamping = o.ReverbDamping;
+        EchoEnabled = o.EchoEnabled; EchoMix = o.EchoMix; EchoDelayMs = o.EchoDelayMs; EchoFeedback = o.EchoFeedback;
+        ChorusEnabled = o.ChorusEnabled; ChorusMix = o.ChorusMix; ChorusRateHz = o.ChorusRateHz; ChorusDepthMs = o.ChorusDepthMs;
+
     }
 
     public ProcessingSettings Clone() => (ProcessingSettings)MemberwiseClone();
@@ -220,6 +254,16 @@ public sealed class ProcessingSettings
         s.EqPresenceQ = Bound(s.EqPresenceQ, 0.35f, 3, 0.9f);
         s.EqAirGainDb = Bound(s.EqAirGainDb, -9, 9, 0);
         s.EqAirQ = Bound(s.EqAirQ, 0.35f, 3, 0.7f);
+        s.ReverbMix = Bound(s.ReverbMix, 0, .5f, .15f);
+        s.ReverbDecaySeconds = Bound(s.ReverbDecaySeconds, .2f, 3, .8f);
+        s.ReverbPreDelayMs = Bound(s.ReverbPreDelayMs, 0, 100, 20);
+        s.ReverbDamping = Bound(s.ReverbDamping, .1f, .85f, .55f);
+        s.EchoMix = Bound(s.EchoMix, 0, .5f, .15f);
+        s.EchoDelayMs = Bound(s.EchoDelayMs, 40, 1000, 180);
+        s.EchoFeedback = Bound(s.EchoFeedback, 0, .7f, .25f);
+        s.ChorusMix = Bound(s.ChorusMix, 0, .5f, .15f);
+        s.ChorusRateHz = Bound(s.ChorusRateHz, .1f, 3, .8f);
+        s.ChorusDepthMs = Bound(s.ChorusDepthMs, 1, 10, 3);
         return s;
     }
 }

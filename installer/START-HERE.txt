@@ -1,4 +1,4 @@
-MicDenoiser 2.2 — Windows 10/11 x64
+MicDenoiser 2.3 — Windows 10/11 x64
 
 العربية
 - المثبّت يتضمن البرنامج و.NET وDeepFilterNet3 ومكتبات الصوت. لا يحتاج تنزيل النموذج.
@@ -23,6 +23,10 @@ MicDenoiser 2.2 — Windows 10/11 x64
 - للغناء: ابدأ بـ«غناء طبيعي»؛ العزل والبوابة متوقفان للحفاظ على النوتات. للتعليق جرّب «تعليق صوتي».
 - اختبار المايك يتيح حفظ WAV أحادي 48kHz Float32 لمدة 10 ثوانٍ بالمستوى الأصلي. التسجيل الكامل يتم في برنامج التسجيل.
 
+- مؤثرات الميكسر: ريفيرب وإيكو وكورَس بتحكم مستقل؛ جرّب «غناء · غرفة» أو «غناء · قاعة» أو «غناء · إيكو قصير».
+- ابدأ بمؤثر 10–15% وسماعة رأس؛ زر إيقاف المؤثرات الثلاثة يعيد صوتًا جافًا مع الحفاظ على EQ والضغط.
+- BM800 مايك؛ هذه مؤثرات برمجية، والخرج أحادي دون تصحيح نشاز. تأخير الغناء الحي يحتاج تجربة على جهازك.
+
 English
 - Setup includes the application, .NET runtime, DeepFilterNet3 model and audio libraries.
 - Install VB-Cable separately: https://vb-audio.com/Cable/ and restart Windows.
@@ -45,6 +49,10 @@ English
 - Mixer: parametric EQ, compressor, de-esser and output ceiling, with effects preset save/load.
 - For singing, start with Natural singing: denoiser mix and gate are off to preserve notes. For narration, try Voice-over.
 - Mic test exports 10-second mono 48 kHz Float32 WAV at captured levels. Record full sessions in your recording software.
+
+- Mixer effects: independent reverb, echo and chorus. Try Vocal room, Vocal hall or Vocal slapback.
+- Start at 10–15% with headphones; Disable all three effects restores a dry voice while retaining EQ/dynamics.
+- BM800 is a microphone. Effects are software-based, mono, without pitch correction; test live singing latency on your device.
 
 This build was compiled and checked on Linux. Physical Windows microphone playback,
 installer execution/uninstallation and listening quality still need Windows validation.

@@ -99,3 +99,23 @@ WASAPI output remains 48 kHz mono PCM16. Use the app's output in your recording
 software via your configured audio routing. Full-session/multitrack recording
 is outside the current mic-test workflow. Windows UI, device latency and
 listening with actual singing/voice-over still require a Windows check.
+
+Version 2.3 adds mono vocal effects to the mixer: damped room/hall reverb
+(0.2–3 s decay, 0–100 ms pre-delay), echo (40–1000 ms repeats, feedback up
+to 70%), and chorus (0.1–3 Hz, 1–10 ms modulation). Each has its own switch
+and level; Disable all three effects restores a dry voice while preserving
+EQ/dynamics. Old settings keep the new modules off. Settings and exchanged
+profiles include all effect controls. Vocal room, Vocal hall and Vocal
+slapback presets start from Natural singing, keeping the speech denoiser mix
+and VAD gate off. Choose Voice-over for dry narration.
+
+The effect chain is EQ → de-esser → compressor → chorus/reverb/echo → output
+gain → sample ceiling. Reverb and echo are parallel sends; chorus blends a
+modulated delayed copy. Parameters fade gradually and echo/pre-delay changes
+crossfade read heads. Delay storage is allocated once; the warmed processing
+worker allocates no managed memory. Dry signal onset and the reported model
+delay are retained; wet effects intentionally have their own delay/tail.
+This is a software effects rack, not hardware emulation, pitch correction,
+echo cancellation, stereo processing or a low-latency ASIO interface. BM800
+is a microphone; it can be used as the selected physical input. Use headphones
+for monitoring and validate actual Windows latency before live singing.
