@@ -8,6 +8,9 @@ jobs:
   render:
     runs-on: windows-latest
     timeout-minutes: 10
+    concurrency:
+      group: micdenoiser-ui-notes
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:

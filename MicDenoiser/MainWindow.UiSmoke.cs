@@ -13,10 +13,18 @@ public partial class MainWindow
         async Task Capture(Window window, string name)
         {
             await window.Dispatcher.InvokeAsync(() => window.UpdateLayout(), DispatcherPriority.ContextIdle);
-            int width = (int)Math.Ceiling(window.ActualWidth), height = (int)Math.Ceiling(window.ActualHeight);
+            var content = (FrameworkElement)window.Content;
+            var margin = content.Margin;
+            int width = (int)Math.Ceiling(content.ActualWidth + margin.Left + margin.Right), height = (int)Math.Ceiling(content.ActualHeight + margin.Top + margin.Bottom);
             if (width < 300 || height < 300) throw new InvalidOperationException("Window did not lay out.");
             var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
-            bitmap.Render(window);
+            var drawing = new DrawingVisual();
+            using (var context = drawing.RenderOpen())
+            {
+                context.DrawRectangle((Brush)FindResource("Surface"), null, new Rect(0, 0, width, height));
+                context.DrawRectangle(new VisualBrush(content), null, new Rect(margin.Left, margin.Top, content.ActualWidth, content.ActualHeight));
+            }
+            bitmap.Render(drawing);
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
             using var output = File.Create(Path.Combine(directory, name + ".png")); encoder.Save(output);
         }

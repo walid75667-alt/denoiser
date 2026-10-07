@@ -11,6 +11,16 @@
 <Border x:Name="Segment" CornerRadius="9" Padding="8,9" Background="Transparent"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
 <ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Segment" Property="Background" Value="{DynamicResource CardBg}"/><Setter Property="Foreground" Value="{DynamicResource Accent}"/><Setter Property="FontWeight" Value="SemiBold"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Segment" Property="BorderBrush" Value="{DynamicResource Accent}"/><Setter TargetName="Segment" Property="BorderThickness" Value="1"/></Trigger></ControlTemplate.Triggers>
 </ControlTemplate></Setter.Value></Setter></Style>
+<Style x:Key="MeterBar" TargetType="ProgressBar">
+<Setter Property="FlowDirection" Value="LeftToRight"/><Setter Property="Foreground" Value="{DynamicResource Accent}"/><Setter Property="Background" Value="{DynamicResource Track}"/><Setter Property="BorderThickness" Value="0"/>
+<Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ProgressBar">
+<Border Background="{TemplateBinding Background}" CornerRadius="3" ClipToBounds="True"><Grid x:Name="PART_Track">
+<Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" HorizontalAlignment="Left" CornerRadius="3"/>
+<Rectangle Fill="{DynamicResource CardBg}" IsHitTestVisible="False"><Rectangle.OpacityMask><DrawingBrush TileMode="Tile" Viewport="0,0,0.05,1" ViewportUnits="RelativeToBoundingBox"><DrawingBrush.Drawing><DrawingGroup>
+<GeometryDrawing Brush="Transparent"><GeometryDrawing.Geometry><RectangleGeometry Rect="0,0,10,10"/></GeometryDrawing.Geometry></GeometryDrawing>
+<GeometryDrawing Brush="Black"><GeometryDrawing.Geometry><RectangleGeometry Rect="8,0,2,10"/></GeometryDrawing.Geometry></GeometryDrawing>
+</DrawingGroup></DrawingBrush.Drawing></DrawingBrush></Rectangle.OpacityMask></Rectangle>
+</Grid></Border></ControlTemplate></Setter.Value></Setter></Style>
 <!-- Palette -->
         <SolidColorBrush x:Key="HeaderBg" Color="#142A37"/>
         <SolidColorBrush x:Key="SelectedPresetBg" Color="#0B7D6E"/>

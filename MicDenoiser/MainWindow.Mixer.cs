@@ -51,7 +51,7 @@ public partial class MainWindow
         {
             if (new FileInfo(dialog.FileName).Length > 65536) throw new InvalidDataException(T("EffectsInvalid"));
             var settings = EffectsProfile.Read(File.ReadAllText(dialog.FileName), _settings, _suppressor != null || _starting);
-            _settings.CopyFrom(settings); _preset = "custom"; _gatePreserved = false;
+            _settings.CopyFrom(settings); _preset = "custom";
             ApplySettingsToUi(); _suppressor?.UpdateSettings(_settings); SetDeviceControls(); SaveConfig(); StatusText.Text = T("EffectsLoaded");
         }
         catch (Exception ex) { StatusText.Text = T("Error", ex is ArgumentException or System.Text.Json.JsonException ? T("EffectsInvalid") : UiStrings.ErrorDetail(ex.Message)); }

@@ -49,6 +49,13 @@ public partial class MainWindow
         _simpleMode = false; InterfaceModeCombo.SelectedIndex = 1;
         ApplyInterfaceMode(); MainTabs.SelectedIndex = page; SaveConfig(); RestoreFromTray();
     }
+    private void StudioPage_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (!ReferenceEquals(e.Source, MainTabs)) return;
+        bool sound = MainTabs.SelectedIndex == 0;
+        StudioMetersCard.Visibility = HealthBanner.Visibility = sound ? Visibility.Visible : Visibility.Collapsed;
+        StudioQuickMeters.Visibility = sound ? Visibility.Collapsed : Visibility.Visible;
+    }
     private void UsagePurpose_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         if (!_ready || _loading) return;

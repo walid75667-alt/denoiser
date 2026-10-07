@@ -44,7 +44,7 @@ public partial class MainWindow
                         }
                         Audio("original.wav", history.Original); Audio("processed.wav", history.Processed);
                         using var report = new StreamWriter(zip.CreateEntry("report.json").Open());
-                        report.Write(JsonSerializer.Serialize(new { Version = "2.5", CreatedUtc = DateTime.UtcNow,
+                        report.Write(JsonSerializer.Serialize(new { Version = AppVersion, CreatedUtc = DateTime.UtcNow,
                             history.Seconds, Timing = timing, Evidence = evidence, Settings = settings,
                             SettingsScope = "Most recent observed settings; the history can span earlier live parameter changes.",
                             Capture = "Delay-aligned original and DSP output; excludes WASAPI playback/device artifacts. Raw levels, no loudness matching." },

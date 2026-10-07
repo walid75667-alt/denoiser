@@ -25,6 +25,7 @@ public partial class MainWindow : Window
     private int _lastUnderruns;
     private DateTime _gapUntil, _clippingUntil, _lastMeterAt;
     private double _inDisp, _outDisp;
+    private static string AppVersion => typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "2.6.0";
     private static string T(string key, params object[] args) => UiStrings.Get(key, args);
 
     public MainWindow()
@@ -176,7 +177,6 @@ public partial class MainWindow : Window
         _settings.CopyFrom(ProcessingSettings.FromPreset(key, _settings.Engine));
         _settings.Bypass = bypass; _settings.Muted = muted; _settings.BufferMode = mode;
         _settings.FastSinging = fast; _settings.CopyFrom(_settings.SanitizedClone());
-        _gatePreserved = false;
         ApplySettingsToUi(); _suppressor?.UpdateSettings(_settings);
     }
     private void Preset_Checked(object sender, RoutedEventArgs e)
@@ -276,8 +276,7 @@ public partial class MainWindow : Window
         }
         finally { _loading = false; }
     }
-    private void RefreshPresetHint() => PresetHint.Text = T(_settings.FastSinging ? "FastSingingActive" : "Preset" + _preset)
-        + (_gatePreserved && _preset != "custom" ? T("PreservedGate") : "");
+    private void RefreshPresetHint() => PresetHint.Text = T(_settings.FastSinging ? "FastSingingActive" : "Preset" + _preset);
     private void OutputDevice_Changed(object sender, SelectionChangedEventArgs e) => RefreshRouting();
     private void RefreshRouting() => RoutingText.Text = T(OutputCombo.SelectedItem is DeviceItem item
         && item.Name.Contains("CABLE Input", StringComparison.OrdinalIgnoreCase) ? "Ui009" : "DirectRouting");
@@ -445,6 +444,7 @@ public partial class MainWindow : Window
     }
     private void ResetMeters()
     {
+        StudioQuickInput.Value = StudioQuickOutput.Value = 0;
         ResetStudioMeters();
         TimingText.Text = T("FrameTiming", _lastTiming.P99UpperBoundMs, _lastTiming.SessionMaximumMs,
             _lastTiming.WindowFrames, _lastTiming.OverBudgetFrames);
@@ -458,6 +458,7 @@ public partial class MainWindow : Window
     private void RenderMeters(MeterData m)
     {
         Compact.RenderMeters(m, _settings);
+        StudioQuickInput.Value = ToMeter(m.InRms); StudioQuickOutput.Value = ToMeter(m.OutRms);
         RenderDiagnostic(m.Diagnostic);
         _lastTiming = m.Timing;
         TimingText.Text = T("FrameTiming", m.Timing.P99UpperBoundMs, m.Timing.SessionMaximumMs,
@@ -484,7 +485,7 @@ public partial class MainWindow : Window
         try
         {
             // No device identifiers or microphone recordings are included.
-            Clipboard.SetText($"MicDenoiser 2.5\n{FormatText.Text}\n{PerformanceText.Text}\n{HealthText.Text}\nEngine: {_settings.Engine}\nBuffer: {_settings.BufferMode}\nNoise limit: {_settings.NoiseReductionDb:0} dB\nInput gain: {_settings.InputGainDb:0} dB\nGate: {_settings.GateEnabled}\nBypass: {_settings.Bypass}");
+            Clipboard.SetText($"MicDenoiser {AppVersion}\n{FormatText.Text}\n{PerformanceText.Text}\n{HealthText.Text}\nEngine: {_settings.Engine}\nBuffer: {_settings.BufferMode}\nNoise limit: {_settings.NoiseReductionDb:0} dB\nInput gain: {_settings.InputGainDb:0} dB\nGate: {_settings.GateEnabled}\nBypass: {_settings.Bypass}");
             StatusText.Text = T("Copied");
         }
         catch (Exception ex) { StatusText.Text = T("Error", UiStrings.ErrorDetail(ex.Message)); }

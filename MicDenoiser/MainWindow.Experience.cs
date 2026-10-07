@@ -114,7 +114,7 @@ public partial class MainWindow
         if (dialog.ShowDialog(this) != true) return;
         try
         {
-            var report = new { Version = "2.5", CreatedUtc = DateTime.UtcNow, Evidence = _lastDiagnostic, Timing = _lastTiming,
+            var report = new { Version = AppVersion, CreatedUtc = DateTime.UtcNow, Evidence = _lastDiagnostic, Timing = _lastTiming,
                 Observation = T("Diagnostic" + _lastDiagnostic.Concern), Settings = _diagnosticSettings ?? _settings.SanitizedClone() };
             File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
             StatusText.Text = T("DiagnosticSaved");

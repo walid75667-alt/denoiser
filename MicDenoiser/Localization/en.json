@@ -96,7 +96,6 @@
   "Healthy": "Audio data is currently stable",
   "HealthyDetail": "If speech still crackles, try Softer sound; the denoising model may be responsible.",
   "Copied": "Diagnostics copied.",
-  "PreservedGate": " The voice gate stays disabled; stop denoising before enabling it.",
   "DirectRouting": "This output plays audio directly. For calls, select CABLE Input. Use headphones.",
   "WaitingData": "Waiting for microphone data",
   "WaitingDataDetail": "No new measurements have arrived. Check the microphone connection and Windows permissions.",

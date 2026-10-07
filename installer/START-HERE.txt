@@ -1,66 +1,31 @@
-MicDenoiser 2.4 — Windows 10/11 x64
+MicDenoiser 2.6 — Windows 10/11 x64
 
 العربية
-- الإصدار 2.4: واجهة بسيطة أو استديو، غناء سريع، مؤشرات الخرفشة، ومقارنة A/B.
-- الغناء السريع يُفعّل والصوت متوقف، ويتخطى نموذج العزل والبوابة مع إبقاء المؤثرات. التأخير الكلي يعتمد على الجهاز والبافر؛ إلغاؤه يعيد العزل إلى 100%.
-- من اختبار المايك: احفظ A وB، سجّل 10 ثوانٍ، ثم جهّز المقارنة لسماع الضبطتين على نفس التسجيل بمستوى متقارب. التجهيز والسماع يوقفان الصوت الحي؛ يمكنك إلغاء التجهيز.
-- من الصحة: احفظ تقرير المؤشرات بدون صوت أو أسماء الأجهزة. المؤشرات تساعد على التحقيق ولا تثبت سبب الخرفشة.
-- المثبّت يتضمن البرنامج و.NET وDeepFilterNet3 ومكتبات الصوت. لا يحتاج تنزيل النموذج.
-- ثبّت VB-Cable بشكل منفصل: https://vb-audio.com/Cable/ ثم أعد تشغيل ويندوز.
-- اختار المايك الحقيقي، ومخرج CABLE Input. في برنامج المكالمات اختار CABLE Output.
-- اللغة: من القائمة أعلى الواجهة. الاختيار يُحفظ.
-- زر «تصغير بجوار الساعة» يخفي النافذة ويُبقي العزل شغّالًا. اضغط مرتين على الأيقونة لاستعادة البرنامج.
-- بالزر اليمين على الأيقونة: فتح، بدء/إيقاف العزل، خروج. زر X يغلق البرنامج ويوقف الصوت.
-- ألغِ خيار «عند التصغير، انقل البرنامج بجوار الساعة» لو عاوز التصغير العادي لشريط المهام.
-- لو الصوت خشن أثناء الكلام: جرّب «صوت أنعم» (25dB) وخفّض تضخيم الدخل.
-- لو عداد نقص البيانات يزيد: أوقف العزل واختار «استقرار أعلى»، ثم ابدأ.
-- «صوت أنعم» ووضع الهمس يعطّلان بوابة الكلام لحماية الكلام الهادئ.
-- أغلق عزل الضوضاء الإضافي في برنامج المكالمات عند المقارنة، واستخدم سماعات.
-- النسخة المضغوطة: فك ضغط المجلد كاملًا في مكان جديد، ثم شغّل MicDenoiser.exe.
-
-- اختبار المايك: سجّل 10 ثوانٍ ثم اسمع الأصل والمعالَج بسماعات. الاستماع يوقف العزل المباشر؛ ابدأه من جديد بعد الانتهاء. التسجيل يبقى في الذاكرة فقط.
-- وضع التأخير التلقائي يعرض اقتراحات في تبويب الأداء. تطبيق الاقتراح يعيد تشغيل العزل.
-- التفضيلات: واجهة داكنة، وتشغيل اختياري مع ويندوز بالأجهزة المحفوظة، مصغّرًا بجوار الساعة.
-- عند فصل جهاز صوت، اختار جهازًا آخر ثم ابدأ العزل؛ لا يتم التبديل تلقائيًا.
-
-- الميكسر: EQ بارامتري، ضغط الصوت، تخفيف السين والشين، وسقف الخرج، مع حفظ/تحميل المؤثرات.
-- للغناء: ابدأ بـ«غناء طبيعي»؛ العزل والبوابة متوقفان للحفاظ على النوتات. للتعليق جرّب «تعليق صوتي».
-- اختبار المايك يتيح حفظ WAV أحادي 48kHz Float32 لمدة 10 ثوانٍ بالمستوى الأصلي. التسجيل الكامل يتم في برنامج التسجيل.
-
-- مؤثرات الميكسر: ريفيرب وإيكو وكورَس بتحكم مستقل؛ جرّب «غناء · غرفة» أو «غناء · قاعة» أو «غناء · إيكو قصير».
-- ابدأ بمؤثر 10–15% وسماعة رأس؛ زر إيقاف المؤثرات الثلاثة يعيد صوتًا جافًا مع الحفاظ على EQ والضغط.
-- BM800 مايك؛ هذه مؤثرات برمجية، والخرج أحادي دون تصحيح نشاز. تأخير الغناء الحي يحتاج تجربة على جهازك.
+- يختار المثبّت الغرض: مكالمات وبث، أو غناء وتعليق صوتي. لا يستبدل إعدادات تثبيت سابق.
+- عند التشغيل الأول: تحقّق من VB-Cable، واختر الميكروفون وتحدث أمام العدّاد، ثم سجّل اختبارًا من 10 ثوانٍ واستمع بسماعات إلى الأصلي والمعالَج.
+- ثبّت VB-Cable من مورّده بشكل منفصل: https://vb-audio.com/Cable/ واتبع تعليماته لإعادة التشغيل.
+- اختر الميكروفون الحقيقي ومخرج CABLE Input في MicDenoiser، وCABLE Output كميكروفون في Zoom أو Discord أو OBS.
+- Simple: زر تشغيل كبير، خفيف/متوازن/قوي، كتم، ومقارنة بالأصلي أثناء الضغط. «قوي» قد يؤثر في الهمس والكلام الضعيف.
+- خفض ضوضاء الخلفية تقدير خلال هدوء الصوت؛ علامة — تعني أن القراءة غير متاحة، ولا تعني صفر ضوضاء.
+- Ctrl+Alt+M للكتم، وCtrl+Alt+D لتشغيل العزل أو إيقافه. يعرض البرنامج تعارض الاختصارات في التفضيلات إن استعملها تطبيق آخر.
+- Studio: ضبط الصوت والميكسر والصحة واختبار الميكروفون والتفضيلات. تظهر الإعدادات التفصيلية داخل «متقدم»، ويمكن إعادة ضبط كل وحدة.
+- تغيير المحرّك أو الاستقرار يعيد تشغيل الصوت تلقائيًا. يمكن تبديل البوابة أثناء التشغيل؛ الغناء والهمس يحفظان الكلام الهادئ ببوابة معطلة.
+- عند التشويش: استخدم «هل توجد مشكلة بالصوت؟» وراجع القياسات قبل تطبيق الحل المقترح. التسجيل التشخيصي الاختياري لآخر 30 ثانية محلي؛ حفظه يوقف الصوت. لا يوجد إرسال تلقائي.
+- اختبار الميكروفون يسجّل في الذاكرة فقط؛ يمكنك تصدير WAV. الاستماع في Studio يوقف العزل الحي؛ ابدأه من جديد بعد الاختبار.
+- إعدادات اللغة العربية/English، الواجهة الداكنة والتشغيل الاختياري مع Windows داخل Studio/التفضيلات.
+- التصغير بجوار الساعة يبقي العزل مستمرًا. قائمة الأيقونة تتيح الفتح والتشغيل والكتم ومستويات العزل. زر X يغلق البرنامج ويوقف الصوت.
+- معلومات الإصدار و«صُمّم بواسطة أحمد سعد برهام» وروابط WhatsApp/Facebook داخل «حول».
+- المثبّت والنسخة المحمولة يتضمنان .NET والنموذج والمكتبات. فك ضغط النسخة المحمولة كاملًا في مجلد جديد ثم شغّل MicDenoiser.exe.
 
 English
-- Version 2.4: Simple/Studio views, Fast singing, crackle evidence and A/B comparison.
-- Enable Fast singing while stopped to skip denoising/VAD models while retaining effects. Total latency depends on devices/buffers; turning it off restores 100% denoiser mix.
-- In Mic test: save A/B, record ten seconds and prepare comparison to preview both settings on identical input at matched levels. Rendering/listening stop live audio; rendering can be canceled.
-- In Health: save an evidence report without audio/device names. Indicators support investigation; they do not prove a crackle cause.
-- Setup includes the application, .NET runtime, DeepFilterNet3 model and audio libraries.
-- Install VB-Cable separately: https://vb-audio.com/Cable/ and restart Windows.
-- Select your microphone and CABLE Input. Select CABLE Output in the calling app.
-- Change language in the header; the choice is saved.
-- Minimize to tray hides the window while denoising continues. Double-click the tray icon to restore.
-- Right-click the icon to open, start/stop denoising, or exit. The window X closes the app and stops audio.
-- Uncheck Minimize to the notification tray to keep normal taskbar minimization.
-- For harsh speech, try Softer sound (25 dB) and reduce input gain.
-- If output dropouts increase, stop processing and choose More stable before restarting.
-- Softer sound and Quiet/whisper disable the speech gate to preserve quiet speech.
-- Disable extra denoising in your calling app for comparisons and use headphones.
-- For the ZIP, extract the entire folder into a new location and run MicDenoiser.exe.
-
-- Mic test: record 10 seconds and listen to matched original/processed audio through headphones. Listening stops live denoising; start it again afterward. Audio stays in memory only.
-- Automatic buffering displays recommendations in Health. Applying a recommendation restarts denoising.
-- Preferences: saved dark theme and optional Windows startup, minimized with saved devices.
-- Device removal stops audio. Choose another device and start again; no automatic device switch.
-
-- Mixer: parametric EQ, compressor, de-esser and output ceiling, with effects preset save/load.
-- For singing, start with Natural singing: denoiser mix and gate are off to preserve notes. For narration, try Voice-over.
-- Mic test exports 10-second mono 48 kHz Float32 WAV at captured levels. Record full sessions in your recording software.
-
-- Mixer effects: independent reverb, echo and chorus. Try Vocal room, Vocal hall or Vocal slapback.
-- Start at 10–15% with headphones; Disable all three effects restores a dry voice while retaining EQ/dynamics.
-- BM800 is a microphone. Effects are software-based, mono, without pitch correction; test live singing latency on your device.
-
-This build was compiled and checked on Linux. Physical Windows microphone playback,
-installer execution/uninstallation and listening quality still need Windows validation.
+- Setup includes .NET, models and native libraries. VB-Cable is a separate vendor installation.
+- Choose calls/streaming or singing/narration in setup. The first-run guide detects cable routing, shows a real mic meter and records a ten-second level-matched local comparison.
+- Physical mic -> MicDenoiser -> CABLE Input; select CABLE Output as the mic in your calling app. Use headphones.
+- Simple offers power, light/balanced/strong isolation, mute and held original comparison. Strong suppression can affect quiet speech.
+- Ctrl+Alt+M mutes; Ctrl+Alt+D starts/stops. Conflicting shortcuts are reported in Preferences.
+- Studio has Sound, Mixer, Health, Mic Test and Preferences. Expand Advanced and reset each effects strip independently.
+- Engine/buffer changes restart automatically. Gate toggles are live. Singing and whisper presets disable the gate.
+- Background reduction is an estimate during low speech evidence; — means unavailable. It is not a speech-quality score.
+- Optional diagnostic history stays local; saving stops live audio. Playback tests in Studio also stop live suppression. Restart after listening.
+- Minimize to tray keeps processing; X exits. About contains the version, designer credit and contact links. Browser links do not send recordings.
+- Extract the complete portable ZIP into a new directory before running MicDenoiser.exe. Physical microphone artifacts and SmartScreen depend on device testing and trusted signing.

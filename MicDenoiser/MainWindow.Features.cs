@@ -16,7 +16,7 @@ public partial class MainWindow
     private AudioDeviceWatcher? _deviceWatcher;
     private StabilityAdvice _advice = StabilityAdvice.Observing;
     private bool _previewOriginal;
-    private bool _darkTheme, _startWithWindows, _savedDevicesAvailable, _gatePreserved;
+    private bool _darkTheme, _startWithWindows, _savedDevicesAvailable;
     private int _deviceGeneration;
 
     private void InitializeFeatures()
