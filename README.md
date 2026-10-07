@@ -1,26 +1,26 @@
 # MicDenoiser
 
-Version 2.5 adds the corrected 960-sample RNNoise delay (40 ms total fixed
-pipeline delay), a conservative call gate with hysteresis, per-frame p99 and
-session maximum timing, optional last-30-second audio diagnosis, and a
-first-run illustrated VB-Cable guide. The recording stays in local RAM until
-you explicitly save it; saving stops audio to avoid blocking the live worker.
+Version 2.6 applies the attached compact/Studio design: power, three isolation
+levels, live meters, held original comparison, mute/global shortcuts, guided
+setup and module resets. See [interface details](docs/UI-DESIGN.md). It retains
+the corrected RNNoise delay, conservative call gate, p99 diagnostics and
+optional local 30-second recording from 2.5.
 
-New packages are built for GitHub Releases after both Linux and Windows CI
-pass on a version tag. See [release workflow](docs/RELEASING.md),
-[release notes](docs/RELEASE-NOTES.md) and [real-speech benchmark](benchmarks/README.md).
-The checked-in downloads below remain version 2.4 until new release assets
-are uploaded and verified; version 2.5 binaries are not added to Git history.
+New packages belong in [GitHub Releases](https://github.com/walid75667-alt/denoiser/releases)
+after Linux and Windows CI pass. Both 2.5 beta assets were downloaded and their
+SHA-256 checksums verified; the links below point to that verified beta while
+the 2.6 workflow runs. Binaries are no longer tracked in the current checkout.
+See [release workflow](docs/RELEASING.md), [release notes](docs/RELEASE-NOTES.md)
+and [real-speech benchmark](benchmarks/README.md).
 
 Windows x64 microphone noise suppression with DeepFilterNet3 (default) and a
 lightweight RNNoise option. The WPF/.NET 8 application was imported from the
 attached MicDenoiser project and upgraded with a streaming native engine,
 WASAPI audio, a dedicated processing worker, and aligned dry/bypass paths.
 
-Download the [Windows x64 installer](downloads/MicDenoiser-Setup-x64.exe)
-or the [portable ZIP](downloads/MicDenoiser-Windows-x64.zip). Both include
-the .NET runtime, model, and native DLLs. On GitHub, open the file and select
-Download raw file. Run the installer, or extract the entire ZIP folder and run
+Download the [Windows x64 installer](https://github.com/walid75667-alt/denoiser/releases/download/v2.5.0-beta.1/MicDenoiser-Setup-x64.exe)
+or the [portable ZIP](https://github.com/walid75667-alt/denoiser/releases/download/v2.5.0-beta.1/MicDenoiser-Windows-x64.zip). Both include
+the .NET runtime, model, and native DLLs. Run the installer, or extract the entire ZIP folder and run
 `MicDenoiser.exe`. VB-Cable is installed separately from its vendor. See [validation and remaining Windows checks](VALIDATION.md).
 
 On Windows, install VB-Cable and the .NET 8 SDK, then run:
@@ -36,8 +36,8 @@ Select the physical microphone, `CABLE Input`, and the engine. Select
 [Arabic setup, architecture, and comparison instructions](MicDenoiser/README.md)
 explain the native rebuild and file-based processing checks. Native source,
 model, and dependency versions are pinned. A Windows CI workflow rebuilds the
-native library, runs processing checks, and packages the installer. Its CI
-results have not been verified in this environment.
+native library, runs processing checks, and packages the installer. The 2.5 branch CI passed on both Linux and Windows. Each new version requires
+its own CI/native and WPF rendering checks; see VALIDATION.md.
 
 Acoustic quality, microphone routing, and total latency require validation on
 Windows. This project does not claim measured equivalence to Krisp.

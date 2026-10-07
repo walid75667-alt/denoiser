@@ -11,12 +11,12 @@ internal static class AppTheme
     {
         var colors = dark ? new Dictionary<string, string>
         {
-            ["Ink"]="#E6EEF6", ["Accent"]="#50D0C3", ["AccentSoft"]="#203E43", ["WarningSoft"]="#473B25",
-            ["Surface"]="#101A24", ["CardBg"]="#1B2936", ["Muted"]="#ABBDCC", ["Line"]="#354857", ["Track"]="#2B4051"
+            ["Ink"]="#E8EDF2", ["Accent"]="#2BC4AB", ["AccentSoft"]="#123530", ["WarningSoft"]="#3A2D12",
+            ["Surface"]="#0F1419", ["CardBg"]="#171E26", ["Muted"]="#9AA6B2", ["Line"]="#2A343F", ["Track"]="#222C36"
         } : new Dictionary<string, string>
         {
-            ["Ink"]="#142A37", ["Accent"]="#087F8C", ["AccentSoft"]="#E6F4F3", ["WarningSoft"]="#FFF3DF",
-            ["Surface"]="#F3F5F8", ["CardBg"]="#FFFFFF", ["Muted"]="#6B7280", ["Line"]="#E3E7ED", ["Track"]="#E9EDF2"
+            ["Ink"]="#12181F", ["Accent"]="#0B7D6E", ["AccentSoft"]="#DCEFEB", ["WarningSoft"]="#FBEBD3",
+            ["Surface"]="#EEF1F4", ["CardBg"]="#FFFFFF", ["Muted"]="#56606B", ["Line"]="#D9DFE5", ["Track"]="#E3E8ED"
         };
         foreach (var item in colors) Application.Current.Resources[item.Key] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(item.Value));
         ApplyTitleBar(window, dark);

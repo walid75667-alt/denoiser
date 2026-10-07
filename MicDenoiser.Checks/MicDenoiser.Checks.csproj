@@ -8,10 +8,13 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="../MicDenoiser/Localization/*.json" Link="UiValidation/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../MicDenoiser/MainWindow.xaml;../MicDenoiser/App.xaml;../MicDenoiser/SetupWindow.xaml" Link="UiValidation/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../MicDenoiser/MainWindow.xaml;../MicDenoiser/App.xaml;../MicDenoiser/SetupWindow.xaml;../MicDenoiser/SimpleView.xaml;../MicDenoiser/AboutWindow.xaml" Link="UiValidation/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="NAudio.Core" Version="2.2.1" />
     <Compile Include="../MicDenoiser/AudioSampleProviders.cs" Link="AudioSampleProviders.cs" />
     <Compile Include="../MicDenoiser/StablePlaybackProvider.cs" Link="StablePlaybackProvider.cs" />
+    <Compile Include="../MicDenoiser/BackgroundReduction.cs" Link="BackgroundReduction.cs" />
+    <Compile Include="../MicDenoiser/SuppressionLevel.cs" Link="SuppressionLevel.cs" />
+    <Compile Include="../MicDenoiser/EffectsModule.cs" Link="EffectsModule.cs" />
     <Compile Include="../MicDenoiser/AudioPipeline.cs" Link="AudioPipeline.cs" />
     <Compile Include="../MicDenoiser/DenoiseEngines.cs" Link="DenoiseEngines.cs" />
     <Compile Include="../MicDenoiser/EffectsProfile.cs" Link="EffectsProfile.cs" />

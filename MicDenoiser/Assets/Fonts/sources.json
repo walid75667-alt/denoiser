@@ -1,0 +1,17 @@
+[
+  {
+    "file": "IBMPlexSansArabic-Regular.ttf",
+    "url": "https://raw.githubusercontent.com/IBM/plex/763c36ef9117782905ae010056dfbe8fd2653a25/packages/plex-sans-arabic/fonts/complete/ttf/IBMPlexSansArabic-Regular.ttf",
+    "sha256": "8e0f1046c736bf939d4939ee3ae0116acf61cbcd6592deae7656761627080981"
+  },
+  {
+    "file": "IBMPlexSansArabic-SemiBold.ttf",
+    "url": "https://raw.githubusercontent.com/IBM/plex/763c36ef9117782905ae010056dfbe8fd2653a25/packages/plex-sans-arabic/fonts/complete/ttf/IBMPlexSansArabic-SemiBold.ttf",
+    "sha256": "1d4ab8b6ebadbb9d85f2ecdcb7cb0bb672420a8ff3388ab4f69d7b98056562aa"
+  },
+  {
+    "file": "IBMPlexSansArabic-Bold.ttf",
+    "url": "https://raw.githubusercontent.com/IBM/plex/763c36ef9117782905ae010056dfbe8fd2653a25/packages/plex-sans-arabic/fonts/complete/ttf/IBMPlexSansArabic-Bold.ttf",
+    "sha256": "b74f809dead12442ed56e02a12c3bcc02076c9ad4e32f17d0a9ca6fc1aafc89e"
+  }
+]

@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace MicDenoiser;
 
-/// <summary>Device-free effects exchange. Routing, engine, buffer and live gate ownership stay local.</summary>
+/// <summary>Device-free effects exchange. Routing, engine, buffer and mute state stay local.</summary>
 public static class EffectsProfile
 {
     private sealed class Document
@@ -20,9 +20,8 @@ public static class EffectsProfile
         if (document?.Format != "MicDenoiser.Effects" || document.Version != 1 || document.Settings == null)
             throw new ArgumentException("Unsupported effects profile.");
         var result = document.Settings.SanitizedClone();
-        result.Engine = current.Engine; result.BufferMode = current.BufferMode; result.Bypass = current.Bypass;
+        result.Engine = current.Engine; result.BufferMode = current.BufferMode; result.Bypass = current.Bypass; result.Muted = current.Muted;
         result.FastSinging = current.FastSinging;
-        if (processing && !current.GateEnabled) result.GateEnabled = false;
         return result.SanitizedClone();
     }
 }

@@ -25,12 +25,11 @@ public partial class MainWindow
     }
     private void ApplyInterfaceMode()
     {
-        if (_simpleMode && MainTabs.SelectedItem == MixerTab) MainTabs.SelectedIndex = 0;
-        MixerTab.Visibility = EngineOptionsCard.Visibility = _simpleMode ? Visibility.Collapsed : Visibility.Visible;
-        QuickLevelsCard.Visibility = _simpleMode ? Visibility.Visible : Visibility.Collapsed;
+        MixerTab.Visibility = EngineOptionsCard.Visibility = Visibility.Visible;
+        QuickLevelsCard.Visibility = Visibility.Collapsed;
         foreach (var rb in PresetRadios())
-            rb.Visibility = !_simpleMode || (string?)rb.Tag is "natural" or "calls" or "singing" or "voiceover" or "vocalroom"
-                || (string?)rb.Tag == _preset ? Visibility.Visible : Visibility.Collapsed;
+            rb.Visibility = _usagePurpose == "studio" || (string?)rb.Tag is "natural" or "calls" or "streaming" or "weakmic" or "whisper" || (string?)rb.Tag == _preset ? Visibility.Visible : Visibility.Collapsed;
+        ApplyCompactLayout();
     }
     private void FastSinging_Click(object sender, RoutedEventArgs e)
     {

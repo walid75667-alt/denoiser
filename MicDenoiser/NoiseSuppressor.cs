@@ -7,7 +7,7 @@ namespace MicDenoiser;
 
 public readonly record struct MeterData(float InPeak, float OutPeak, float? Vad, float GateGain,
     bool Bypass, double FrameMs, double QueuedMs, int Underruns, float InRms = 0, float OutRms = 0, float CompressorReductionDb = 0, float DeEsserReductionDb = 0, float LimiterReductionDb = 0,
-    DiagnosticSnapshot Diagnostic = default, FrameTimingSnapshot Timing = default);
+    DiagnosticSnapshot Diagnostic = default, FrameTimingSnapshot Timing = default, double? BackgroundReductionDb = null);
 
 /// <summary>WASAPI capture only queues audio; a dedicated worker resamples and denoises it.</summary>
 public sealed class NoiseSuppressor : IDisposable
@@ -27,6 +27,7 @@ public sealed class NoiseSuppressor : IDisposable
     private readonly StabilityAdvisor _advisor;
     private readonly AudioDiagnostics _diagnostics = new();
     private readonly FrameTiming _timing = new();
+    private readonly BackgroundReduction _background = new();
     private readonly RollingAudio? _history;
     private readonly bool _fastSinging;
     private long _lastInputAt;
@@ -47,7 +48,7 @@ public sealed class NoiseSuppressor : IDisposable
         _advisor = new StabilityAdvisor(_settings.Engine, _settings.BufferMode, _fastSinging);
         PlaybackBufferTargetMs = AudioEngineFactory.PlaybackTargetMs(_settings);
         IDenoiseEngine engine = AudioEngineFactory.Create(_settings);
-        _pipeline = new AudioPipeline(engine);
+        _pipeline = new AudioPipeline(engine, prepareLiveVad: true);
         try
         {
             if (recordHistory) _history = new RollingAudio(_pipeline.FrameSize, (int)Math.Round(AlgorithmicDelayMs * 48));
@@ -183,6 +184,7 @@ public sealed class NoiseSuppressor : IDisposable
                     double elapsedMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds;
                     maximumFrameMs = Math.Max(maximumFrameMs, elapsedMs);
                     _timing.Observe(elapsedMs);
+                    _background.Observe(meters, settings);
                     _history?.Add(input, output);
                     var comparison = Volatile.Read(ref _comparison);
                     if (comparison != null && comparison.Add(input, output))
@@ -215,7 +217,7 @@ public sealed class NoiseSuppressor : IDisposable
                         Meters?.Invoke(new MeterData(inputPeak, outputPeak, meters.Vad, meters.GateGain, settings.Bypass,
                             maximumFrameMs, _captureBuffer.BufferedDuration.TotalMilliseconds + _outputBuffer.BufferedDuration.TotalMilliseconds,
                             _monitor.Underruns, (float)Math.Sqrt(inputEnergy / meterFrames), (float)Math.Sqrt(outputEnergy / meterFrames),
-                            compReduction, deEssReduction, limitReduction, diagnostic, _timing.Snapshot()));
+                            compReduction, deEssReduction, limitReduction, diagnostic, _timing.Snapshot(), _background.Decibels));
                         inputPeak = outputPeak = rawPeak = 0; maximumFrameMs = inputEnergy = outputEnergy = 0; meterFrames = 0;
                         compReduction = deEssReduction = limitReduction = 0; uiClock.Restart();
                     }

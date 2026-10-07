@@ -37,6 +37,7 @@ public partial class MainWindow
         catch { StatusText.Text = T("DeviceWatchUnavailable"); }
         Loaded += async (_, _) =>
         {
+            if (Environment.GetCommandLineArgs().Contains("--ui-smoke")) return;
             bool startup = Environment.GetCommandLineArgs().Contains("--startup");
             if (!_setupCompleted && !startup) ShowSetup();
             if (!_startWithWindows || !startup) return;
@@ -111,6 +112,7 @@ public partial class MainWindow
     private async void RecordComparison_Click(object sender, RoutedEventArgs e)
     {
         if (_starting || _comparison != null || _preview != null) return;
+        if (_settings.Muted) { ComparisonStatus.Text = T("RecordUnmute"); return; }
         if (_settings.Bypass) { ComparisonStatus.Text = T("RecordDisableBypass"); return; }
         if (_suppressor == null) await StartProcessing();
         if (_suppressor == null || _closed) return;

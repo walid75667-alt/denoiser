@@ -12,7 +12,7 @@ public partial class MainWindow : Window
 {
     private static readonly string ConfigPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MicDenoiser", "settings.json");
-    private readonly ProcessingSettings _settings = new();
+    private readonly ProcessingSettings _settings = ProcessingSettings.FromPreset("calls");
     private readonly object _meterLock = new();
     private readonly DispatcherTimer _meterTimer;
     private NoiseSuppressor? _suppressor, _meterSource;
@@ -21,7 +21,7 @@ public partial class MainWindow : Window
     private WindowState _restoreWindowState = WindowState.Normal;
     private MeterData _latestMeters;
     private bool _hasMeters, _ready, _loading, _starting, _closed;
-    private string _preset = "studio", _language = "ar";
+    private string _preset = "calls", _language = "ar";
     private int _lastUnderruns;
     private DateTime _gapUntil, _clippingUntil, _lastMeterAt;
     private double _inDisp, _outDisp;
@@ -38,6 +38,9 @@ public partial class MainWindow : Window
         LoadConfig();
         UiStrings.Apply(this, _language);
         _ready = true;
+        System.ComponentModel.DependencyPropertyDescriptor.FromProperty(TextBlock.TextProperty, typeof(TextBlock))
+            .AddValueChanged(StatusText, (_, _) => { if (_ready) RefreshCompact(); });
+        InitializeCompact();
         ApplySettingsToUi();
         if (!OutputCombo.Items.Cast<DeviceItem>().Any(d => d.Name.Contains("CABLE Input", StringComparison.OrdinalIgnoreCase)))
             StatusText.Text = T("NoCable");
@@ -73,7 +76,7 @@ public partial class MainWindow : Window
         {
             _closed = true; _meterTimer.Stop();
             try { StopProcessing(); }
-            finally { DisposeFeatures(); _tray?.Dispose(); _tray = null; SaveConfig(); }
+            finally { _hotkeys?.Dispose(); DisposeFeatures(); _tray?.Dispose(); _tray = null; SaveConfig(); }
         };
     }
 
@@ -87,7 +90,7 @@ public partial class MainWindow : Window
         try
         {
             _tray = new NotificationTray(() => Post(RestoreFromTray),
-                () => Post(() => ToggleButton_Click(this, new RoutedEventArgs())), () => Post(Close));
+                () => Post(() => ToggleButton_Click(this, new RoutedEventArgs())), () => Post(Close), () => Post(ToggleMute), level => Post(async () => await SetIsolationLevel(level)), () => Post(() => OpenStudio(4)));
         }
         catch (Exception) { StatusText.Text = T("TrayUnavailable"); }
         TrayMinimizeButton.IsEnabled = MinimizeToTrayCheck.IsEnabled = _tray != null;
@@ -167,13 +170,13 @@ public partial class MainWindow : Window
     private void SetPreset(string key)
     {
         _preset = key;
-        bool bypass = _settings.Bypass, gate = _settings.GateEnabled, fast = _settings.FastSinging;
+        HoldOriginal(false);
+        bool bypass = _settings.Bypass, muted = _settings.Muted, fast = _settings.FastSinging;
         var mode = _settings.BufferMode;
         _settings.CopyFrom(ProcessingSettings.FromPreset(key, _settings.Engine));
-        _settings.Bypass = bypass; _settings.BufferMode = mode;
+        _settings.Bypass = bypass; _settings.Muted = muted; _settings.BufferMode = mode;
         _settings.FastSinging = fast; _settings.CopyFrom(_settings.SanitizedClone());
-        _gatePreserved = (_suppressor != null || _starting) && !gate && _settings.GateEnabled;
-        if (_gatePreserved) _settings.GateEnabled = false; // Never allocate a new VAD model on the live worker.
+        _gatePreserved = false;
         ApplySettingsToUi(); _suppressor?.UpdateSettings(_settings);
     }
     private void Preset_Checked(object sender, RoutedEventArgs e)
@@ -182,21 +185,25 @@ public partial class MainWindow : Window
     }
     private void SofterSound_Click(object sender, RoutedEventArgs e) => SetPreset("natural");
     private void ResetAudio_Click(object sender, RoutedEventArgs e) => SetPreset("studio");
-    private void Engine_Changed(object sender, SelectionChangedEventArgs e)
+    private async void Engine_Changed(object sender, SelectionChangedEventArgs e)
     {
-        if (!_ready || _loading || _suppressor != null || _starting) return;
+        if (!_ready || _loading || _starting || _abBusy || _comparison != null || _preview != null) return;
         if (EngineCombo.SelectedItem is not ComboBoxItem { Tag: string kind } || !Enum.TryParse<DenoiserKind>(kind, out var engine)) return;
-        _settings.Engine = engine;
-        _abResult = null; _abError = null;
-        if (_preset != "custom") SetPreset(_preset);
-        else { _settings.GateEnabled = engine == DenoiserKind.RNNoise; ApplySettingsToUi(); }
+        bool restart = _suppressor != null; HoldOriginal(false);
+        if (restart) StopProcessing();
+        _settings.Engine = engine; _abResult = null; _abError = null;
+        ApplySettingsToUi(); SaveConfig();
+        if (restart) await StartProcessing();
     }
-    private void BufferMode_Changed(object sender, SelectionChangedEventArgs e)
+    private async void BufferMode_Changed(object sender, SelectionChangedEventArgs e)
     {
-        if (!_ready || _loading || _suppressor != null || _starting) return;
-        if (BufferModeCombo.SelectedIndex is >= 0 and <= 3) _settings.BufferMode = (AudioBufferMode)BufferModeCombo.SelectedIndex;
-        _abResult = null; _abError = null;
-        RefreshBufferHint(); RefreshAdvice(); RefreshAb();
+        if (!_ready || _loading || _starting || _abBusy || _comparison != null || _preview != null) return;
+        if (BufferModeCombo.SelectedIndex is < 0 or > 3) return;
+        var mode = (AudioBufferMode)BufferModeCombo.SelectedIndex;
+        bool restart = _suppressor != null; if (restart) StopProcessing();
+        _settings.BufferMode = mode; _abResult = null; _abError = null;
+        ApplySettingsToUi(); SaveConfig();
+        if (restart) await StartProcessing();
     }
     private void RefreshBufferHint() => BufferHint.Text = T(_settings.BufferMode switch
         { AudioBufferMode.Automatic => "AutomaticHint", AudioBufferMode.Stable => "StableHint", AudioBufferMode.LowLatency => "FastHint", _ => "BalancedHint" });
@@ -208,6 +215,7 @@ public partial class MainWindow : Window
         try
         {
             var s = _settings;
+            UsagePurposeCombo.SelectedIndex = _usagePurpose == "studio" ? 1 : 0;
             FastSingingCheck.IsChecked = s.FastSinging;
             FastSingingHint.Text = T(s.FastSinging ? "FastSingingActive" : "FastSingingHint");
             InterfaceModeCombo.SelectedIndex = _simpleMode ? 0 : 1;
@@ -332,9 +340,8 @@ public partial class MainWindow : Window
     {
         if (_preset == "custom") return false;
         var p = ProcessingSettings.FromPreset(_preset, _settings.Engine);
-        p.BufferMode = _settings.BufferMode; p.Bypass = _settings.Bypass;
+        p.BufferMode = _settings.BufferMode; p.Bypass = _settings.Bypass; p.Muted = _settings.Muted;
         p.FastSinging = _settings.FastSinging; p = p.SanitizedClone();
-        if (_suppressor != null || _starting) p.GateEnabled = _settings.GateEnabled;
         return JsonSerializer.Serialize(p) != JsonSerializer.Serialize(_settings);
     }
     private IEnumerable<RadioButton> PresetRadios() => PresetPanel.Children.OfType<RadioButton>();
@@ -342,14 +349,15 @@ public partial class MainWindow : Window
     {
         bool idle = _suppressor == null && !_starting && _preview == null && !_abBusy;
         InputCombo.IsEnabled = OutputCombo.IsEnabled = EngineCombo.IsEnabled = BufferModeCombo.IsEnabled = RefreshDevicesButton.IsEnabled = GateEnabledCheck.IsEnabled = idle;
-        EngineCombo.IsEnabled = GateEnabledCheck.IsEnabled = idle && !_settings.FastSinging;
+        EngineCombo.IsEnabled = GateEnabledCheck.IsEnabled = !_starting && !_abBusy && _comparison == null && _preview == null && !_settings.FastSinging;
+        BufferModeCombo.IsEnabled = !_starting && !_abBusy && _comparison == null && _preview == null;
         FastSingingCheck.IsEnabled = idle;
         HistoryCheck.IsEnabled = idle;
         SaveHistoryButton.IsEnabled = !_starting && !_abBusy && _comparison == null;
         ToggleButton.IsEnabled = !_starting && _preview == null && !_abBusy;
         LoadingProgress.Visibility = _starting ? Visibility.Visible : Visibility.Collapsed;
-        _tray?.Refresh(_suppressor != null, _starting || _preview != null);
-        RefreshComparison();
+        _tray?.Refresh(_suppressor != null, _starting || _preview != null, _settings.Muted, _level);
+        RefreshComparison(); RefreshCompact();
     }
     private async void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
@@ -407,6 +415,7 @@ public partial class MainWindow : Window
     }
     private void StopProcessing()
     {
+        HoldOriginal(false);
         CancelComparison();
         var suppressor = _suppressor; _suppressor = null;
         DiagnosticSnapshot? last = null;
@@ -421,7 +430,7 @@ public partial class MainWindow : Window
             lock (_meterLock) { if (_meterSource == suppressor) { _meterSource = null; _hasMeters = false; } }
         }
         SetDeviceControls(); ResetMeters(); SetStatus(false);
-        RefreshPresetHint(); StatusText.Text = error == null ? T("Stopped") : T("Error", UiStrings.ErrorDetail(error.Message));
+        RefreshPresetHint(); StatusText.Text = error == null ? T("Stopped") : T("Error", UiStrings.ErrorDetail(error.Message)); RefreshCompact();
     }
     private void RefreshFormat() => FormatText.Text = _suppressor == null ? "" : T("Format", _suppressor.InputFormatDescription,
         _suppressor.AlgorithmicDelayMs, _suppressor.PlaybackBufferTargetMs);
@@ -430,7 +439,8 @@ public partial class MainWindow : Window
         StatusPill.Text = T(running ? "Running" : "Ui001");
         StatusDot.Fill = (Brush)FindResource(running ? "Accent" : "Muted");
         ToggleButton.Content = T(running ? "Stop" : "Ui019");
-        _tray?.Refresh(running, _starting);
+        _tray?.Refresh(running, _starting, _settings.Muted, _level);
+        RefreshCompact();
     }
     private void ResetMeters()
     {
@@ -446,6 +456,7 @@ public partial class MainWindow : Window
     }
     private void RenderMeters(MeterData m)
     {
+        Compact.RenderMeters(m, _settings);
         RenderDiagnostic(m.Diagnostic);
         _lastTiming = m.Timing;
         TimingText.Text = T("FrameTiming", m.Timing.P99UpperBoundMs, m.Timing.SessionMaximumMs,
@@ -487,11 +498,13 @@ public partial class MainWindow : Window
         public string? OutputDevice { get; set; }
         public string? InputDeviceId { get; set; }
         public string? OutputDeviceId { get; set; }
-        public string Preset { get; set; } = "studio";
+        public string Preset { get; set; } = "calls";
         public string Language { get; set; } = "ar";
         public bool MinimizeToTray { get; set; } = true;
         public bool DarkTheme { get; set; }
-        public bool SimpleMode { get; set; }
+        public bool SimpleMode { get; set; } = true;
+        public string IsolationLevel { get; set; } = "balanced";
+        public string UsagePurpose { get; set; } = "calls";
         public bool SetupCompleted { get; set; }
         public ProcessingSettings? SnapshotA { get; set; }
         public ProcessingSettings? SnapshotB { get; set; }
@@ -499,6 +512,7 @@ public partial class MainWindow : Window
     }
     private void LoadConfig()
     {
+        if (Environment.GetCommandLineArgs().Contains("--ui-smoke")) return;
         try
         {
             if (!File.Exists(ConfigPath)) return;
@@ -506,8 +520,10 @@ public partial class MainWindow : Window
             _preset = cfg.Preset is "natural" or "studio" or "podcast" or "max" or "custom" or "calls" or "streaming" or "weakmic" or "whisper" or "singing" or "voiceover" or "broadcast" or "vocalroom" or "vocalhall" or "slapback" ? cfg.Preset : "studio";
             _language = cfg.Language == "en" ? "en" : "ar";
             _minimizeToTray = cfg.MinimizeToTray; _darkTheme = cfg.DarkTheme;
+            _level = cfg.IsolationLevel is "light" or "balanced" or "strong" ? cfg.IsolationLevel : "balanced";
+            _usagePurpose = cfg.UsagePurpose == "studio" ? "studio" : "calls";
             _setupCompleted = cfg.SetupCompleted; _simpleMode = cfg.SimpleMode; _snapshotA = cfg.SnapshotA?.SanitizedClone(); _snapshotB = cfg.SnapshotB?.SanitizedClone();
-            if (cfg.Settings != null) _settings.CopyFrom(cfg.Settings.SanitizedClone());
+            _settings.CopyFrom(cfg.Settings?.SanitizedClone() ?? ProcessingSettings.FromPreset(_preset));
             InputCombo.SelectedItem = InputCombo.Items.Cast<DeviceItem>().FirstOrDefault(d => d.Id == cfg.InputDeviceId)
                 ?? InputCombo.Items.Cast<DeviceItem>().FirstOrDefault(d => d.Name == cfg.InputDevice) ?? InputCombo.SelectedItem;
             OutputCombo.SelectedItem = OutputCombo.Items.Cast<DeviceItem>().FirstOrDefault(d => d.Id == cfg.OutputDeviceId)
@@ -520,12 +536,13 @@ public partial class MainWindow : Window
     }
     private void SaveConfig()
     {
+        if (Environment.GetCommandLineArgs().Contains("--ui-smoke")) return;
         try
         {
             var cfg = new AppConfig { InputDevice = (InputCombo.SelectedItem as DeviceItem)?.Name,
                 OutputDevice = (OutputCombo.SelectedItem as DeviceItem)?.Name,
                 InputDeviceId = (InputCombo.SelectedItem as DeviceItem)?.Id, OutputDeviceId = (OutputCombo.SelectedItem as DeviceItem)?.Id,
-                Preset = _preset, Language = _language, MinimizeToTray = _minimizeToTray, DarkTheme = _darkTheme, Settings = _settings.SanitizedClone(),
+                Preset = _preset, Language = _language, MinimizeToTray = _minimizeToTray, DarkTheme = _darkTheme, Settings = PersistentSettings(), IsolationLevel = _level, UsagePurpose = _usagePurpose,
                 SetupCompleted = _setupCompleted, SimpleMode = _simpleMode, SnapshotA = _snapshotA?.SanitizedClone(), SnapshotB = _snapshotB?.SanitizedClone() };
             Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath)!);
             File.WriteAllText(ConfigPath, JsonSerializer.Serialize(cfg, new JsonSerializerOptions { WriteIndented = true }));

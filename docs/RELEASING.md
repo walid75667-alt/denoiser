@@ -5,22 +5,23 @@ It rebuilds pinned native engines, runs xUnit (including actual RNNoise DLL
 execution on Windows), runs the Linux real-speech benchmark, and builds setup
 and portable packages with SHA-256 checksums. A `v*` tag additionally publishes
 a GitHub prerelease only after both jobs succeed. CI has `contents: write`
-permission only in the publishing job. App and installer versions currently
-are 2.5.0; use a matching beta tag such as `v2.5.0-beta.1`.
+permission only in the publishing and result-recording jobs. App and installer versions currently
+are 2.6.0; use a matching beta tag such as `v2.6.0-beta.1`.
 
 Inspect the run linked from the commit/Actions tab. A local Linux pass does
 not prove that the Windows job is green. When API access is available:
 
 ```sh
 gh run list --branch codex/micdenoiser-2.4-experience
-gh release view v2.5.0-beta.1
+gh release view v2.6.0-beta.1
 ```
 
 Releases contain `MicDenoiser-Setup-x64.exe`, `MicDenoiser-Windows-x64.zip`
 and `SHA256SUMS.txt`. Download the assets, check both hashes, and check that the
 portable ZIP contains `MicDenoiser.exe`, the model and both native DLLs before
 replacing README download links and removing `downloads/` from tracking.
-The old 2.4 downloads remain until that publication can be verified. New
+The 2.5 beta assets were downloaded and SHA-256 verified, and the old tracked
+2.4 packages were removed in the 2.6 change. New
 binaries are generated only under ignored `artifacts/`, not committed to Git.
 
 Removing downloads in a new commit prevents future package growth but does
@@ -58,7 +59,9 @@ git fetch origin refs/notes/micdenoiser-ci:refs/notes/micdenoiser-ci
 git notes --ref=micdenoiser-ci show HEAD
 ```
 
-Windows packaging explicitly checks that at least all 50 tests executed and
+Windows packaging explicitly checks that at least all 55 tests executed and
 passed, including the two named native DLL checks; skipped native tests do
 not permit publishing. The release job verifies all three uploaded assets
 exist with nonzero sizes before recording success.
+
+The Windows job also runs `--ui-smoke` and uploads 21 actual WPF renders. Git notes retain both branch and tag outcomes for the same source commit, preferring the tag outcome for the summary.

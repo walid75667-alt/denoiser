@@ -4,7 +4,14 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
 
-        <!-- Palette -->
+        <FontFamily x:Key="InterfaceFont">pack://application:,,,/MicDenoiser;component/Assets/Fonts/#IBM Plex Sans Arabic</FontFamily>
+        <Style x:Key="SegmentOption" TargetType="RadioButton">
+<Setter Property="Foreground" Value="{DynamicResource Muted}"/><Setter Property="Cursor" Value="Hand"/>
+<Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+<Border x:Name="Segment" CornerRadius="9" Padding="8,9" Background="Transparent"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+<ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Segment" Property="Background" Value="{DynamicResource CardBg}"/><Setter Property="Foreground" Value="{DynamicResource Accent}"/><Setter Property="FontWeight" Value="SemiBold"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Segment" Property="BorderBrush" Value="{DynamicResource Accent}"/><Setter TargetName="Segment" Property="BorderThickness" Value="1"/></Trigger></ControlTemplate.Triggers>
+</ControlTemplate></Setter.Value></Setter></Style>
+<!-- Palette -->
         <SolidColorBrush x:Key="HeaderBg" Color="#142A37"/>
         <SolidColorBrush x:Key="SelectedPresetBg" Color="#142A37"/>
         <SolidColorBrush x:Key="PrimaryAccent" Color="#087F8C"/>
@@ -97,7 +104,7 @@
             <Setter Property="Background" Value="{DynamicResource CardBg}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="CornerRadius" Value="18"/>
             <Setter Property="Padding" Value="16"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
         </Style>

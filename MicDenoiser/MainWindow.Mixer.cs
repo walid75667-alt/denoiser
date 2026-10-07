@@ -9,6 +9,12 @@ namespace MicDenoiser;
 public partial class MainWindow
 {
     private bool _exporting;
+    private void ModuleReset_Click(object sender, RoutedEventArgs e)
+    {
+        if (_starting || _comparison != null || _abBusy || sender is not Button { Tag: string module }) return;
+        HoldOriginal(false); _settings.CopyFrom(EffectsModule.Reset(module, _settings)); _preset = "custom";
+        ApplySettingsToUi(); _suppressor?.UpdateSettings(_settings); SaveConfig();
+    }
     private void SpatialReset_Click(object sender, RoutedEventArgs e)
     {
         _settings.ReverbEnabled = _settings.EchoEnabled = _settings.ChorusEnabled = false;

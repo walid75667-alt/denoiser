@@ -1,3 +1,16 @@
+MicDenoiser 2.6 beta applies the attached compact/Studio interface design:
+
+- Compact home with large power control, three isolation levels, live input/output meters, folded devices, mute, held original comparison and a background-reduction estimate.
+- Three-step VB-Cable setup with a live microphone meter, ten-second local before/after test and illustrated app routing. Installer purpose selection initializes calls or narration presets without replacing existing settings.
+- Global Ctrl+Alt+M mute and Ctrl+Alt+D start/stop, plus quick tray controls. Engine/buffer changes restart audio automatically; the speech gate can toggle live with its detector initialized before processing.
+- Simplified formal Arabic, matched English, embedded IBM Plex Sans Arabic, green/neutral light/dark palette and five Studio pages. Detailed mixer controls expand and each strip has an independent reset.
+- Version is shown in About; designer attribution and WhatsApp/Facebook links are included.
+- Windows CI renders 21 actual WPF screenshots without recording, alongside native DLL checks. Linux has 53 passed portable/native checks and 2 Windows-only skips; the 36 real-speech scenes pass the existing benchmark thresholds.
+
+This beta retains the 960-sample RNNoise delay, conservative 6 dB default call gate, individual-frame p99/session maximum and optional last-30-second paired local diagnostics from 2.5. Background reduction is an estimate during low VAD, not a speech-quality score. Strong mode may attenuate weak speech. Packages include .NET, models and libraries; VB-Cable remains a separate vendor install. Signing requires an owner-provided trusted certificate. Physical-device crackling and singing quality still require listening tests; no Krisp equivalence is claimed.
+
+Previous audio changes:
+
 MicDenoiser 2.5 beta improves timing alignment and crackle diagnosis:
 
 - RNNoise uses 960 samples of native delay. With the existing gate look-ahead, its fixed pipeline delay is 40 ms; device/playback buffering adds more.

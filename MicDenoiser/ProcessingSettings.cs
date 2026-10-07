@@ -11,6 +11,7 @@ public sealed class ProcessingSettings
     public bool GateEnabled { get; set; }
     public bool HighPassEnabled { get; set; }
     public bool Bypass { get; set; }
+    public bool Muted { get; set; }
     public bool FastSinging { get; set; }
 
     // ── Input ──────────────────────────────────────────────
@@ -171,6 +172,7 @@ public sealed class ProcessingSettings
         GateEnabled = o.GateEnabled;
         HighPassEnabled = o.HighPassEnabled;
         Bypass = o.Bypass;
+        Muted = o.Muted;
         FastSinging = o.FastSinging;
         InputGainDb = o.InputGainDb;
         Strength = o.Strength;

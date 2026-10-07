@@ -1,3 +1,14 @@
+# Version 2.6 validation update
+
+- WPF Release cross-build succeeds without warnings/errors.
+- xUnit: 53 passed, 2 Windows-only skips, total 55. New meaningful checks cover mute/unmute continuity in dry and processed paths, honest delayed noise-energy measurements, VAD eligibility, conservative Simple defaults and independent module reset.
+- All 36 deterministic recorded-speech scenes pass the unchanged 2.5 benchmark thresholds. Audio remains identical for unchanged unmuted settings; no baseline was rewritten.
+- Windows CI now requires all 55 checks and renders 21 WPF screens without audio capture/playback or user configuration writes. Current-version remote results are recorded in Git notes after the push; a local build does not prove remote GUI success.
+- The prior 2.5 branch CI was independently observed green on both Linux and Windows: https://github.com/walid75667-alt/denoiser/actions/runs/37699586291. Its release page contains all three expected assets. Both assets were fully downloaded and their published SHA-256 sums verified; the portable ZIP contains the executable, both engines and model. Old tracked binaries are removed without rewriting history.
+- Full live wizard/shortcut/device interaction, physical microphone crackling, signing/SmartScreen and installer execution remain Windows device checks. The nine-screen HTML supplied design data; no prototype meter values were treated as evidence.
+
+---
+
 # Version 2.5 validation update
 
 The previous version's evidence and limitations are retained below. For 2.5:

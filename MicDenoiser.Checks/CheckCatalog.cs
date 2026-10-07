@@ -28,7 +28,7 @@ Check("interface catalogs and XAML resource references are complete", () =>
     var xkey = System.Xml.Linq.XName.Get("Key", "http://schemas.microsoft.com/winfx/2006/xaml");
     var application = System.Xml.Linq.XDocument.Load(Path.Combine(assets, "App.xaml"));
     var staticKeys = application.Descendants().SelectMany(e => e.Attributes(xkey)).Select(a => a.Value).ToHashSet();
-    foreach (string file in new[] { "MainWindow.xaml", "App.xaml", "SetupWindow.xaml" })
+    foreach (string file in new[] { "MainWindow.xaml", "App.xaml", "SetupWindow.xaml", "SimpleView.xaml", "AboutWindow.xaml" })
     {
         foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
                      File.ReadAllText(Path.Combine(assets, file)), @"\{(StaticResource|DynamicResource) ([^}]+)\}"))
@@ -243,10 +243,10 @@ Check("professional settings and exchanged profiles are bounded and preserve rou
     var settings=new ProcessingSettings { EqLowHz=float.NaN, EqAirQ=float.PositiveInfinity, EqBodyGainDb=100, CompAttackMs=0, CompReleaseMs=99999, OutputCeilingDb=1, DeEsserHz=-30 };
     var s=settings.SanitizedClone();
     Require(s.EqLowHz==120 && s.EqAirQ==.7f && s.EqBodyGainDb==9 && s.CompAttackMs==1 && s.CompReleaseMs==1000 && s.OutputCeilingDb==-.3f && s.DeEsserHz==2500,"Professional settings escaped bounds.");
-    var current=new ProcessingSettings { Engine=DenoiserKind.RNNoise, BufferMode=AudioBufferMode.Stable, Bypass=true };
+    var current=new ProcessingSettings { Engine=DenoiserKind.RNNoise, BufferMode=AudioBufferMode.Stable, Bypass=true, Muted=true };
     var saved=ProcessingSettings.FromPreset("voiceover"); saved.GateEnabled=true;
     var loaded=EffectsProfile.Read(EffectsProfile.Serialize(saved),current,true);
-    Require(loaded.Engine==current.Engine && loaded.BufferMode==current.BufferMode && loaded.Bypass && !loaded.GateEnabled,"Profile changed processing ownership/routing or activated a live VAD.");
+    Require(loaded.Engine==current.Engine && loaded.BufferMode==current.BufferMode && loaded.Bypass && loaded.Muted && loaded.GateEnabled,"Profile changed routing/mute or lost the live-adjustable gate.");
     Require(loaded.EqEnabled && loaded.CompKneeDb==6 && loaded.DeEsserEnabled,"Profile lost effects.");
     bool invalid=false; try { EffectsProfile.Read("{\"Settings\":{}}",current,false); } catch(ArgumentException) { invalid=true; }
     Require(invalid,"Untagged settings were accepted as an effects profile.");
@@ -778,12 +778,17 @@ Check("DeepFilterNet attenuation control retains more detail at lower limits", (
             var vad = engine.Process(input, output);
             Require(vad is >= 0f and <= 1f && output.All(float.IsFinite), "RNNoise returned invalid audio or VAD.");
         }
-        using var pipeline = new AudioPipeline(new DeepFilterNetEngine());
-        var meters = pipeline.Process(input, output, new ProcessingSettings { GateEnabled = true });
+        using var pipeline = new AudioPipeline(new DeepFilterNetEngine(), prepareLiveVad: true);
+        var settings = new ProcessingSettings { GateEnabled = false };
+        var meters = pipeline.Process(input, output, settings);
+        Require(meters.Vad is >= 0f and <= 1f, "Live VAD must exist with gate off.");
+        settings.GateEnabled = true;
+        meters = pipeline.Process(input, output, settings);
         Require(meters.Vad is >= 0f and <= 1f && output.All(float.IsFinite), "Parallel VAD did not run.");
     });
 }
 AdditionalChecks.Register(Check, Require);
+ExperienceChecks.Register(Check, Require);
 WindowsCheck("pinned Windows RNNoise DLL has 960 sample impulse delay", () =>
 {
     string path = Path.Combine(AppContext.BaseDirectory, "rnnoise.dll");

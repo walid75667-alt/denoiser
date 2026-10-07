@@ -55,12 +55,25 @@ jobs:
       - name: Build native engine and test the actual Windows DLLs
         shell: pwsh
         run: ./scripts/build.ps1 -RebuildNative -Publish
+      - name: Render actual WPF screens without recording audio
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath artifacts/windows/MicDenoiser.exe -ArgumentList '--ui-smoke' -PassThru
+          if (!$process.WaitForExit(90000)) { $process.Kill(); throw 'WPF render smoke timed out.' }
+          if ($process.ExitCode -ne 0) { throw 'WPF render smoke failed; see UI artifacts.' }
+          if ((Get-ChildItem artifacts/ui-smoke/*.png).Count -ne 21) { throw 'Expected all 21 Arabic, English and dark WPF renders.' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: MicDenoiser-WPF-screens
+          path: artifacts/ui-smoke/
+          if-no-files-found: warn
       - name: Require executed Windows native checks
         shell: pwsh
         run: |
           [xml]$results = Get-Content artifacts/test-results/windows.trx -Raw
           $counts = $results.TestRun.ResultSummary.Counters
-          if ([int]$counts.executed -lt 50 -or [int]$counts.failed -ne 0 -or [int]$counts.passed -ne [int]$counts.executed) { throw 'The complete Windows test suite did not execute and pass.' }
+          if ([int]$counts.executed -lt 55 -or [int]$counts.failed -ne 0 -or [int]$counts.passed -ne [int]$counts.executed) { throw 'The complete Windows test suite did not execute and pass.' }
           foreach ($name in @('RealWindowsRNNoiseLatency', 'RealWindowsRNNoiseAndDeepFilterVad')) {
             $native = @($results.TestRun.Results.UnitTestResult | Where-Object { $_.testName -like "*.$name" -and $_.outcome -eq 'Passed' })
             if ($native.Count -ne 1) { throw "Required native check did not pass: $name" }
@@ -140,6 +153,11 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: MicDenoiser-WPF-screens
+          path: artifacts/ui-smoke
       - name: Record CI outcomes as Git notes without changing source branches
         env:
           LINUX_RESULT: ${{ needs.linux.result }}
@@ -147,10 +165,17 @@ jobs:
           RELEASE_RESULT: ${{ needs.release.result }}
         run: |
           python - <<'PY'
-          import json, os
+          import json, os, base64
+          from pathlib import Path
           result = {'commit': os.environ['GITHUB_SHA'], 'ref': os.environ['GITHUB_REF'],
                     'run_url': os.environ['GITHUB_SERVER_URL'] + '/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + os.environ['GITHUB_RUN_ID'],
                     'linux': os.environ['LINUX_RESULT'], 'windows': os.environ['WINDOWS_RESULT'], 'release': os.environ['RELEASE_RESULT']}
+          images = {}
+          for name in ['ar-simple', 'ar-studio-1', 'ar-setup-3', 'ar-about']:
+              path = Path('artifacts/ui-smoke') / (name + '.png')
+              if path.is_file() and path.stat().st_size < 1024 * 1024:
+                  images[name] = base64.b64encode(path.read_bytes()).decode('ascii')
+          if images: result['ui_screens'] = images
           open('ci-outcome.json', 'w').write(json.dumps(result, indent=2) + '\n')
           PY
           git config user.name 'github-actions[bot]'
@@ -158,5 +183,18 @@ jobs:
           if git ls-remote --exit-code origin refs/notes/micdenoiser-ci > /dev/null; then
             git fetch origin refs/notes/micdenoiser-ci:refs/notes/micdenoiser-ci
           fi
+          python - <<'PY'
+          import json, subprocess
+          current = json.load(open('ci-outcome.json'))
+          previous = subprocess.run(['git', 'notes', '--ref=micdenoiser-ci', 'show', current['commit']], capture_output=True, text=True)
+          old = json.loads(previous.stdout) if previous.returncode == 0 else {}
+          runs = old.get('runs', {})
+          if old.get('ref'): runs[old['ref']] = {k: v for k, v in old.items() if k not in ('runs', 'ui_screens')}
+          runs[current['ref']] = {k: v for k, v in current.items() if k != 'ui_screens'}
+          preferred = current if current['ref'].startswith('refs/tags/') or not old.get('ref', '').startswith('refs/tags/') else {k: v for k, v in old.items() if k not in ('runs', 'ui_screens')}
+          if current.get('ui_screens'): preferred['ui_screens'] = current['ui_screens']
+          preferred['runs'] = runs
+          open('ci-outcome.json', 'w').write(json.dumps(preferred, indent=2) + '\n')
+          PY
           git notes --ref=micdenoiser-ci add -f -F ci-outcome.json "$GITHUB_SHA"
           git push origin refs/notes/micdenoiser-ci
