@@ -1,0 +1,8 @@
+{
+  "commit": "1e111b8432893ea94b835f17f8f3e7704e8b7104",
+  "ref": "refs/tags/v2.5.0-beta.1",
+  "run_url": "https://github.com/walid75667-alt/denoiser/actions/runs/37699681871",
+  "linux": "success",
+  "windows": "success",
+  "release": "success"
+}
