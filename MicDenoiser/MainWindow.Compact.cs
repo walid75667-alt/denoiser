@@ -116,9 +116,22 @@ public partial class MainWindow
         StudioMuteButton.Content = T(_settings.Muted ? "Unmute" : "Mute");
         _tray?.Refresh(_suppressor != null, _starting || _abBusy || _comparison != null || _preview != null, _settings.Muted, EffectiveLevel);
     }
+    private Rect CurrentWorkArea()
+    {
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero) return SystemParameters.WorkArea;
+        var screen = System.Windows.Forms.Screen.FromHandle(handle).WorkingArea;
+        var area = new Rect(screen.Left, screen.Top, screen.Width, screen.Height);
+        if (PresentationSource.FromVisual(this)?.CompositionTarget is { } target)
+            area.Transform(target.TransformFromDevice);
+        return area;
+    }
     private void ApplyCompactLayout()
     {
         if (_lastCompactMode == _simpleMode) { RefreshCompact(); return; }
+        var area = CurrentWorkArea();
+        bool reposition = IsLoaded && double.IsFinite(Left) && double.IsFinite(Top);
+        double centerX = Left + ActualWidth / 2, centerY = Top + ActualHeight / 2;
         bool wasStudio = _lastCompactMode == false;
         _lastCompactMode = _simpleMode;
         if (_simpleMode && wasStudio)
@@ -126,9 +139,15 @@ public partial class MainWindow
         Compact.Visibility = _simpleMode ? Visibility.Visible : Visibility.Collapsed;
         StudioHeader.Visibility = StudioBody.Visibility = StudioFooter.Visibility = _simpleMode ? Visibility.Collapsed : Visibility.Visible;
         if (WindowState == WindowState.Maximized) WindowState = WindowState.Normal;
-        MinWidth = _simpleMode ? 400 : 900; MinHeight = _simpleMode ? 560 : 680;
-        Width = _simpleMode ? 440 : Math.Min(_studioWidth, SystemParameters.WorkArea.Width - 24);
-        Height = _simpleMode ? Math.Min(680, SystemParameters.WorkArea.Height - 24) : Math.Min(_studioHeight, SystemParameters.WorkArea.Height - 24);
+        MinWidth = Math.Min(_simpleMode ? 400 : 900, Math.Max(300, area.Width - 24));
+        MinHeight = Math.Min(_simpleMode ? 560 : 680, Math.Max(300, area.Height - 24));
+        Width = Math.Min(_simpleMode ? 440 : _studioWidth, area.Width - 24);
+        Height = Math.Min(_simpleMode ? 680 : _studioHeight, area.Height - 24);
+        if (reposition)
+        {
+            Left = Math.Clamp(centerX - Width / 2, area.Left, Math.Max(area.Left, area.Right - Width));
+            Top = Math.Clamp(centerY - Height / 2, area.Top, Math.Max(area.Top, area.Bottom - Height));
+        }
         RefreshCompact();
     }
     private void About_Click(object sender, RoutedEventArgs e) => new AboutWindow(_language) { Owner = this }.ShowDialog();

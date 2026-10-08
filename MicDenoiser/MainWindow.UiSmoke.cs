@@ -13,6 +13,12 @@ public partial class MainWindow
         async Task Capture(Window window, string name)
         {
             await window.Dispatcher.InvokeAsync(() => window.UpdateLayout(), DispatcherPriority.ContextIdle);
+            if (window == this)
+            {
+                var area = CurrentWorkArea();
+                if (Left < area.Left - 2 || Top < area.Top - 2 || Left + ActualWidth > area.Right + 2 || Top + ActualHeight > area.Bottom + 2)
+                    throw new InvalidOperationException("Mode switch places the window outside the working area.");
+            }
             var content = (FrameworkElement)window.Content;
             var margin = content.Margin;
             int width = (int)Math.Ceiling(content.ActualWidth + margin.Left + margin.Right), height = (int)Math.Ceiling(content.ActualHeight + margin.Top + margin.Bottom);
