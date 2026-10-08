@@ -2,7 +2,7 @@
 
 Version 2.6 applies the attached compact/Studio design: power, three isolation
 levels, live meters, held original comparison, mute/global shortcuts, guided
-setup and module resets. See [interface details](docs/UI-DESIGN.md). It retains
+setup and module resets. See [interface details](docs/UI-DESIGN.md) and [actual Windows screenshots](docs/screenshots/README.md). It retains
 the corrected RNNoise delay, conservative call gate, p99 diagnostics and
 optional local 30-second recording from 2.5.
 

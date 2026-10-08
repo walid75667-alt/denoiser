@@ -1,10 +1,11 @@
 # Version 2.6 validation update
 
-- WPF Release cross-build succeeds without warnings/errors.
+- WPF Release cross-build succeeds without warnings/errors. Actual Windows UI rendering additionally passed all 21 Arabic/English/dark views on source `1c77d014`, with 55/55 native/DSP checks passed: https://github.com/walid75667-alt/denoiser/actions/runs/37705113820. Four unchanged PNGs are available in docs/screenshots/.
 - xUnit: 53 passed, 2 Windows-only skips, total 55. New meaningful checks cover mute/unmute continuity in dry and processed paths, honest delayed noise-energy measurements, VAD eligibility, conservative Simple defaults and independent module reset.
 - All 36 deterministic recorded-speech scenes pass the unchanged 2.5 benchmark thresholds. Audio remains identical for unchanged unmuted settings; no baseline was rewritten.
-- Windows CI now requires all 55 checks and renders 21 WPF screens without audio capture/playback or user configuration writes. Current-version remote results are recorded in Git notes after the push; a local build does not prove remote GUI success.
+- Full 2.6 branch CI was observed green on Linux and Windows after correcting WPF startup/resource conflicts: https://github.com/walid75667-alt/denoiser/actions/runs/37704222635 (source fd732a4). The final beta.2 source subsequently passed the independent 55-test/21-render Windows check. Tagged Release verification is a separate outcome and remains gated on both full jobs.
 - The prior 2.5 branch CI was independently observed green on both Linux and Windows: https://github.com/walid75667-alt/denoiser/actions/runs/37699586291. Its release page contains all three expected assets. Both assets were fully downloaded and their published SHA-256 sums verified; the portable ZIP contains the executable, both engines and model. Old tracked binaries are removed without rewriting history.
+- The local setup/ZIP packages include 485 payload files; the explicit installer manifest avoids recursive user-folder removal. Final package payload verification runs after publishing the corrected source.
 - Full live wizard/shortcut/device interaction, physical microphone crackling, signing/SmartScreen and installer execution remain Windows device checks. The nine-screen HTML supplied design data; no prototype meter values were treated as evidence.
 
 ---

@@ -6,14 +6,14 @@ execution on Windows), runs the Linux real-speech benchmark, and builds setup
 and portable packages with SHA-256 checksums. A `v*` tag additionally publishes
 a GitHub prerelease only after both jobs succeed. CI has `contents: write`
 permission only in the publishing and result-recording jobs. App and installer versions currently
-are 2.6.0; use a matching beta tag such as `v2.6.0-beta.1`.
+are 2.6.0; use a matching beta tag such as `v2.6.0-beta.2`.
 
 Inspect the run linked from the commit/Actions tab. A local Linux pass does
 not prove that the Windows job is green. When API access is available:
 
 ```sh
 gh run list --branch codex/micdenoiser-2.4-experience
-gh release view v2.6.0-beta.1
+gh release view v2.6.0-beta.2
 ```
 
 Releases contain `MicDenoiser-Setup-x64.exe`, `MicDenoiser-Windows-x64.zip`
@@ -65,3 +65,5 @@ not permit publishing. The release job verifies all three uploaded assets
 exist with nonzero sizes before recording success.
 
 The Windows job also runs `--ui-smoke` and uploads 21 actual WPF renders. Git notes retain both branch and tag outcomes for the same source commit, preferring the tag outcome for the summary.
+
+The independent `WPF interface render check` runs quickly against bundled native dependencies and records 55-test/render evidence in `refs/notes/micdenoiser-ui`. It helps diagnose GUI failures without waiting for a native rebuild; it does not replace the full Linux/MSVC/package pipeline required for Release publication. The unreleased beta.1 tag is retained as history; do not force-update it after a failed CI run.
