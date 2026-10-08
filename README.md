@@ -7,9 +7,8 @@ the corrected RNNoise delay, conservative call gate, p99 diagnostics and
 optional local 30-second recording from 2.5.
 
 New packages belong in [GitHub Releases](https://github.com/walid75667-alt/denoiser/releases)
-after Linux and Windows CI pass. Both 2.5 beta assets were downloaded and their
-SHA-256 checksums verified; the links below point to that verified beta while
-the 2.6 workflow runs. Binaries are no longer tracked in the current checkout.
+after Linux and Windows CI pass. Both 2.6 beta.3 assets were fully downloaded and their
+SHA-256 checksums verified after Linux/Windows CI passed. Binaries are no longer tracked in the current checkout.
 See [release workflow](docs/RELEASING.md), [release notes](docs/RELEASE-NOTES.md)
 and [real-speech benchmark](benchmarks/README.md).
 
@@ -18,8 +17,8 @@ lightweight RNNoise option. The WPF/.NET 8 application was imported from the
 attached MicDenoiser project and upgraded with a streaming native engine,
 WASAPI audio, a dedicated processing worker, and aligned dry/bypass paths.
 
-Download the [Windows x64 installer](https://github.com/walid75667-alt/denoiser/releases/download/v2.5.0-beta.1/MicDenoiser-Setup-x64.exe)
-or the [portable ZIP](https://github.com/walid75667-alt/denoiser/releases/download/v2.5.0-beta.1/MicDenoiser-Windows-x64.zip). Both include
+Download the [Windows x64 installer](https://github.com/walid75667-alt/denoiser/releases/download/v2.6.0-beta.3/MicDenoiser-Setup-x64.exe)
+or the [portable ZIP](https://github.com/walid75667-alt/denoiser/releases/download/v2.6.0-beta.3/MicDenoiser-Windows-x64.zip). Both include
 the .NET runtime, model, and native DLLs. Run the installer, or extract the entire ZIP folder and run
 `MicDenoiser.exe`. VB-Cable is installed separately from its vendor. See [validation and remaining Windows checks](VALIDATION.md).
 

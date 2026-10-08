@@ -6,21 +6,21 @@ execution on Windows), runs the Linux real-speech benchmark, and builds setup
 and portable packages with SHA-256 checksums. A `v*` tag additionally publishes
 a GitHub prerelease only after both jobs succeed. CI has `contents: write`
 permission only in the publishing and result-recording jobs. App and installer versions currently
-are 2.6.0; use a matching beta tag such as `v2.6.0-beta.2`.
+are 2.6.0; use a matching beta tag such as `v2.6.0-beta.3`.
 
 Inspect the run linked from the commit/Actions tab. A local Linux pass does
 not prove that the Windows job is green. When API access is available:
 
 ```sh
 gh run list --branch codex/micdenoiser-2.4-experience
-gh release view v2.6.0-beta.2
+gh release view v2.6.0-beta.3
 ```
 
 Releases contain `MicDenoiser-Setup-x64.exe`, `MicDenoiser-Windows-x64.zip`
 and `SHA256SUMS.txt`. Download the assets, check both hashes, and check that the
 portable ZIP contains `MicDenoiser.exe`, the model and both native DLLs before
 replacing README download links and removing `downloads/` from tracking.
-The 2.5 beta assets were downloaded and SHA-256 verified, and the old tracked
+The 2.6 beta.3 assets were downloaded and SHA-256 verified, and the old tracked
 2.4 packages were removed in the 2.6 change. New
 binaries are generated only under ignored `artifacts/`, not committed to Git.
 
