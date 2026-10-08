@@ -1,0 +1,213 @@
+name: Native audio checks and Windows packages
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build pinned Linux native engine
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal
+          cargo +1.90.0 build --manifest-path MicDenoiser/native-src/Cargo.toml --release --locked -j 2
+      - name: xUnit portable and native regressions
+        run: |
+          dotnet restore MicDenoiser.Tests --locked-mode
+          dotnet test MicDenoiser.Tests -c Release --no-restore --logger 'trx;LogFileName=linux.trx' --results-directory artifacts/test-results
+      - name: Real-speech benchmark with pinned Linux VAD
+        run: |
+          python -m pip install numpy==2.3.5
+          python scripts/prepare-benchmark.py artifacts/benchmark-native
+          export MICDENOISER_RNNOISE_LIBRARY="$GITHUB_WORKSPACE/artifacts/benchmark-native/librnnoise.so"
+          python benchmarks/run.py --checks MicDenoiser.Checks/bin/Release/net8.0/MicDenoiser.Checks.dll
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Linux-regression-reports
+          path: |
+            artifacts/test-results/*.trx
+            artifacts/benchmark/report.json
+          if-no-files-found: warn
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Verify Rust is available
+        shell: pwsh
+        run: |
+          if (!(Get-Command rustup -ErrorAction SilentlyContinue)) { throw 'The Windows runner requires rustup and the MSVC x64 C++ build tools.' }
+          rustup toolchain install 1.90.0 --profile minimal
+      - name: Build native engine and test the actual Windows DLLs
+        shell: pwsh
+        run: ./scripts/build.ps1 -RebuildNative -Publish
+      - name: Render actual WPF screens without recording audio
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath artifacts/windows/MicDenoiser.exe -ArgumentList '--ui-smoke' -WorkingDirectory $PWD.Path -PassThru
+          if (!$process.WaitForExit(90000)) { $process.Kill(); throw 'WPF render smoke timed out.' }
+          if ($process.ExitCode -ne 0) { if (Test-Path artifacts/ui-smoke/error.txt) { Get-Content artifacts/ui-smoke/error.txt }; throw 'WPF render smoke failed; see UI artifacts.' }
+          if ((Get-ChildItem artifacts/ui-smoke/*.png).Count -ne 21) { throw 'Expected all 21 Arabic, English and dark WPF renders.' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: MicDenoiser-WPF-screens
+          path: artifacts/ui-smoke/
+          if-no-files-found: warn
+      - name: Require executed Windows native checks
+        shell: pwsh
+        run: |
+          [xml]$results = Get-Content artifacts/test-results/windows.trx -Raw
+          $counts = $results.TestRun.ResultSummary.Counters
+          if ([int]$counts.executed -lt 55 -or [int]$counts.failed -ne 0 -or [int]$counts.passed -ne [int]$counts.executed) { throw 'The complete Windows test suite did not execute and pass.' }
+          foreach ($name in @('RealWindowsRNNoiseLatency', 'RealWindowsRNNoiseAndDeepFilterVad')) {
+            $native = @($results.TestRun.Results.UnitTestResult | Where-Object { $_.testName -like "*.$name" -and $_.outcome -eq 'Passed' })
+            if ($native.Count -ne 1) { throw "Required native check did not pass: $name" }
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Windows-xUnit-results
+          path: artifacts/test-results/*.trx
+          if-no-files-found: warn
+      - name: Sign application when a certificate is configured
+        shell: pwsh
+        env:
+          WINDOWS_SIGN_CERT_PFX_BASE64: ${{ secrets.WINDOWS_SIGN_CERT_PFX_BASE64 }}
+          WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
+        run: ./scripts/sign-windows.ps1 -Path artifacts/windows/MicDenoiser.exe
+      - name: Install NSIS and package Windows setup
+        shell: pwsh
+        run: |
+          choco install nsis --no-progress -y
+          ./scripts/build-installer.ps1 -Makensis "${env:ProgramFiles(x86)}/NSIS/makensis.exe"
+      - name: Sign setup when a certificate is configured
+        shell: pwsh
+        env:
+          WINDOWS_SIGN_CERT_PFX_BASE64: ${{ secrets.WINDOWS_SIGN_CERT_PFX_BASE64 }}
+          WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
+        run: ./scripts/sign-windows.ps1 -Path artifacts/MicDenoiser-Setup-x64.exe
+      - name: Archive portable application and checksum both packages
+        shell: pwsh
+        run: |
+          Compress-Archive -Path artifacts/windows/* -DestinationPath artifacts/MicDenoiser-Windows-x64.zip
+          $lines = @('MicDenoiser-Setup-x64.exe', 'MicDenoiser-Windows-x64.zip') | ForEach-Object {
+            ((Get-FileHash "artifacts/$_" -Algorithm SHA256).Hash.ToLowerInvariant()) + '  ' + $_
+          }
+          [IO.File]::WriteAllLines("$PWD/artifacts/SHA256SUMS.txt", $lines, [Text.UTF8Encoding]::new($false))
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MicDenoiser-release-packages
+          path: |
+            artifacts/MicDenoiser-Setup-x64.exe
+            artifacts/MicDenoiser-Windows-x64.zip
+            artifacts/SHA256SUMS.txt
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: MicDenoiser-release-packages
+          path: artifacts/release
+      - name: Verify packages and publish the tagged prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd artifacts/release
+          sha256sum --check SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" --verify-tag --prerelease --title "MicDenoiser $GITHUB_REF_NAME" --notes-file "$GITHUB_WORKSPACE/docs/RELEASE-NOTES.md" MicDenoiser-Setup-x64.exe MicDenoiser-Windows-x64.zip SHA256SUMS.txt
+          gh release view "$GITHUB_REF_NAME" --json assets,url,tagName > published.json
+          python - <<'PY'
+          import json
+          result = json.load(open('published.json'))
+          assert {a['name'] for a in result['assets']} == {'MicDenoiser-Setup-x64.exe', 'MicDenoiser-Windows-x64.zip', 'SHA256SUMS.txt'}
+          assert all(a['size'] > 0 for a in result['assets'])
+          PY
+  record_results:
+    if: always() && github.event_name == 'push'
+    needs: [linux, windows, release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: micdenoiser-ci-notes
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: MicDenoiser-WPF-screens
+          path: artifacts/ui-smoke
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: Windows-xUnit-results
+          path: artifacts/windows-test-results
+      - name: Record CI outcomes as Git notes without changing source branches
+        env:
+          LINUX_RESULT: ${{ needs.linux.result }}
+          WINDOWS_RESULT: ${{ needs.windows.result }}
+          RELEASE_RESULT: ${{ needs.release.result }}
+        run: |
+          python - <<'PY'
+          import json, os, base64
+          from pathlib import Path
+          result = {'commit': os.environ['GITHUB_SHA'], 'ref': os.environ['GITHUB_REF'],
+                    'run_url': os.environ['GITHUB_SERVER_URL'] + '/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + os.environ['GITHUB_RUN_ID'],
+                    'linux': os.environ['LINUX_RESULT'], 'windows': os.environ['WINDOWS_RESULT'], 'release': os.environ['RELEASE_RESULT']}
+          images = {}
+          for name in ['ar-simple', 'ar-studio-1', 'ar-setup-3', 'ar-about']:
+              path = Path('artifacts/ui-smoke') / (name + '.png')
+              if path.is_file() and path.stat().st_size < 1024 * 1024:
+                  images[name] = base64.b64encode(path.read_bytes()).decode('ascii')
+          if images: result['ui_screens'] = images
+          error = Path('artifacts/ui-smoke/error.txt')
+          if error.is_file(): result['ui_error'] = error.read_text()[:20000]
+          reports = list(Path('artifacts/windows-test-results').glob('*.trx'))
+          if reports:
+              import xml.etree.ElementTree as ET
+              report = ET.parse(reports[0]); ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+              result['windows_test_counts'] = report.find('.//t:Counters', ns).attrib
+              result['windows_test_failures'] = [{ 'name': e.get('testName'), 'output': ET.tostring(e, encoding='unicode')[:20000] } for e in report.findall('.//t:UnitTestResult', ns) if e.get('outcome') != 'Passed']
+          open('ci-outcome.json', 'w').write(json.dumps(result, indent=2) + '\n')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if git ls-remote --exit-code origin refs/notes/micdenoiser-ci > /dev/null; then
+            git fetch origin refs/notes/micdenoiser-ci:refs/notes/micdenoiser-ci
+          fi
+          python - <<'PY'
+          import json, subprocess
+          current = json.load(open('ci-outcome.json'))
+          previous = subprocess.run(['git', 'notes', '--ref=micdenoiser-ci', 'show', current['commit']], capture_output=True, text=True)
+          old = json.loads(previous.stdout) if previous.returncode == 0 else {}
+          runs = old.get('runs', {})
+          if old.get('ref'): runs[old['ref']] = {k: v for k, v in old.items() if k not in ('runs', 'ui_screens')}
+          runs[current['ref']] = {k: v for k, v in current.items() if k != 'ui_screens'}
+          preferred = current if current['ref'].startswith('refs/tags/') or not old.get('ref', '').startswith('refs/tags/') else {k: v for k, v in old.items() if k not in ('runs', 'ui_screens')}
+          if current.get('ui_screens'): preferred['ui_screens'] = current['ui_screens']
+          preferred['runs'] = runs
+          open('ci-outcome.json', 'w').write(json.dumps(preferred, indent=2) + '\n')
+          PY
+          git notes --ref=micdenoiser-ci add -f -F ci-outcome.json "$GITHUB_SHA"
+          git push origin refs/notes/micdenoiser-ci

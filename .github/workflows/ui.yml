@@ -1,0 +1,77 @@
+name: WPF interface render check
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    concurrency:
+      group: micdenoiser-ui-notes
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build UI with bundled dependencies
+        shell: pwsh
+        run: |
+          dotnet restore MicDenoiser --locked-mode -r win-x64 -p:SelfContained=true
+          if ($LASTEXITCODE -ne 0) { throw 'Restore failed.' }
+          dotnet publish MicDenoiser -c Release -r win-x64 --self-contained true -o artifacts/windows --no-restore
+          if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
+      - name: Execute bundled Windows native and DSP checks
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          dotnet restore MicDenoiser.Tests --locked-mode
+          if ($LASTEXITCODE -ne 0) { throw 'Test restore failed.' }
+          dotnet test MicDenoiser.Tests -c Release --no-restore --logger 'trx;LogFileName=windows.trx' --results-directory artifacts/test-results
+          if ($LASTEXITCODE -ne 0) { throw 'Native/DSP test failed; see report.' }
+      - name: Render without capture or playback
+        id: smoke
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath artifacts/windows/MicDenoiser.exe -ArgumentList '--ui-smoke' -WorkingDirectory $PWD.Path -PassThru
+          if (!$process.WaitForExit(90000)) { $process.Kill(); throw 'Render timed out.' }
+          if ($process.ExitCode -ne 0) { if (Test-Path artifacts/ui-smoke/error.txt) { Get-Content artifacts/ui-smoke/error.txt }; throw 'Render failed.' }
+          if ((Get-ChildItem artifacts/ui-smoke/*.png).Count -ne 21) { throw 'Expected 21 WPF renders.' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: MicDenoiser-UI-check
+          path: |
+            artifacts/ui-smoke/
+            artifacts/test-results/*.trx
+          if-no-files-found: warn
+      - name: Record rendering evidence in an independent Git note
+        if: always()
+        shell: pwsh
+        env:
+          RENDER_RESULT: ${{ steps.smoke.outcome }}
+        run: |
+          $images = @{}
+          foreach ($name in @('ar-simple', 'ar-studio-1', 'ar-setup-3', 'ar-about')) {
+            $file = "artifacts/ui-smoke/$name.png"
+            if (Test-Path $file) { $images[$name] = [Convert]::ToBase64String([IO.File]::ReadAllBytes((Join-Path $PWD $file))) }
+          }
+          $errorText = if (Test-Path artifacts/ui-smoke/error.txt) { Get-Content artifacts/ui-smoke/error.txt -Raw } else { '' }
+          $result = @{ commit = $env:GITHUB_SHA; result = $env:RENDER_RESULT; run_url = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"; error = $errorText; ui_screens = $images }
+          if (Test-Path artifacts/test-results/windows.trx) {
+            [xml]$tests = Get-Content artifacts/test-results/windows.trx -Raw
+            $result['test_counts'] = $tests.TestRun.ResultSummary.Counters.OuterXml
+            $result['test_failures'] = @($tests.TestRun.Results.UnitTestResult | Where-Object { $_.outcome -ne 'Passed' } | ForEach-Object { @{ name = $_.testName; message = $_.Output.ErrorInfo.Message; stack = $_.Output.ErrorInfo.StackTrace } })
+          }
+          [IO.File]::WriteAllText((Join-Path $PWD 'ui-result.json'), ($result | ConvertTo-Json -Depth 8), [Text.UTF8Encoding]::new($false))
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git ls-remote --exit-code origin refs/notes/micdenoiser-ui
+          if ($LASTEXITCODE -eq 0) { git fetch origin refs/notes/micdenoiser-ui:refs/notes/micdenoiser-ui }
+          git notes --ref=micdenoiser-ui add -f -F ui-result.json $env:GITHUB_SHA
+          git push origin refs/notes/micdenoiser-ui
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to record UI evidence.' }

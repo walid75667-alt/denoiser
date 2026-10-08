@@ -1,0 +1,31 @@
+MicDenoiser 2.6 — Windows 10/11 x64
+
+العربية
+- يختار المثبّت الغرض: مكالمات وبث، أو غناء وتعليق صوتي. لا يستبدل إعدادات تثبيت سابق.
+- عند التشغيل الأول: تحقّق من VB-Cable، واختر الميكروفون وتحدث أمام العدّاد، ثم سجّل اختبارًا من 10 ثوانٍ واستمع بسماعات إلى الأصلي والمعالَج.
+- ثبّت VB-Cable من مورّده بشكل منفصل: https://vb-audio.com/Cable/ واتبع تعليماته لإعادة التشغيل.
+- اختر الميكروفون الحقيقي ومخرج CABLE Input في MicDenoiser، وCABLE Output كميكروفون في Zoom أو Discord أو OBS.
+- Simple: زر تشغيل كبير، خفيف/متوازن/قوي، كتم، ومقارنة بالأصلي أثناء الضغط. «قوي» قد يؤثر في الهمس والكلام الضعيف.
+- خفض ضوضاء الخلفية تقدير خلال هدوء الصوت؛ علامة — تعني أن القراءة غير متاحة، ولا تعني صفر ضوضاء.
+- Ctrl+Alt+M للكتم، وCtrl+Alt+D لتشغيل العزل أو إيقافه. يعرض البرنامج تعارض الاختصارات في التفضيلات إن استعملها تطبيق آخر.
+- Studio: ضبط الصوت والميكسر والصحة واختبار الميكروفون والتفضيلات. تظهر الإعدادات التفصيلية داخل «متقدم»، ويمكن إعادة ضبط كل وحدة.
+- تغيير المحرّك أو الاستقرار يعيد تشغيل الصوت تلقائيًا. يمكن تبديل البوابة أثناء التشغيل؛ الغناء والهمس يحفظان الكلام الهادئ ببوابة معطلة.
+- عند التشويش: استخدم «هل توجد مشكلة بالصوت؟» وراجع القياسات قبل تطبيق الحل المقترح. التسجيل التشخيصي الاختياري لآخر 30 ثانية محلي؛ حفظه يوقف الصوت. لا يوجد إرسال تلقائي.
+- اختبار الميكروفون يسجّل في الذاكرة فقط؛ يمكنك تصدير WAV. الاستماع في Studio يوقف العزل الحي؛ ابدأه من جديد بعد الاختبار.
+- إعدادات اللغة العربية/English، الواجهة الداكنة والتشغيل الاختياري مع Windows داخل Studio/التفضيلات.
+- التصغير بجوار الساعة يبقي العزل مستمرًا. قائمة الأيقونة تتيح الفتح والتشغيل والكتم ومستويات العزل. زر X يغلق البرنامج ويوقف الصوت.
+- معلومات الإصدار و«صُمّم بواسطة أحمد سعد برهام» وروابط WhatsApp/Facebook داخل «حول».
+- المثبّت والنسخة المحمولة يتضمنان .NET والنموذج والمكتبات. فك ضغط النسخة المحمولة كاملًا في مجلد جديد ثم شغّل MicDenoiser.exe.
+
+English
+- Setup includes .NET, models and native libraries. VB-Cable is a separate vendor installation.
+- Choose calls/streaming or singing/narration in setup. The first-run guide detects cable routing, shows a real mic meter and records a ten-second level-matched local comparison.
+- Physical mic -> MicDenoiser -> CABLE Input; select CABLE Output as the mic in your calling app. Use headphones.
+- Simple offers power, light/balanced/strong isolation, mute and held original comparison. Strong suppression can affect quiet speech.
+- Ctrl+Alt+M mutes; Ctrl+Alt+D starts/stops. Conflicting shortcuts are reported in Preferences.
+- Studio has Sound, Mixer, Health, Mic Test and Preferences. Expand Advanced and reset each effects strip independently.
+- Engine/buffer changes restart automatically. Gate toggles are live. Singing and whisper presets disable the gate.
+- Background reduction is an estimate during low speech evidence; — means unavailable. It is not a speech-quality score.
+- Optional diagnostic history stays local; saving stops live audio. Playback tests in Studio also stop live suppression. Restart after listening.
+- Minimize to tray keeps processing; X exits. About contains the version, designer credit and contact links. Browser links do not send recordings.
+- Extract the complete portable ZIP into a new directory before running MicDenoiser.exe. Physical microphone artifacts and SmartScreen depend on device testing and trusted signing.

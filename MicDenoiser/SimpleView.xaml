@@ -1,0 +1,72 @@
+<UserControl x:Class="MicDenoiser.SimpleView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="22,18,22,12">
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="/Assets/MicDenoiser.png" Width="28" Height="28" Margin="0,0,8,0"/>
+                    <TextBlock Text="MicDenoiser" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource Ink}" FlowDirection="LeftToRight"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal"><Button Content="{DynamicResource StudioMode}" Click="Studio_Click" Style="{StaticResource SecondaryButton}" FontSize="11" Padding="7,5" Margin="0,0,6,0"/><Button Content="⚙" Click="Settings_Click" Style="{StaticResource SecondaryButton}" Padding="10,5" ToolTip="{DynamicResource PreferencesTitle}"/></StackPanel>
+            </Grid>
+            <StackPanel HorizontalAlignment="Center" Margin="0,0,0,12">
+                <Border Background="{DynamicResource AccentSoft}" Padding="6" CornerRadius="60">
+                    <Button x:Name="PowerButton" Width="92" Height="92" Click="Power_Click" Background="{DynamicResource Accent}" Foreground="White" ToolTip="{DynamicResource PowerShortcut}">
+                        <Button.Template><ControlTemplate TargetType="Button"><Border Background="{TemplateBinding Background}" CornerRadius="50"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border></ControlTemplate></Button.Template>
+                        <Path Data="M 16,2 L 16,16 M 8,6 A 13,13 0 1 0 24,6" Stroke="White" StrokeThickness="3" Width="32" Height="32" Stretch="Uniform" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                    </Button>
+                </Border>
+                <TextBlock x:Name="Headline" Text="{DynamicResource Ui001}" FontSize="21" FontWeight="SemiBold" Foreground="{DynamicResource Ink}" HorizontalAlignment="Center" Margin="0,10,0,3"/>
+                <TextBlock x:Name="Subline" Text="{DynamicResource CompactIdle}" Style="{StaticResource Label}" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="340"/>
+            </StackPanel>
+            <TextBlock Text="{DynamicResource IsolationLevel}" Style="{StaticResource Label}"/>
+            <Border Background="{DynamicResource Track}" CornerRadius="12" Padding="4">
+                <UniformGrid Rows="1">
+                    <RadioButton x:Name="LightLevel" Content="{DynamicResource LevelLight}" Tag="light" Checked="Level_Checked" Style="{StaticResource SegmentOption}"/>
+                    <RadioButton x:Name="BalancedLevel" Content="{DynamicResource LevelBalanced}" Tag="balanced" Checked="Level_Checked" Style="{StaticResource SegmentOption}"/>
+                    <RadioButton x:Name="StrongLevel" Content="{DynamicResource LevelStrong}" Tag="strong" Checked="Level_Checked" Style="{StaticResource SegmentOption}"/>
+                </UniformGrid>
+            </Border>
+            <TextBlock x:Name="LevelHint" Style="{StaticResource Label}" TextWrapping="Wrap" FontSize="11" Margin="0,6,0,10"/>
+            <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="16" Padding="16,12" Margin="0,0,0,12">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel><TextBlock Text="{DynamicResource RemovedNoise}" Style="{StaticResource Label}"/><TextBlock x:Name="ReductionText" Text="— dB" FontSize="28" FontWeight="SemiBold" Foreground="{DynamicResource Accent}" FlowDirection="LeftToRight" ToolTip="{DynamicResource RemovedNoiseHint}"/></StackPanel>
+                        <TextBlock x:Name="VoiceStatus" Grid.Column="1" Style="{StaticResource Label}" VerticalAlignment="Center"/>
+                    </Grid>
+                    <Grid Margin="0,8,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="{DynamicResource Ui023}" Style="{StaticResource Label}" FontSize="11"/>
+                        <ProgressBar x:Name="InputMeter" Style="{StaticResource MeterBar}" Grid.Column="1" Maximum="1" Height="8" Foreground="{DynamicResource Accent}" Background="{DynamicResource Track}"/>
+                    </Grid>
+                    <Grid Margin="0,5,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="{DynamicResource Ui024}" Style="{StaticResource Label}" FontSize="11"/>
+                        <ProgressBar x:Name="OutputMeter" Style="{StaticResource MeterBar}" Grid.Column="1" Maximum="1" Height="8" Foreground="{DynamicResource Accent}" Background="{DynamicResource Track}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="1.35*"/></Grid.ColumnDefinitions>
+                <Button x:Name="MuteButton" Content="{DynamicResource Mute}" Click="Mute_Click" Style="{StaticResource SecondaryButton}" Height="40" Margin="0,0,8,0" ToolTip="{DynamicResource MuteShortcut}"/>
+                <Button x:Name="CompareButton" Grid.Column="1" Content="{DynamicResource HoldOriginal}" Style="{StaticResource SecondaryButton}" Height="40"
+                        PreviewMouseLeftButtonDown="Compare_Down" PreviewMouseLeftButtonUp="Compare_Up" LostMouseCapture="Compare_Lost" PreviewKeyDown="Compare_KeyDown" PreviewKeyUp="Compare_KeyUp" LostKeyboardFocus="Compare_Blur" ToolTip="{DynamicResource HoldOriginalHint}"/>
+            </Grid>
+            <Expander x:Name="DevicesExpander" Header="{DynamicResource Ui002}" Margin="0,12,0,0" Foreground="{DynamicResource Ink}">
+                <StackPanel Margin="0,8,0,0">
+                    <TextBlock Text="{DynamicResource Ui005}" Style="{StaticResource Label}"/>
+                    <ComboBox x:Name="MicCombo" SelectionChanged="Devices_Changed"/>
+                    <TextBlock Text="{DynamicResource Ui007}" Style="{StaticResource Label}" Margin="0,8,0,0"/>
+                    <ComboBox x:Name="OutputCombo" SelectionChanged="Devices_Changed"/>
+                    <TextBlock Text="{DynamicResource Ui009}" Style="{StaticResource Label}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    <Button Content="{DynamicResource SetupTitle}" Click="Setup_Click" Style="{StaticResource SecondaryButton}" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Expander>
+            <TextBlock x:Name="DeviceSummary" Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" FontSize="11" Margin="0,5,0,8" FlowDirection="LeftToRight"/>
+            <Button Content="{DynamicResource SoundProblem}" Click="Diagnosis_Click" Style="{StaticResource SecondaryButton}" Padding="8,5"/>
+            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Ctrl+Alt+M · Ctrl+Alt+D" Style="{StaticResource Label}" FontSize="10" VerticalAlignment="Center" FlowDirection="LeftToRight"/>
+                <Button Grid.Column="1" Content="{DynamicResource StudioMode}" Click="Studio_Click" Style="{StaticResource SecondaryButton}" Padding="8,5"/>
+            </Grid>
+            <TextBlock x:Name="StatusText" Style="{StaticResource Label}" TextWrapping="Wrap" FontSize="11" Margin="0,8,0,0"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

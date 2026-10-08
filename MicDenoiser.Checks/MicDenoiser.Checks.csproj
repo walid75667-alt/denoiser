@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="../MicDenoiser/Localization/*.json" Link="UiValidation/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../MicDenoiser/MainWindow.xaml;../MicDenoiser/App.xaml;../MicDenoiser/SetupWindow.xaml;../MicDenoiser/SimpleView.xaml;../MicDenoiser/AboutWindow.xaml" Link="UiValidation/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <PackageReference Include="NAudio.Core" Version="2.2.1" />
+    <Compile Include="../MicDenoiser/AudioSampleProviders.cs" Link="AudioSampleProviders.cs" />
+    <Compile Include="../MicDenoiser/StablePlaybackProvider.cs" Link="StablePlaybackProvider.cs" />
+    <Compile Include="../MicDenoiser/BackgroundReduction.cs" Link="BackgroundReduction.cs" />
+    <Compile Include="../MicDenoiser/SuppressionLevel.cs" Link="SuppressionLevel.cs" />
+    <Compile Include="../MicDenoiser/EffectsModule.cs" Link="EffectsModule.cs" />
+    <Compile Include="../MicDenoiser/AudioPipeline.cs" Link="AudioPipeline.cs" />
+    <Compile Include="../MicDenoiser/DenoiseEngines.cs" Link="DenoiseEngines.cs" />
+    <Compile Include="../MicDenoiser/EffectsProfile.cs" Link="EffectsProfile.cs" />
+    <Compile Include="../MicDenoiser/VoiceEffects.cs" Link="VoiceEffects.cs" />
+    <Compile Include="../MicDenoiser/SpatialEffects.cs" Link="SpatialEffects.cs" />
+    <Compile Include="../MicDenoiser/FrameTiming.cs" Link="FrameTiming.cs" />
+    <Compile Include="../MicDenoiser/RollingAudio.cs" Link="RollingAudio.cs" />
+    <Compile Include="../MicDenoiser/AudioDiagnostics.cs" Link="AudioDiagnostics.cs" />
+    <Compile Include="../MicDenoiser/AbComparison.cs" Link="AbComparison.cs" />
+    <Compile Include="../MicDenoiser/Dsp.cs" Link="Dsp.cs" />
+    <Compile Include="../MicDenoiser/ComparisonCapture.cs" Link="ComparisonCapture.cs" />
+    <Compile Include="../MicDenoiser/StabilityAdvisor.cs" Link="StabilityAdvisor.cs" />
+    <Compile Include="../MicDenoiser/ProcessingSettings.cs" Link="ProcessingSettings.cs" />
+    <Compile Include="../MicDenoiser/RNNoiseNative.cs" Link="RNNoiseNative.cs" />
+    <None Include="../MicDenoiser/models/DeepFilterNet3_onnx.tar.gz" Link="models/DeepFilterNet3_onnx.tar.gz" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../MicDenoiser/native/micdenoiser_df.dll" Condition="Exists('../MicDenoiser/native/micdenoiser_df.dll')" Link="micdenoiser_df.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../MicDenoiser/native/rnnoise.dll" Link="rnnoise.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../MicDenoiser/native/vcruntime140.dll" Link="vcruntime140.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../MicDenoiser/native-src/target/release/libmicdenoiser_df.so" Condition="Exists('../MicDenoiser/native-src/target/release/libmicdenoiser_df.so')" Link="libmicdenoiser_df.so" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

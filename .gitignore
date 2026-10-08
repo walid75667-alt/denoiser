@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/target/
+artifacts/
+.native-build/
+*.user
+
+# Future build packages belong in Releases, not Git history.
+downloads/*.exe
+downloads/*.zip
+**/__pycache__/
